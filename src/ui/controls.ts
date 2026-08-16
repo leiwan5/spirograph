@@ -1,6 +1,7 @@
 import type { Pen } from '../types';
 import { addPen, getState, removePen, setPen, setPens, setState, subscribe } from '../state/store';
 import { curveInfo } from '../math/curve';
+import { serializeState } from '../state/url';
 import { COMBO_PRESETS, RING_PRESETS, ROLLING_PRESETS } from './presets';
 
 const RING_MIN = 40;
@@ -77,6 +78,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       <button class="btn btn-ghost" id="random">🎲 随机灵感</button>
       <button class="btn btn-ghost" id="export-png">⬇ 导出 PNG</button>
       <button class="btn btn-ghost" id="export-svg">⬇ 导出 SVG</button>
+      <button class="btn btn-ghost full" id="copy-image-link">🔗 复制图片链接</button>
     </section>
 
     <section class="info">
@@ -108,6 +110,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   const randomBtn = $<HTMLButtonElement>('random');
   const exportPngBtn = $<HTMLButtonElement>('export-png');
   const exportSvgBtn = $<HTMLButtonElement>('export-svg');
+  const copyLinkBtn = $<HTMLButtonElement>('copy-image-link');
   const infoRatio = $('info-ratio');
   const infoPetals = $('info-petals');
   const infoTurns = $('info-turns');
@@ -264,6 +267,30 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   randomBtn.addEventListener('click', () => onRandom());
   exportPngBtn.addEventListener('click', () => onPng());
   exportSvgBtn.addEventListener('click', () => onSvg());
+
+  // 复制当前参数的图片链接（/api/image?...&format=png）
+  copyLinkBtn.addEventListener('click', async () => {
+    const qs = serializeState(getState());
+    const dir = location.pathname.replace(/[^/]*$/, '');
+    const url = location.origin + dir + 'api/image?' + qs + '&format=png';
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // 降级方案：临时 textarea + execCommand
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+    }
+    copyLinkBtn.textContent = '✅ 已复制链接';
+    setTimeout(() => {
+      copyLinkBtn.textContent = '🔗 复制图片链接';
+    }, 1600);
+  });
 
   // ---- 同步控件到状态（状态变化时调用）----
   function syncControls(): void {
