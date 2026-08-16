@@ -376,17 +376,21 @@ export function drawPenHoles(
     const isActive = i === activePenIndex;
     const hx = penPoints[i][0] * scale + offsetX;
     const hy = penPoints[i][1] * scale + offsetY;
-    // 孔描边：当前笔加深加粗（高亮但保持与孔阵同族样式）
-    ctx.beginPath();
-    ctx.arc(hx, hy, holeR, 0, PI2);
-    ctx.strokeStyle = isActive ? 'rgba(58,70,90,0.9)' : 'rgba(118,132,152,0.55)';
-    ctx.lineWidth = isActive ? 2 : 1.2;
-    ctx.stroke();
-    // 笔尖（彩色，填满孔内大部分：像笔杆插在孔里）
+    // 笔尖（彩色，填满孔内大部分：像笔杆插在孔里）。
+    // 注意：不在此加深孔描边（孔阵已统一淡色空心圆），
+    // 避免深色圆环截断穿过孔心的曲线。
     ctx.beginPath();
     ctx.arc(hx, hy, isActive ? holeR * 0.72 : holeR * 0.45, 0, PI2);
     ctx.fillStyle = pens[i].color;
     ctx.fill();
+    // 当前笔白描边（细，仅标记使用中，几乎不遮曲线）
+    if (isActive) {
+      ctx.beginPath();
+      ctx.arc(hx, hy, holeR * 0.72 + 1, 0, PI2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }
