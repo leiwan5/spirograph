@@ -1,4 +1,4 @@
-import type { Bounds, CurveData, DrawingMode, GradientStop, Pen, Transform } from '../types';
+import type { Bounds, CurveData, DrawingMode, Pen, Transform } from '../types';
 import { meshPhase } from '../math/gear';
 
 /** 计算一组曲线的联合包围盒 */
@@ -85,7 +85,7 @@ export function renderFull(
   for (const item of items) {
     const { points, count } = item.curve;
     if (item.pen.gradient.length > 1) {
-      strokeGradientCurve(ctx, points, count, item.pen.gradient, item.pen.width, transform, GRADIENT_SEGMENTS, item.pen.gradientLoop);
+      strokeGradientCurve(ctx, points, count, item.pen.gradient, item.pen.gradientSpacing, item.pen.width, transform);
       continue;
     }
     ctx.strokeStyle = item.pen.color;
@@ -117,7 +117,7 @@ export function renderPartial(
     const { points, count } = item.curve;
     const drawn = Math.max(1, Math.floor(progress * count));
     if (item.pen.gradient.length > 1) {
-      strokeGradientCurve(ctx, points, drawn, item.pen.gradient, item.pen.width, transform, GRADIENT_SEGMENTS, item.pen.gradientLoop);
+      strokeGradientCurve(ctx, points, drawn, item.pen.gradient, item.pen.gradientSpacing, item.pen.width, transform, false);
       continue;
     }
     ctx.strokeStyle = item.pen.color;
@@ -161,73 +161,90 @@ export function lerpColor(a: string, b: string, t: number): string {
 }
 
 /**
- * 定位渐变：t ∈ [0,1] 时取第 i 个断点颜色；断点末尾 transition 长度内线性过渡到下一个断点色。
- * 例 stops=[{pos:15,trans:5,c:1},{pos:30,trans:5,c:2},{pos:40,trans:0,c:3}]：
- *   0-10 纯色1，10-15 色1→色2，15-25 纯色2，25-30 色2→色3，30-40 纯色3；
- *   超过末断点位置后保持末色（loop=true 时按末断点位置为周期循环）。
+ * 间隔渐变（闭合回环）：颜色等距落在曲线上（间距 spacing%，第 1 色在 0 处），色用尽后循环。
+ * 相邻两个颜色点之间的整段线段：从一端颜色渐变到另一端。
+ * 例 colors=[红,蓝,绿,橙], spacing=10：
+ *   位置 0/10/20/30/40/50...= 红/蓝/绿/橙/红/蓝...；[0,10)红→蓝，[10,20)蓝→绿，...
+ * 曲线是闭合的：100% 处回到 0%（起点）。因此最后一格（最后一个颜色点 →100%）
+ * 渐变回初始色 colors[0]，保证收笔衔接（末尾颜色变回初始颜色，无跳变）。
+ * 位置 p ∈ [k·spacing, (k+1)·spacing] 取 colors[k%n] → colors[(k+1)%n] 渐变。
  */
-export function gradientColorAt(
-  stops: Array<{ color: string; pos: number; trans: number }>,
-  t: number,
-  loop = false,
-): string {
-  const n = stops.length;
+export function gradientColorAt(colors: string[], t: number, spacing: number): string {
+  const n = colors.length;
   if (n <= 0) return '#000000';
-  if (n === 1) return stops[0].color;
-  let p = t * 100;
-  if (loop) {
-    const period = Math.max(stops[n - 1].pos, 1);
-    p = ((p % period) + period) % period;
-  }
-  if (p <= stops[0].pos) return stopColorAt(stops, 0, p);
-  for (let i = 1; i < n - 1; i++) {
-    if (p <= stops[i].pos) return stopColorAt(stops, i, p);
-  }
-  return stops[n - 1].color;
-}
+  if (n === 1) return colors[0];
+  const s = Math.max(1, spacing); // 间隔至少 1%
+  const p = Math.min(100, Math.max(0, t * 100));
 
-/** 第 i 个断点区间 [pos[i-1], pos[i]]：末尾 trans 内过渡到第 i+1 个颜色 */
-function stopColorAt(
-  stops: Array<{ color: string; pos: number; trans: number }>,
-  i: number,
-  p: number,
-): string {
-  const s = stops[i];
-  const next = stops[i + 1];
-  const transStart = s.pos - s.trans;
-  if (p <= transStart) return s.color;
-  const u = s.trans <= 0 ? 1 : Math.min(1, Math.max(0, (p - transStart) / s.trans));
-  return lerpColor(s.color, next.color, u);
+  // 在闭合区间 [0,100] 上分布的配色点数 = ceil(100/s)；最后一个点必 < 100。
+  // 第 slot 个点的位置 = slot*s，颜色 = colors[slot % n]。
+  const lastIdx = Math.ceil(100 / s) - 1; // 最后一个（闭合前）颜色点的索引
+  const lastPos = lastIdx * s; // 其位置，恒 < 100
+  const slot = Math.min(Math.floor(p / s), lastIdx);
+
+  if (slot === lastIdx) {
+    // 闭合前最后一格：从当前位置的渐变色渐变回初始色 colors[0]，跨度 = 100 - lastPos
+    const span = Math.max(1, 100 - lastPos);
+    const local = Math.min(1, Math.max(0, (p - lastPos) / span));
+    return lerpColor(colors[lastIdx % n], colors[0], local);
+  }
+  const c1 = colors[slot % n];
+  const c2 = colors[(slot + 1) % n];
+  const local = Math.min(1, Math.max(0, p / s - slot));
+  return lerpColor(c1, c2, local);
 }
 
 /**
- * 渐变曲线绘制：按绘制进度分段着色（每个断点区间的纯色/过渡），沿路径呈现定位渐变。
+ * 渐变曲线绘制（绝对无断裂）：逐点分段绘制，相邻两点的圆角 cap 在共享顶点
+ * 完全重叠（等效连续 single-path 的 round join），无论转角多尖、点距多大，
+ * 整条线都连续无缝——与图片端点（per-pair plotLine）行为一致。
+ * 每个线段的颜色 = 该处间隔渐变取色；闭合处（t→1）渐变回初始色。
+ * closed=true 时（完整图案/导出）额外补一条收笔连线（最后点→起点）闭合曲线；
+ * 动画部分绘制（closed=false）不画收笔线，避免笔尖到起点出现多余连线。
  */
 export function strokeGradientCurve(
   ctx: CanvasRenderingContext2D,
   points: Float64Array,
   count: number,
-  stops: GradientStop[],
+  colors: string[],
+  spacing: number,
   lineWidth: number,
   transform: Transform,
-  segments = GRADIENT_SEGMENTS,
-  loop = false,
+  closed = true,
 ): void {
   ctx.lineWidth = lineWidth;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  const segLen = Math.max(1, Math.floor(count / segments));
-  for (let seg = 0; seg < count; seg += segLen) {
-    const end = Math.min(count, seg + segLen);
-    const t = (seg + (end - seg) / 2) / count;
-    ctx.strokeStyle = gradientColorAt(stops, t, loop);
-    ctx.beginPath();
-    for (let j = seg; j < end; j++) {
-      const [sx, sy] = applyTransform(transform, points[2 * j], points[2 * j + 1]);
-      if (j === seg) ctx.moveTo(sx, sy);
-      else ctx.lineTo(sx, sy);
+
+  // 逐点（i → i+1）绘制；相邻线段共享顶点，圆角 cap 重叠保证无缝隙
+  if (count > 1) {
+    for (let i = 0; i + 1 < count; i++) {
+      const t = (i + 0.5) / Math.max(1, count - 1);
+      ctx.strokeStyle = gradientColorAt(colors, t, spacing);
+      const [x0, y0] = applyTransform(transform, points[2 * i], points[2 * i + 1]);
+      const [x1, y1] = applyTransform(transform, points[2 * i + 2], points[2 * i + 3]);
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(x1, y1);
+      ctx.stroke();
     }
-    ctx.stroke();
+    // 收笔：最后一点 → 起点，闭合曲线，收笔色渐变回初始色（仅完整绘制时）
+    if (closed) {
+      const tLast = 1;
+      ctx.strokeStyle = gradientColorAt(colors, tLast, spacing);
+      const [xn, yn] = applyTransform(transform, points[2 * (count - 1)], points[2 * (count - 1) + 1]);
+      const [x0, y0] = applyTransform(transform, points[0], points[1]);
+      ctx.beginPath();
+      ctx.moveTo(xn, yn);
+      ctx.lineTo(x0, y0);
+      ctx.stroke();
+    }
+  } else if (count === 1) {
+    // 单点：画一个小圆点
+    ctx.fillStyle = gradientColorAt(colors, 0, spacing);
+    ctx.beginPath();
+    ctx.arc(points[0] * transform.scale + transform.offsetX, points[1] * transform.scale + transform.offsetY, lineWidth / 2, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
@@ -509,7 +526,7 @@ export function renderSteps(
     const { points, count } = items[i].curve;
     const drawn = i < penIndex ? count : Math.max(1, Math.floor(penProgress * count));
     if (items[i].pen.gradient.length > 1) {
-      strokeGradientCurve(ctx, points, drawn, items[i].pen.gradient, items[i].pen.width, transform, GRADIENT_SEGMENTS, items[i].pen.gradientLoop);
+      strokeGradientCurve(ctx, points, drawn, items[i].pen.gradient, items[i].pen.gradientSpacing, items[i].pen.width, transform, drawn >= count);
       continue;
     }
     ctx.strokeStyle = items[i].pen.color;
@@ -548,7 +565,7 @@ export function renderToCanvasAt(
     const { points, count } = item.curve;
     const w = item.pen.width * (sizePx / 1000); // 导出尺寸按比例放大笔宽（以 1000px 为基准）
     if (item.pen.gradient.length > 1) {
-      strokeGradientCurve(ctx, points, count, item.pen.gradient, w, t, GRADIENT_SEGMENTS, item.pen.gradientLoop);
+      strokeGradientCurve(ctx, points, count, item.pen.gradient, item.pen.gradientSpacing, w, t);
       continue;
     }
     ctx.strokeStyle = item.pen.color;

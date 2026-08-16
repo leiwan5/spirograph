@@ -195,6 +195,25 @@ input[type='color'] {
 }
 .pen-grad-del:hover { color: #fff; border-color: var(--danger); background: rgba(229, 72, 77, 0.15); }
 
+/* 渐变色槽 */
+.pen-grad-colors { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pen-grad-slot { display: inline-flex; align-items: center; gap: 3px; }
+.pen-grad-slot input[type='color'] { width: 30px !important; height: 24px !important; padding: 1px; }
+.pen-grad-del {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 11px;
+  flex-shrink: 0;
+  font-family: inherit;
+  line-height: 1;
+}
+.pen-grad-del:hover { color: #fff; border-color: var(--danger); background: rgba(229, 72, 77, 0.15); }
+
 /* 下拉选择 */
 .size-select {
   background: var(--panel-2);

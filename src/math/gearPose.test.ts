@@ -2,13 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { computeGearPose, computeSteps, gradientColorAt, lerpColor } from '../render/renderer';
 import { sampleCurve } from '../math/curve';
 
-describe('渐变颜色插值（定位断点）', () => {
-  // 用户例子：0-10 纯色1，10-15 色1→色2，15-25 纯色2，25-30 色2→色3，30-40 纯色3，40+ 纯色3
-  const stops = [
-    { color: '#ff0000', pos: 15, trans: 5 },
-    { color: '#00ff00', pos: 30, trans: 5 },
-    { color: '#0000ff', pos: 40, trans: 0 },
-  ];
+describe('渐变颜色插值（间隔模型，闭合回环）', () => {
+  // 颜色等距落在闭合区间点（间距 spacing%，第 1 色在 0 处），色用尽循环；
+  // 曲线闭合：最后一格渐变回初始色（收笔衔接）。返回值统一为 rgb(...) 字符串。
+  const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00']; // 红 绿 蓝 黄
+  const spacing = 10;
 
   it('lerpColor 线性插值', () => {
     expect(lerpColor('#ff0000', '#0000ff', 0)).toBe('rgb(255,0,0)');
@@ -16,32 +14,33 @@ describe('渐变颜色插值（定位断点）', () => {
     expect(lerpColor('#ff0000', '#0000ff', 0.5)).toBe('rgb(128,0,128)');
   });
 
-  it('纯色区保持该断点颜色', () => {
-    expect(gradientColorAt(stops, 0.02)).toBe('#ff0000'); // 2% 纯色1
-    expect(gradientColorAt(stops, 0.1)).toBe('#ff0000'); // 10% 过渡起点仍纯色1
-    expect(gradientColorAt(stops, 0.2)).toBe('#00ff00'); // 20% 纯色2
-    expect(gradientColorAt(stops, 0.25)).toBe('#00ff00'); // 25% 过渡起点仍纯色2
-    expect(gradientColorAt(stops, 0.35)).toBe('#0000ff'); // 35% 纯色3
-    expect(gradientColorAt(stops, 0.9)).toBe('#0000ff'); // 90% 超过末断点 → 纯色3
+  it('间隔点正好是设置的颜色（循环）', () => {
+    expect(gradientColorAt(colors, 0.0, spacing)).toBe('rgb(255,0,0)');   // 0  → 红
+    expect(gradientColorAt(colors, 0.1, spacing)).toBe('rgb(0,255,0)');   // 10 → 绿
+    expect(gradientColorAt(colors, 0.2, spacing)).toBe('rgb(0,0,255)');   // 20 → 蓝
+    expect(gradientColorAt(colors, 0.3, spacing)).toBe('rgb(255,255,0)'); // 30 → 黄
+    expect(gradientColorAt(colors, 0.4, spacing)).toBe('rgb(255,0,0)');   // 40 → 循环回红
+    expect(gradientColorAt(colors, 0.8, spacing)).toBe('rgb(255,0,0)');   // 80 → 红
+    expect(gradientColorAt(colors, 0.9, spacing)).toBe('rgb(0,255,0)');   // 90 → 绿
   });
 
-  it('过渡区线性插值到下一色', () => {
-    expect(gradientColorAt(stops, 0.125)).toBe('rgb(128,128,0)'); // 12.5% 色1→色2 中点
-    expect(gradientColorAt(stops, 0.15)).toBe('rgb(0,255,0)'); // 15% 过渡终点 = 色2
-    expect(gradientColorAt(stops, 0.28)).toBe('rgb(0,102,153)'); // 28% 色2→色3 (u=0.6)
-    expect(gradientColorAt(stops, 0.3)).toBe('rgb(0,0,255)'); // 30% = 色3
+  it('闭合处（100%≡0%）渐变回初始色', () => {
+    expect(gradientColorAt(colors, 1.0, spacing)).toBe('rgb(255,0,0)'); // 收笔 = 初始红
   });
 
-  it('循环：末断点位置为周期，超过回首色', () => {
-    expect(gradientColorAt(stops, 0.02, true)).toBe('#ff0000');
-    expect(gradientColorAt(stops, 0.5, true)).toBe('#ff0000'); // t=50 → p=10 → 过渡起点
-    expect(gradientColorAt(stops, 0.6, true)).toBe('#00ff00'); // t=60 → p=20 → 纯色2
-    expect(gradientColorAt(stops, 0.9, true)).toBe('#ff0000'); // t=90 → p=10 → 色1区域
+  it('spacing 不整除 100 时末尾仍渐变回初始色', () => {
+    expect(gradientColorAt(colors, 1.0, 30)).toBe('rgb(255,0,0)'); // 100 收笔回红
+    expect(gradientColorAt(colors, 0.90, 30)).toBe('rgb(255,255,0)'); // 90 → 黄
   });
 
-  it('单断点 = 单色；空 = 黑', () => {
-    expect(gradientColorAt([{ color: '#123456', pos: 100, trans: 0 }], 0.5)).toBe('#123456');
-    expect(gradientColorAt([], 0.5)).toBe('#000000');
+  it('段内整段渐变（中点）', () => {
+    // [0,10)：红→绿；5% = (255,127,127)? 红(255,0,0)→绿(0,255,0) 中点 = (128,128,0)
+    expect(gradientColorAt(colors, 0.05, spacing)).toBe('rgb(128,128,0)');
+  });
+
+  it('空 = 黑；单色 = 该色', () => {
+    expect(gradientColorAt([], 0.5, spacing)).toBe('#000000');
+    expect(gradientColorAt(['#123456'], 0.5, spacing)).toBe('#123456');
   });
 });
 

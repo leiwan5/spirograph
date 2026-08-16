@@ -19,10 +19,9 @@ export function serializeState(s: AppState): string {
   for (const pen of s.pens) {
     const parts = [pen.hole, pen.color.replace('#', '').toLowerCase(), pen.width];
     if (pen.gradient.length > 1) {
-      // 渐变 stops：pos:color:trans 用 ~ 分隔（第 4 段）；末尾附加 loop 标志（第 5 段）
-      const stops = pen.gradient.map((g) => g.pos + ':' + g.color.replace('#', '').toLowerCase() + ':' + g.trans).join('~');
-      parts.push(stops);
-      if (pen.gradientLoop) parts.push('1');
+      // 渐变：hole,color,width,spacing,c2[,c3[,c4]]
+      parts.push(String(pen.gradientSpacing));
+      for (const c of pen.gradient.slice(0, 3)) parts.push(c.replace('#', '').toLowerCase());
     }
     p.append('pen', parts.join(','));
   }
@@ -76,8 +75,8 @@ export function parseState(search: string): UrlPatch {
 
 function parsePen(raw: string): Omit<Pen, 'id'> | null {
   const parts = raw.split(',');
-  // 3 段单色；≥4 段：第 4 段含 ':' → 渐变 stops；可选第 5 段 '1'/'0' = loop
-  if (parts.length < 3 || parts.length > 5) return null;
+  // 3 段单色；4-7 段：hole,color,width,spacing,c2[,c3[,c4]]
+  if (parts.length < 3 || parts.length > 7) return null;
   const hole = Number(parts[0]);
   const colorRaw = parts[1];
   const width = Number(parts[2]);
@@ -85,27 +84,21 @@ function parsePen(raw: string): Omit<Pen, 'id'> | null {
   if (!/^[0-9a-fA-F]{6}$/.test(colorRaw)) return null;
   if (!Number.isFinite(width) || width < 0.5 || width > 8) return null;
 
-  const pen: Omit<Pen, 'id'> = { hole, color: '#' + colorRaw.toLowerCase(), gradient: [], gradientLoop: false, width };
-  if (parts.length >= 4 && parts[3].includes(':')) {
-    // 渐变 stops：pos:color:trans~pos:color:trans...
-    const output: Array<{ color: string; pos: number; trans: number }> = [];
-    for (const s of parts[3].split('~')) {
-      const seg = s.split(':');
-      if (seg.length !== 3) return null;
-      const pos = Number(seg[0]);
-      const color = seg[1];
-      const trans = Number(seg[2]);
-      if (!Number.isFinite(pos) || pos < 0 || pos > 100) return null;
-      if (!/^[0-9a-fA-F]{6}$/.test(color)) return null;
-      if (!Number.isFinite(trans) || trans < 0 || trans > 100) return null;
-      output.push({ pos, color: '#' + color.toLowerCase(), trans });
+  const pen: Omit<Pen, 'id'> = { hole, color: '#' + colorRaw.toLowerCase(), gradient: [], gradientSpacing: 20, width };
+  if (parts.length >= 4) {
+    // 渐变：hole,color,width,spacing,c2[,c3[,c4]]；spacing 非法或渐变色非法 → 整笔忽略
+    if (!/^\d+(\.\d+)?$/.test(parts[3])) return null;
+    const spacing = Number(parts[3]);
+    if (!(spacing >= 1 && spacing <= 100)) return null;
+    const colorParts = parts.slice(4);
+    if (colorParts.length < 1 || colorParts.length > 3) return null;
+    const gradient: string[] = [];
+    for (const c of colorParts) {
+      if (!/^[0-9a-fA-F]{6}$/.test(c)) return null;
+      gradient.push('#' + c.toLowerCase());
     }
-    if (output.length < 2 || output.length > 4) return null;
-    pen.gradient = output;
-  }
-  if (parts.length === 5) {
-    if (parts[4] !== '0' && parts[4] !== '1') return null;
-    pen.gradientLoop = parts[4] === '1';
+    pen.gradientSpacing = spacing;
+    pen.gradient = gradient;
   }
   return pen;
 }

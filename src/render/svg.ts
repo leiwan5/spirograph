@@ -1,6 +1,6 @@
 import type { Bounds, Transform } from '../types';
 import type { RenderItem } from './renderer';
-import { computeBounds, computeTransform, gradientColorAt, strokeGradientCurve, GRADIENT_SEGMENTS } from './renderer';
+import { computeBounds, computeTransform, gradientColorAt, strokeGradientCurve } from './renderer';
 
 /** 每支笔导出点数上限（超出抽样） */
 const MAX_EXPORT_POINTS_PER_PEN = 12_000;
@@ -20,20 +20,24 @@ export function buildSvg(items: RenderItem[], background: string, sizePx = 2048)
     const { points, count } = item.curve;
     const w = strokeWidth(item);
     if (item.pen.gradient.length > 1) {
-      // 渐变：逐段 path，每段一个定位插值色（纯色区/过渡区）
-      const loop = item.pen.gradientLoop;
-      const segLen = Math.max(1, Math.floor(count / GRADIENT_SEGMENTS));
-      for (let seg = 0; seg < count; seg += segLen) {
-        const end = Math.min(count, seg + segLen);
-        const prog = (seg + (end - seg) / 2) / count;
-        const color = gradientColorAt(item.pen.gradient, prog, loop);
-        let d = '';
-        for (let j = seg; j < end; j++) {
-          const [sx, sy] = applySvgTransform(t, points[2 * j], points[2 * j + 1]);
-          d += (j === seg ? 'M' : 'L') + sx.toFixed(2) + ' ' + sy.toFixed(2);
-        }
+      // 渐变：逐点路径（每相邻两点一条 path，圆角 cap 在共享顶点重叠），
+      // 保证与画布/导出 PNG 一样绝对无断裂。闭合处补一条收笔连线回起点。
+      for (let i = 0; i + 1 < count; i++) {
+        const prog = (i + 0.5) / Math.max(1, count - 1);
+        const color = gradientColorAt(item.pen.gradient, prog, item.pen.gradientSpacing);
+        const [x0, y0] = applySvgTransform(t, points[2 * i], points[2 * i + 1]);
+        const [x1, y1] = applySvgTransform(t, points[2 * i + 2], points[2 * i + 3]);
         pathEls.push(
-          `  <path d="${d}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`,
+          `  <path d="M ${x0.toFixed(2)} ${y0.toFixed(2)} L ${x1.toFixed(2)} ${y1.toFixed(2)}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>`,
+        );
+      }
+      // 收笔：最后一点 → 起点，闭合曲线，色渐变回初始色
+      if (count > 0) {
+        const [x0, y0] = applySvgTransform(t, points[2 * (count - 1)], points[2 * (count - 1) + 1]);
+        const [x1, y1] = applySvgTransform(t, points[0], points[1]);
+        const color = gradientColorAt(item.pen.gradient, 1, item.pen.gradientSpacing);
+        pathEls.push(
+          `  <path d="M ${x0.toFixed(2)} ${y0.toFixed(2)} L ${x1.toFixed(2)} ${y1.toFixed(2)}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>`,
         );
       }
       continue;
@@ -97,7 +101,7 @@ export function exportPng(items: RenderItem[], background: string, sizePx = 2048
     const { points, count } = item.curve;
     const w = item.pen.width * (sizePx / 1000);
     if (item.pen.gradient.length > 1) {
-      strokeGradientCurve(ctx, points, count, item.pen.gradient, w, t, GRADIENT_SEGMENTS, item.pen.gradientLoop);
+      strokeGradientCurve(ctx, points, count, item.pen.gradient, item.pen.gradientSpacing, w, t);
       continue;
     }
     ctx.strokeStyle = item.pen.color;

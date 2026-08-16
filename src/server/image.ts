@@ -3,7 +3,7 @@ import type { AppState } from '../types';
 import { DEFAULT_STATE } from '../state/store';
 import { parseState } from '../state/url';
 import { sampleCurve } from '../math/curve';
-import { computeBounds, computeFixedBounds, computeTransform, GRADIENT_SEGMENTS } from '../render/renderer';
+import { computeBounds, computeFixedBounds, computeTransform, gradientColorAt, GRADIENT_SEGMENTS } from '../render/renderer';
 import { buildSvg } from '../render/svg';
 
 export interface ImageParams {
@@ -77,9 +77,9 @@ export function generatePng(search: string): Uint8Array {
   for (const item of items) {
     const w = item.pen.width * (size / 1000); // 笔宽按导出基准放大
     const { points, count } = item.curve;
-    const stops = item.pen.gradient;
-    const hasGradient = stops.length > 1;
-    const loop = item.pen.gradientLoop;
+    const colors = item.pen.gradient;
+    const hasGradient = colors.length > 1;
+    const spacing = item.pen.gradientSpacing;
     const segLen = Math.max(1, Math.floor(Math.max(1, count - 1) / GRADIENT_SEGMENTS));
     for (let i = 0; i < count - 1; i++) {
       const x0 = points[2 * i] * t.scale + t.offsetX;
@@ -87,56 +87,12 @@ export function generatePng(search: string): Uint8Array {
       const x1 = points[2 * i + 2] * t.scale + t.offsetX;
       const y1 = points[2 * i + 3] * t.scale + t.offsetY;
       const color = hasGradient
-        ? gradientRgb(stops, (Math.floor(i / segLen) * segLen + segLen / 2) / Math.max(1, count - 1), loop)
+        ? hexToRgb(gradientColorAt(colors, (Math.floor(i / segLen) * segLen + segLen / 2) / Math.max(1, count - 1), spacing))
         : hexToRgb(item.pen.color);
       plotLine(rgba, size, x0, y0, x1, y1, color, w);
     }
   }
   return encodePng(size, size, rgba);
-}
-
-/**
- * 多色渐变 → RGB 数组（与前端 gradientColorAt 同逻辑，直接数值插值，
- * 避免 rgb() 字符串经 hexToRgb 解析产生 NaN）。
- */
-function gradientRgb(
-  stops: Array<{ color: string; pos: number; trans: number }>,
-  t: number,
-  loop: boolean,
-): [number, number, number] {
-  const n = stops.length;
-  if (n <= 0) return [0, 0, 0];
-  if (n === 1) return hexToRgb(stops[0].color);
-  let p = t * 100;
-  if (loop) {
-    const period = Math.max(stops[n - 1].pos, 1);
-    p = ((p % period) + period) % period;
-  }
-  if (p <= stops[0].pos) return stopRgb(stops, 0, p);
-  for (let i = 1; i < n - 1; i++) {
-    if (p <= stops[i].pos) return stopRgb(stops, i, p);
-  }
-  return hexToRgb(stops[n - 1].color);
-}
-
-/** 第 i 个断点区间：末尾 trans 内过渡到下一个颜色 */
-function stopRgb(
-  stops: Array<{ color: string; pos: number; trans: number }>,
-  i: number,
-  p: number,
-): [number, number, number] {
-  const s = stops[i];
-  const next = stops[i + 1];
-  const transStart = s.pos - s.trans;
-  if (p <= transStart) return hexToRgb(s.color);
-  const u = s.trans <= 0 ? 1 : Math.min(1, Math.max(0, (p - transStart) / s.trans));
-  const a = hexToRgb(s.color);
-  const b = hexToRgb(next.color);
-  return [
-    Math.round(a[0] + (b[0] - a[0]) * u),
-    Math.round(a[1] + (b[1] - a[1]) * u),
-    Math.round(a[2] + (b[2] - a[2]) * u),
-  ];
 }
 
 function hexToRgb(hex: string): [number, number, number] {
