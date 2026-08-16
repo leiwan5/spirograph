@@ -172,7 +172,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     b.textContent = p.name;
     b.title = `${p.ring}齿环 × ${p.rolling}齿轮，${p.mode === 'inside' ? '内切' : '外切'}`;
     b.addEventListener('click', () => {
-      setPens(p.pens.map((pp) => ({ hole: pp.hole, color: pp.color, gradient: pp.gradient ?? [], gradientStart: 0, gradientLength: 100, gradientLoop: false, width: pp.width })));
+      setPens(p.pens.map((pp) => ({ hole: pp.hole, color: pp.color, gradient: pp.gradient ?? [], gradientLoop: false, width: pp.width })));
       setState({ mode: p.mode, ringTeeth: p.ring, rollingTeeth: p.rolling });
     });
     presetChipsEl.appendChild(b);
@@ -256,17 +256,12 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       <div class="row-label"><span>粗细（px）</span><span class="val">${pen.width}</span></div>
       <input type="range" class="pen-width" min="0.5" max="8" step="0.5" value="${pen.width}">
       <div class="pen-row">
-        <label class="check-row"><input type="checkbox" class="pen-grad"${pen.gradient.length > 0 ? ' checked' : ''}><span>渐变</span></label>
+        <label class="check-row"><input type="checkbox" class="pen-grad"${pen.gradient.length > 1 ? ' checked' : ''}><span>渐变</span></label>
         <span class="pen-grad-slots"></span>
-        <button class="pen-grad-add" title="添加渐变色">＋</button>
+        <button class="pen-grad-add" title="添加渐变色断点">＋</button>
       </div>
-      <div class="pen-grad-opts">
-        <div class="row-label"><span>渐变起点（画到此处开始变色）</span><span class="val">${pen.gradientStart}%</span></div>
-        <input type="range" class="pen-grad-start" min="0" max="100" step="1" value="${pen.gradientStart}">
-        <div class="row-label"><span>渐变长度（多长完成渐变）</span><span class="val">${pen.gradientLength}%</span></div>
-        <input type="range" class="pen-grad-length" min="0" max="100" step="1" value="${pen.gradientLength}">
-        <label class="check-row"><input type="checkbox" class="pen-grad-loop"${pen.gradientLoop ? ' checked' : ''}><span>循环渐变（1/2/3/4/1/2/3/4…）</span></label>
-      </div>
+      <div class="pen-grad-opts"></div>
+      <label class="check-row"><input type="checkbox" class="pen-grad-loop"${pen.gradientLoop ? ' checked' : ''}><span>循环渐变（1/2/3/4/1/2/3/4…）</span></label>
     `;
     const holeSlider = card.querySelector<HTMLInputElement>('.pen-hole')!;
     const colorInput = card.querySelector<HTMLInputElement>('.pen-color')!;
@@ -293,64 +288,86 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     const gradSlots = card.querySelector<HTMLElement>('.pen-grad-slots')!;
     const gradAdd = card.querySelector<HTMLButtonElement>('.pen-grad-add')!;
     const gradOpts = card.querySelector<HTMLElement>('.pen-grad-opts')!;
-    const gradStartSlider = card.querySelector<HTMLInputElement>('.pen-grad-start')!;
-    const gradLengthSlider = card.querySelector<HTMLInputElement>('.pen-grad-length')!;
-    const gradStartVal = gradOpts.querySelectorAll('.row-label .val')[0] as HTMLElement;
-    const gradLengthVal = gradOpts.querySelectorAll('.row-label .val')[1] as HTMLElement;
+    const gradLoopCheck = card.querySelector<HTMLInputElement>('.pen-grad-loop')!;
 
-    function renderGradSlots(): void {
-      gradSlots.innerHTML = '';
-      const g = getState().pens.find((p) => p.id === pen.id)?.gradient ?? pen.gradient;
-      gradOpts.classList.toggle('show', g.length > 0);
-      g.forEach((c, idx) => {
-        const swatch = document.createElement('input');
-        swatch.type = 'color';
-        swatch.className = 'pen-grad-color';
-        swatch.value = c;
-        swatch.title = '渐变色 ' + (idx + 2);
-        swatch.addEventListener('input', () => {
-          const cur = getState().pens.find((p) => p.id === pen.id)?.gradient ?? [];
-          const next = cur.map((x, i) => (i === idx ? swatch.value : x));
-          setPen(pen.id, { gradient: next });
+    function currentGradient(): Array<{ color: string; pos: number; trans: number }> {
+      return getState().pens.find((p) => p.id === pen.id)?.gradient ?? pen.gradient;
+    }
+    function updateGradient(mutate: (cur: Array<{ color: string; pos: number; trans: number }>) => Array<{ color: string; pos: number; trans: number }>): void {
+      setPen(pen.id, { gradient: mutate(currentGradient()) });
+    }
+
+    /** 渲染每个断点一行：颜色 + 位置 + 过渡长度（末断点无过渡）+ 删除 */
+    function renderGrad(): void {
+      const g = currentGradient();
+      gradSlots.textContent = g.map((s) => s.color).join(' ');
+      gradOpts.innerHTML = '';
+      gradOpts.classList.toggle('show', g.length > 1);
+      gradAdd.disabled = g.length >= 4;
+      gradAdd.textContent = g.length >= 4 ? '4' : '＋';
+      g.forEach((stop, idx) => {
+        const row = document.createElement('div');
+        row.className = 'grad-stop';
+        const isLast = idx === g.length - 1;
+        row.innerHTML =
+          '<span class="grad-label">COLOUR ' + (idx + 1) + '</span>' +
+          '<input type="color" class="pen-grad-color" value="' + stop.color + '">' +
+          '<div class="grad-field"><span>POS</span><input type="range" class="pen-grad-pos" min="0" max="100" step="1" value="' + stop.pos + '"><b>' + stop.pos + '%</b></div>' +
+          '<div class="grad-field"' + (isLast ? ' style="display:none"' : '') + '><span>TRANS</span><input type="range" class="pen-grad-trans" min="0" max="100" step="1" value="' + stop.trans + '"><b>' + stop.trans + '%</b></div>' +
+          '<button class="pen-grad-del"' + (g.length <= 2 ? ' style="display:none"' : '') + '>X</button>';
+        row.querySelector<HTMLInputElement>('.pen-grad-color')!.addEventListener('input', (e) => {
+          const v = (e.target as HTMLInputElement).value;
+          updateGradient((cur) => cur.map((s, i) => (i === idx ? { ...s, color: v } : s)));
         });
-        gradSlots.appendChild(swatch);
+        row.querySelector<HTMLInputElement>('.pen-grad-pos')!.addEventListener('input', (e) => {
+          const v = Math.round(+(e.target as HTMLInputElement).value);
+          updateGradient((cur) => cur.map((s, i) => (i === idx ? { ...s, pos: v } : s)));
+          row.querySelector<HTMLElement>('.grad-field b')!.textContent = v + '%';
+        });
+        const transSlider = row.querySelector<HTMLInputElement>('.pen-grad-trans');
+        if (transSlider) {
+          transSlider.addEventListener('input', (e) => {
+            const v = Math.round(+(e.target as HTMLInputElement).value);
+            updateGradient((cur) => cur.map((s, i) => (i === idx ? { ...s, trans: v } : s)));
+            row.querySelectorAll<HTMLElement>('.grad-field b')[1].textContent = v + '%';
+          });
+        }
+        const del = row.querySelector<HTMLButtonElement>('.pen-grad-del');
+        if (del) {
+          del.addEventListener('click', () => {
+            updateGradient((cur) => cur.filter((_, i) => i !== idx));
+            renderGrad();
+          });
+        }
+        gradOpts.appendChild(row);
       });
-      gradAdd.disabled = g.length >= 3;
-      gradAdd.textContent = g.length >= 3 ? '3' : '＋';
     }
 
     gradCheck.addEventListener('change', () => {
-      if (gradCheck.checked) {
-        const cur = getState().pens.find((p) => p.id === pen.id)?.gradient ?? [];
-        const next = cur.length > 0 ? cur : [nextGradientColor(pen.color)];
-        setPen(pen.id, { gradient: next });
-      } else {
+      const cur = currentGradient();
+      if (gradCheck.checked && cur.length <= 1) {
+        setPen(pen.id, {
+          gradient:
+            cur.length === 0
+              ? [{ color: pen.color, pos: 30, trans: 10 }, { color: nextGradientColor(pen.color), pos: 60, trans: 10 }]
+              : [cur[0], { color: nextGradientColor(cur[0].color), pos: 100, trans: 10 }],
+        });
+      } else if (!gradCheck.checked) {
         setPen(pen.id, { gradient: [] });
       }
-      renderGradSlots();
+      renderGrad();
     });
     gradAdd.addEventListener('click', () => {
-      const cur = getState().pens.find((p) => p.id === pen.id)?.gradient ?? [];
-      if (cur.length >= 3) return;
-      const last = cur[cur.length - 1] ?? pen.color;
-      setPen(pen.id, { gradient: [...cur, nextGradientColor(last)] });
-      renderGradSlots();
+      const cur = currentGradient();
+      if (cur.length >= 4) return;
+      const last = cur[cur.length - 1];
+      updateGradient((c) => [...c, { color: nextGradientColor(last.color), pos: Math.min(100, last.pos + 30), trans: 10 }]);
+      renderGrad();
     });
-    gradStartSlider.addEventListener('input', () => {
-      const v = Math.round(+gradStartSlider.value);
-      setPen(pen.id, { gradientStart: v });
-      gradStartVal.textContent = v + '%';
-    });
-    gradLengthSlider.addEventListener('input', () => {
-      const v = Math.round(+gradLengthSlider.value);
-      setPen(pen.id, { gradientLength: v });
-      gradLengthVal.textContent = v + '%';
-    });
-    const gradLoopCheck = card.querySelector<HTMLInputElement>('.pen-grad-loop')!;
     gradLoopCheck.addEventListener('change', () => {
       setPen(pen.id, { gradientLoop: gradLoopCheck.checked });
     });
-    renderGradSlots();
+    renderGrad();
     card.querySelector<HTMLButtonElement>('.pen-del')!.addEventListener('click', () => {
       removePen(pen.id);
     });

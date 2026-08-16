@@ -166,6 +166,35 @@ input[type='color'] {
 }
 .add-pen:hover { color: var(--accent-2); border-color: var(--accent); }
 
+/* 渐变断点行 */
+.grad-stop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.grad-label { font-size: 11px; color: var(--muted); width: 26px; flex-shrink: 0; }
+.grad-field { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; }
+.grad-field span { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.grad-field input[type='range'] { flex: 1; min-width: 0; }
+.grad-field b { font-size: 11px; color: var(--text); width: 30px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.pen-grad-color { width: 26px !important; height: 22px !important; padding: 1px; flex-shrink: 0; }
+.pen-grad-del {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 11px;
+  flex-shrink: 0;
+  font-family: inherit;
+  line-height: 1;
+}
+.pen-grad-del:hover { color: #fff; border-color: var(--danger); background: rgba(229, 72, 77, 0.15); }
+
 /* 下拉选择 */
 .size-select {
   background: var(--panel-2);

@@ -18,13 +18,11 @@ export function serializeState(s: AppState): string {
   p.set('mode', s.mode);
   for (const pen of s.pens) {
     const parts = [pen.hole, pen.color.replace('#', '').toLowerCase(), pen.width];
-    if (pen.gradient.length > 0) {
-      // 渐变起点/长度/循环非默认时用新格式（start,length[,loop] 置于色前），否则旧格式（纯色段）
-      if (pen.gradientStart !== 0 || pen.gradientLength !== 100 || pen.gradientLoop) {
-        parts.push(String(pen.gradientStart), String(pen.gradientLength));
-        if (pen.gradientLoop) parts.push('1');
-      }
-      for (const c of pen.gradient.slice(0, 3)) parts.push(c.replace('#', '').toLowerCase());
+    if (pen.gradient.length > 1) {
+      // 渐变 stops：pos:color:trans 用 ~ 分隔（第 4 段）；末尾附加 loop 标志（第 5 段）
+      const stops = pen.gradient.map((g) => g.pos + ':' + g.color.replace('#', '').toLowerCase() + ':' + g.trans).join('~');
+      parts.push(stops);
+      if (pen.gradientLoop) parts.push('1');
     }
     p.append('pen', parts.join(','));
   }
@@ -78,8 +76,8 @@ export function parseState(search: string): UrlPatch {
 
 function parsePen(raw: string): Omit<Pen, 'id'> | null {
   const parts = raw.split(',');
-  // 3 段单色；4-6 段旧渐变格式（全为颜色）；7-8 段新格式（start,length,颜色...）
-  if (parts.length < 3 || parts.length > 8) return null;
+  // 3 段单色；≥4 段：第 4 段含 ':' → 渐变 stops；可选第 5 段 '1'/'0' = loop
+  if (parts.length < 3 || parts.length > 5) return null;
   const hole = Number(parts[0]);
   const colorRaw = parts[1];
   const width = Number(parts[2]);
@@ -87,34 +85,29 @@ function parsePen(raw: string): Omit<Pen, 'id'> | null {
   if (!/^[0-9a-fA-F]{6}$/.test(colorRaw)) return null;
   if (!Number.isFinite(width) || width < 0.5 || width > 8) return null;
 
-  let gradientStart = 0;
-  let gradientLength = 100;
-  let gradientLoop = false;
-  let colorParts: string[] = parts.slice(3);
-  // 新格式（6-9 段）：hole,color,width,start,length[,loop],color2[,color3[,color4]]
-  // 判定：第 4、5 段均为 0-100 数字（旧格式该位置是 hex 颜色，非数字）
-  const isNum = (v: string) => /^\d+(\.\d+)?$/.test(v);
-  if (parts.length >= 6 && isNum(parts[3]) && isNum(parts[4])) {
-    const s = Number(parts[3]);
-    const l = Number(parts[4]);
-    if (s < 0 || s > 100 || l < 0 || l > 100) return null;
-    gradientStart = s;
-    gradientLength = l;
-    // 第 6 段为 '0'/'1' → 循环标志（颜色从第 7 段开始）；否则为颜色
-    if (parts.length >= 7 && (parts[5] === '0' || parts[5] === '1')) {
-      gradientLoop = parts[5] === '1';
-      colorParts = parts.slice(6);
-    } else {
-      colorParts = parts.slice(5);
+  const pen: Omit<Pen, 'id'> = { hole, color: '#' + colorRaw.toLowerCase(), gradient: [], gradientLoop: false, width };
+  if (parts.length >= 4 && parts[3].includes(':')) {
+    // 渐变 stops：pos:color:trans~pos:color:trans...
+    const output: Array<{ color: string; pos: number; trans: number }> = [];
+    for (const s of parts[3].split('~')) {
+      const seg = s.split(':');
+      if (seg.length !== 3) return null;
+      const pos = Number(seg[0]);
+      const color = seg[1];
+      const trans = Number(seg[2]);
+      if (!Number.isFinite(pos) || pos < 0 || pos > 100) return null;
+      if (!/^[0-9a-fA-F]{6}$/.test(color)) return null;
+      if (!Number.isFinite(trans) || trans < 0 || trans > 100) return null;
+      output.push({ pos, color: '#' + color.toLowerCase(), trans });
     }
+    if (output.length < 2 || output.length > 4) return null;
+    pen.gradient = output;
   }
-  if (colorParts.length > 3) return null; // 附加色最多 3 个
-  const gradient: string[] = [];
-  for (const c of colorParts) {
-    if (!/^[0-9a-fA-F]{6}$/.test(c)) return null;
-    gradient.push('#' + c.toLowerCase());
+  if (parts.length === 5) {
+    if (parts[4] !== '0' && parts[4] !== '1') return null;
+    pen.gradientLoop = parts[4] === '1';
   }
-  return { hole, color: '#' + colorRaw.toLowerCase(), gradient, gradientStart, gradientLength, gradientLoop, width };
+  return pen;
 }
 
 /** 页面加载时应用 URL 参数（须在 buildPanel 之前调用） */

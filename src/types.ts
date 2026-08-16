@@ -1,14 +1,19 @@
 export type DrawingMode = 'inside' | 'outside';
 
+/** 渐变中的一个颜色断点：颜色停在 position 处，末尾 transition 长度内过渡到下一个颜色 */
+export interface GradientStop {
+  color: string;
+  pos: number; // 该颜色区间结束位置（% 曲线长度，0-100）
+  trans: number; // 该区间末尾过渡长度（% 曲线长度，0-100；最后一段无过渡）
+}
+
 /** 一支笔：孔洞位置（占滚动齿轮半径百分比）+ 颜色 + 粗细 */
 export interface Pen {
   id: number;
   hole: number; // 0-100, 百分比（真实 Spirograph 孔洞都在齿轮盘内，d ≤ r）
-  color: string; // 起始颜色
-  gradient: string[]; // 渐变附加色（0-3 个；总色数 1-4，沿绘制路径依次渐变；空数组 = 单色）
-  gradientStart: number; // 渐变起点（% 曲线进度，画到此处才开始变色）
-  gradientLength: number; // 渐变长度（% 曲线进度，从起点开始多长完成渐变）
-  gradientLoop: boolean; // 循环渐变：完成一轮渐变后回到首色继续（1/2/3/4/1/2/3/4...）
+  color: string; // 起始颜色（无渐变时的单色）
+  gradient: GradientStop[]; // 渐变断点（空 = 单色；≥2 个 = 分段渐变）
+  gradientLoop: boolean; // 循环渐变：整轮断点周期循环
   width: number; // 屏幕像素
 }
 

@@ -2,45 +2,46 @@ import { describe, it, expect } from 'vitest';
 import { computeGearPose, computeSteps, gradientColorAt, lerpColor } from '../render/renderer';
 import { sampleCurve } from '../math/curve';
 
-describe('渐变颜色插值', () => {
+describe('渐变颜色插值（定位断点）', () => {
+  // 用户例子：0-10 纯色1，10-15 色1→色2，15-25 纯色2，25-30 色2→色3，30-40 纯色3，40+ 纯色3
+  const stops = [
+    { color: '#ff0000', pos: 15, trans: 5 },
+    { color: '#00ff00', pos: 30, trans: 5 },
+    { color: '#0000ff', pos: 40, trans: 0 },
+  ];
+
   it('lerpColor 线性插值', () => {
     expect(lerpColor('#ff0000', '#0000ff', 0)).toBe('rgb(255,0,0)');
     expect(lerpColor('#ff0000', '#0000ff', 1)).toBe('rgb(0,0,255)');
     expect(lerpColor('#ff0000', '#0000ff', 0.5)).toBe('rgb(128,0,128)');
   });
 
-  it('gradientColorAt 多色渐变', () => {
-    const colors = ['#ff0000', '#00ff00', '#0000ff'];
-    expect(gradientColorAt(colors, 0)).toBe('rgb(255,0,0)');
-    expect(gradientColorAt(colors, 0.5)).toBe('rgb(0,255,0)');
-    expect(gradientColorAt(colors, 1)).toBe('rgb(0,0,255)');
-    expect(gradientColorAt(colors, 0.25)).toBe('rgb(128,128,0)');
+  it('纯色区保持该断点颜色', () => {
+    expect(gradientColorAt(stops, 0.02)).toBe('#ff0000'); // 2% 纯色1
+    expect(gradientColorAt(stops, 0.1)).toBe('#ff0000'); // 10% 过渡起点仍纯色1
+    expect(gradientColorAt(stops, 0.2)).toBe('#00ff00'); // 20% 纯色2
+    expect(gradientColorAt(stops, 0.25)).toBe('#00ff00'); // 25% 过渡起点仍纯色2
+    expect(gradientColorAt(stops, 0.35)).toBe('#0000ff'); // 35% 纯色3
+    expect(gradientColorAt(stops, 0.9)).toBe('#0000ff'); // 90% 超过末断点 → 纯色3
   });
 
-  it('gradientColorAt 循环渐变：完成一轮回到首色（1/2/3/4/1/2/3/4...）', () => {
-    const colors = ['#ff0000', '#00ff00', '#0000ff'];
-    // length=0.5：每 0.5 完成一轮（1→2→3），然后回到首色循环
-    expect(gradientColorAt(colors, 0.2, 0, 0.5, true)).toBe('rgb(51,204,0)'); // u=0.4
-    expect(gradientColorAt(colors, 0.5, 0, 0.5, true)).toBe('rgb(255,0,0)'); // 一轮完成 → 循环回首色（u=0）
-    expect(gradientColorAt(colors, 0.6, 0, 0.5, true)).toBe('rgb(153,102,0)'); // 第二轮 u=0.2 → seg=0.4
-    expect(gradientColorAt(colors, 0.75, 0, 0.5, true)).toBe('rgb(0,255,0)'); // 第二轮 u=0.5 → seg=1 → 色2
-    expect(gradientColorAt(colors, 0.99, 0, 0.5, true)).toBe('rgb(0,10,245)'); // 第二轮 u=0.98
-    // 循环 + 起点：起点前纯首色，起点后循环
-    expect(gradientColorAt(colors, 0.2, 0.3, 0.5, true)).toBe('#ff0000'); // t < start
-    expect(gradientColorAt(colors, 0.3, 0.3, 0.5, true)).toBe('rgb(255,0,0)'); // 起点 u=0
-    expect(gradientColorAt(colors, 0.55, 0.3, 0.5, true)).toBe('rgb(0,255,0)'); // 起点+0.25 → u=0.5 → 色2
-    // 与不循环对比：t > start+length 后保持末色
-    expect(gradientColorAt(colors, 0.9, 0.3, 0.5, false)).toBe('#0000ff');
+  it('过渡区线性插值到下一色', () => {
+    expect(gradientColorAt(stops, 0.125)).toBe('rgb(128,128,0)'); // 12.5% 色1→色2 中点
+    expect(gradientColorAt(stops, 0.15)).toBe('rgb(0,255,0)'); // 15% 过渡终点 = 色2
+    expect(gradientColorAt(stops, 0.28)).toBe('rgb(0,102,153)'); // 28% 色2→色3 (u=0.6)
+    expect(gradientColorAt(stops, 0.3)).toBe('rgb(0,0,255)'); // 30% = 色3
   });
 
-  it('gradientColorAt 起点/长度：前段纯首色、中段渐变、后段纯末色', () => {
-    const colors = ['#ff0000', '#0000ff'];
-    // t < start 返回原始首色；t > start+length 返回原始末色；之间返回插值 rgb
-    expect(gradientColorAt(colors, 0, 0.3, 0.4)).toBe('#ff0000');
-    expect(gradientColorAt(colors, 0.3, 0.3, 0.4)).toBe('rgb(255,0,0)'); // 渐变起点
-    expect(gradientColorAt(colors, 0.5, 0.3, 0.4)).toBe('rgb(128,0,128)'); // 渐变中点
-    expect(gradientColorAt(colors, 0.7, 0.3, 0.4)).toBe('rgb(0,0,255)'); // 渐变终点
-    expect(gradientColorAt(colors, 0.9, 0.3, 0.4)).toBe('#0000ff');
+  it('循环：末断点位置为周期，超过回首色', () => {
+    expect(gradientColorAt(stops, 0.02, true)).toBe('#ff0000');
+    expect(gradientColorAt(stops, 0.5, true)).toBe('#ff0000'); // t=50 → p=10 → 过渡起点
+    expect(gradientColorAt(stops, 0.6, true)).toBe('#00ff00'); // t=60 → p=20 → 纯色2
+    expect(gradientColorAt(stops, 0.9, true)).toBe('#ff0000'); // t=90 → p=10 → 色1区域
+  });
+
+  it('单断点 = 单色；空 = 黑', () => {
+    expect(gradientColorAt([{ color: '#123456', pos: 100, trans: 0 }], 0.5)).toBe('#123456');
+    expect(gradientColorAt([], 0.5)).toBe('#000000');
   });
 });
 

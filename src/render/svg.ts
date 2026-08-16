@@ -19,17 +19,14 @@ export function buildSvg(items: RenderItem[], background: string, sizePx = 2048)
   for (const item of items) {
     const { points, count } = item.curve;
     const w = strokeWidth(item);
-    if (item.pen.gradient.length > 0) {
-      // 渐变：逐段 path，每段一个插值色（沿绘制路径平滑过渡）
-      const colors = [item.pen.color, ...item.pen.gradient];
-      const start = item.pen.gradientStart / 100;
-      const length = item.pen.gradientLength / 100;
+    if (item.pen.gradient.length > 1) {
+      // 渐变：逐段 path，每段一个定位插值色（纯色区/过渡区）
       const loop = item.pen.gradientLoop;
       const segLen = Math.max(1, Math.floor(count / GRADIENT_SEGMENTS));
       for (let seg = 0; seg < count; seg += segLen) {
         const end = Math.min(count, seg + segLen);
         const prog = (seg + (end - seg) / 2) / count;
-        const color = gradientColorAt(colors, prog, start, length, loop);
+        const color = gradientColorAt(item.pen.gradient, prog, loop);
         let d = '';
         for (let j = seg; j < end; j++) {
           const [sx, sy] = applySvgTransform(t, points[2 * j], points[2 * j + 1]);
@@ -99,11 +96,8 @@ export function exportPng(items: RenderItem[], background: string, sizePx = 2048
   for (const item of items) {
     const { points, count } = item.curve;
     const w = item.pen.width * (sizePx / 1000);
-    if (item.pen.gradient.length > 0) {
-      strokeGradientCurve(
-        ctx, points, count, [item.pen.color, ...item.pen.gradient], w, t, GRADIENT_SEGMENTS,
-        item.pen.gradientStart / 100, item.pen.gradientLength / 100, item.pen.gradientLoop,
-      );
+    if (item.pen.gradient.length > 1) {
+      strokeGradientCurve(ctx, points, count, item.pen.gradient, w, t, GRADIENT_SEGMENTS, item.pen.gradientLoop);
       continue;
     }
     ctx.strokeStyle = item.pen.color;
