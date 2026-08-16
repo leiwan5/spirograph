@@ -1,6 +1,6 @@
 import './ui/styles.css';
 import { buildPanel } from './ui/controls';
-import { getState, subscribe } from './state/store';
+import { DEFAULT_STATE, getState, subscribe } from './state/store';
 import { sampleCurve } from './math/curve';
 import {
   clearCanvas,
@@ -33,18 +33,20 @@ let cacheItems: RenderItem[] = [];
 
 function buildItems(): RenderItem[] {
   const s = getState();
+  // 防御：pens 意外为空时回退默认笔，保证曲线永远可生成
+  const pens = s.pens.length > 0 ? s.pens : DEFAULT_STATE.pens;
   const key =
     s.mode + '|' + s.ringTeeth + '|' + s.rollingTeeth + '|' +
-    s.pens.map((p) => p.id + ':' + p.hole).join(',');
+    pens.map((p) => p.id + ':' + p.hole).join(',');
   if (key !== cacheKey) {
-    cacheItems = s.pens.map((pen) => ({
+    cacheItems = pens.map((pen) => ({
       curve: sampleCurve(s.ringTeeth, s.rollingTeeth, s.mode, pen.hole),
       pen: { ...pen },
     }));
     cacheKey = key;
   } else {
     // 颜色/粗细可能已变：合并最新笔属性，曲线复用
-    const byId = new Map(s.pens.map((p) => [p.id, p] as const));
+    const byId = new Map(pens.map((p) => [p.id, p] as const));
     cacheItems = cacheItems.map((item) => ({
       curve: item.curve,
       pen: byId.get(item.pen.id) ?? item.pen,
@@ -85,7 +87,8 @@ function renderStatic(): void {
   };
   if (s.showGears) {
     // 齿轮画在曲线之下：静态显示初始位姿
-    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, 0, s.pens, 0);
+    const pens = s.pens.length > 0 ? s.pens : DEFAULT_STATE.pens;
+    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, 0, pens, 0);
   }
   renderFull(ctx, items, t);
 }
@@ -100,10 +103,20 @@ function renderProgress(progress: number): void {
   const { width, height } = canvasSize();
   const ctx = clearCanvas(canvas, width, height, s.background);
   const { items, t } = computeTransformFor(width, height);
+  if (items.length === 0) {
+    // 防御：无笔可画时直接渲染静态图，避免空数组越界
+    renderStatic();
+    return;
+  }
   if (s.showGears) {
     // 多笔分步：先画齿轮（当前笔的位姿），再画曲线
     const { penIndex, penProgress } = computeSteps(items.length, progress);
-    const tParam = progressToT(penProgress, items[penIndex].curve.periodTurns);
+    const curve = items[penIndex]?.curve;
+    if (!curve) {
+      renderStatic();
+      return;
+    }
+    const tParam = progressToT(penProgress, curve.periodTurns);
     drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, tParam, s.pens, penIndex);
     renderSteps(ctx, items, t, progress);
   } else {

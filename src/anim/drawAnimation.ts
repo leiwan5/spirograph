@@ -66,7 +66,15 @@ export class DrawAnimation {
     this.lastTs = ts;
     this.elapsed += dt * this.speed;
     const progress = Math.min(1, this.elapsed / this.baseDurationMs);
-    this.tick(progress);
+    try {
+      this.tick(progress);
+    } catch (err) {
+      // 渲染异常：停止动画并回退静态图，错误可见便于诊断
+      console.error('[Spirograph] 动画渲染异常，已停止：', err);
+      this.stop();
+      this.onDone();
+      return;
+    }
     if (progress >= 1) {
       this.stop();
       this.onDone();

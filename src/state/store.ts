@@ -37,8 +37,9 @@ export function setPen(id: number, patch: Partial<Pen>): void {
   emit();
 }
 
-/** 整体替换笔列表（预设/随机用），自动分配新 id */
+/** 整体替换笔列表（预设/随机用），自动分配新 id；空列表会被拒绝（保证至少一支笔） */
 export function setPens(pens: Array<Omit<Pen, 'id'>>): void {
+  if (pens.length === 0) return;
   state = { ...state, pens: pens.map((p) => ({ ...p, id: nextPenId++ })) };
   emit();
 }
