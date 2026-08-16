@@ -46,6 +46,31 @@ npm run build      # 类型检查 + 生产构建 → dist/
 - 外切（epitrochoid）：x=(R+r)cos t − d·cos((R+r)/r·t)，y=(R+r)sin t − d·sin((R+r)/r·t)
 - 齿数同模数，半径与齿数成正比；闭合周期 T=2π·q（q = 滚动齿数/gcd）
 
+## 图片端点（format=png/svg）
+
+URL 带 `format=png` 或 `format=svg` 时直接返回图片（可被 `<img>` 引用、右键保存）：
+
+```
+http://localhost:5273/api/image?ring=72&rolling=30&pen=40,e63946,2.5&format=png&size=2048
+http://localhost:5273/?ring=72&rolling=30&format=svg
+```
+
+- 参数与主应用 URL 一致（ring/rolling/mode/pen/bg/scale/speed 等），额外支持 `size`（64–4096，默认 1000）
+- 开发环境：Vite 中间件（`/?format=` 与 `/api/image` 均可）
+- 生产部署：Serverless 函数（Vercel `api/image.ts` / Cloudflare Pages `functions/api/image.ts`），PNG 编码为纯 JS（pako），无原生依赖
+
+### 部署到 Vercel
+
+1. 推送仓库到 GitHub，在 Vercel 导入项目（Framework: Vite）
+2. `api/image.ts` 自动成为 `/api/image` 端点，静态站点照常托管
+3. 图片 URL：`https://你的域名/api/image?...&format=png`
+
+### 部署到 Cloudflare Pages
+
+1. 构建命令 `npm run build`，输出目录 `dist`
+2. `functions/` 目录自动成为 Pages Functions，`/api/image` 端点生效
+3. 图片 URL：`https://你的域名/api/image?...&format=png`
+
 ## 目录结构
 
 ```
