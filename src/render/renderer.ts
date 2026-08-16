@@ -121,7 +121,7 @@ export function renderPartial(
     const drawn = Math.max(1, Math.floor(progress * count));
     if (item.pen.gradient.length > 0) {
       strokeGradientCurve(
-        ctx, points, drawn, [item.pen.color, ...item.pen.gradient], item.pen.width, transform, 48,
+        ctx, points, drawn, [item.pen.color, ...item.pen.gradient], item.pen.width, transform, GRADIENT_SEGMENTS,
         item.pen.gradientStart / 100, item.pen.gradientLength / 100, item.pen.gradientLoop,
       );
       continue;
@@ -145,6 +145,9 @@ export function gearHoleRadius(transform: Transform, rollingTeeth: number): numb
 }
 
 // ==================== 多色渐变 ====================
+
+/** 渐变分段数：屏幕渲染、动画、导出、图片端点统一使用，保证各处颜色一致 */
+export const GRADIENT_SEGMENTS = 128;
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
@@ -204,7 +207,7 @@ export function strokeGradientCurve(
   colors: string[],
   lineWidth: number,
   transform: Transform,
-  segments = 96,
+  segments = GRADIENT_SEGMENTS,
   start = 0,
   length = 1,
   loop = false,
@@ -506,7 +509,7 @@ export function renderSteps(
     const drawn = i < penIndex ? count : Math.max(1, Math.floor(penProgress * count));
     if (items[i].pen.gradient.length > 0) {
       strokeGradientCurve(
-        ctx, points, drawn, [items[i].pen.color, ...items[i].pen.gradient], items[i].pen.width, transform, 48,
+        ctx, points, drawn, [items[i].pen.color, ...items[i].pen.gradient], items[i].pen.width, transform, GRADIENT_SEGMENTS,
         items[i].pen.gradientStart / 100, items[i].pen.gradientLength / 100, items[i].pen.gradientLoop,
       );
       continue;
@@ -548,7 +551,7 @@ export function renderToCanvasAt(
     const w = item.pen.width * (sizePx / 1000); // 导出尺寸按比例放大笔宽（以 1000px 为基准）
     if (item.pen.gradient.length > 0) {
       strokeGradientCurve(
-        ctx, points, count, [item.pen.color, ...item.pen.gradient], w, t, 120,
+        ctx, points, count, [item.pen.color, ...item.pen.gradient], w, t, GRADIENT_SEGMENTS,
         item.pen.gradientStart / 100, item.pen.gradientLength / 100, item.pen.gradientLoop,
       );
       continue;

@@ -3,8 +3,7 @@ import type { AppState } from '../types';
 import { DEFAULT_STATE } from '../state/store';
 import { parseState } from '../state/url';
 import { sampleCurve } from '../math/curve';
-import { computeBounds, computeFixedBounds, computeTransform } from '../render/renderer';
-import { gradientColorAt } from '../render/renderer';
+import { computeBounds, computeFixedBounds, computeTransform, GRADIENT_SEGMENTS } from '../render/renderer';
 import { buildSvg } from '../render/svg';
 
 export interface ImageParams {
@@ -74,7 +73,7 @@ export function generatePng(search: string): Uint8Array {
     rgba[i + 2] = bg[2];
     rgba[i + 3] = 255;
   }
-  // 逐笔绘制曲线（后画覆盖先画，与前端一致；渐变笔逐段插值色）
+  // 逐笔绘制曲线（后画覆盖先画，与前端一致；渐变笔按 GRADIENT_SEGMENTS 分段着色，与导出 PNG 颜色一致）
   for (const item of items) {
     const w = item.pen.width * (size / 1000); // 笔宽按导出基准放大
     const { points, count } = item.curve;
@@ -83,18 +82,55 @@ export function generatePng(search: string): Uint8Array {
     const gs = item.pen.gradientStart / 100;
     const gl = item.pen.gradientLength / 100;
     const loop = item.pen.gradientLoop;
+    const segLen = Math.max(1, Math.floor(Math.max(1, count - 1) / GRADIENT_SEGMENTS));
     for (let i = 0; i < count - 1; i++) {
       const x0 = points[2 * i] * t.scale + t.offsetX;
       const y0 = points[2 * i + 1] * t.scale + t.offsetY;
       const x1 = points[2 * i + 2] * t.scale + t.offsetX;
       const y1 = points[2 * i + 3] * t.scale + t.offsetY;
       const color = hasGradient
-        ? hexToRgb(gradientColorAt(colors, i / Math.max(1, count - 1), gs, gl, loop))
+        ? gradientRgb(colors, (Math.floor(i / segLen) * segLen + segLen / 2) / Math.max(1, count - 1), gs, gl, loop)
         : hexToRgb(item.pen.color);
       plotLine(rgba, size, x0, y0, x1, y1, color, w);
     }
   }
   return encodePng(size, size, rgba);
+}
+
+/**
+ * 多色渐变 → RGB 数组（与前端 gradientColorAt 同逻辑，直接数值插值，
+ * 避免 rgb() 字符串经 hexToRgb 解析产生 NaN）。
+ */
+function gradientRgb(
+  colors: string[],
+  t: number,
+  start: number,
+  length: number,
+  loop: boolean,
+): [number, number, number] {
+  const n = colors.length;
+  if (n <= 0) return [0, 0, 0];
+  if (n === 1) return hexToRgb(colors[0]);
+  if (t < start) return hexToRgb(colors[0]);
+  let u: number;
+  if (loop) {
+    const span = Math.max(length, 1e-6);
+    u = ((t - start) % span) / span;
+  } else {
+    if (t > start + length) return hexToRgb(colors[n - 1]);
+    u = length <= 0 ? 1 : (t - start) / length;
+  }
+  u = Math.min(1, Math.max(0, u));
+  const seg = u * (n - 1);
+  const idx = Math.min(n - 2, Math.floor(seg));
+  const a = hexToRgb(colors[idx]);
+  const b = hexToRgb(colors[idx + 1]);
+  const k = seg - idx;
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * k),
+    Math.round(a[1] + (b[1] - a[1]) * k),
+    Math.round(a[2] + (b[2] - a[2]) * k),
+  ];
 }
 
 function hexToRgb(hex: string): [number, number, number] {

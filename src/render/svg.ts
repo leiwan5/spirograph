@@ -1,6 +1,6 @@
 import type { Bounds, Transform } from '../types';
 import type { RenderItem } from './renderer';
-import { computeBounds, computeTransform, gradientColorAt, strokeGradientCurve } from './renderer';
+import { computeBounds, computeTransform, gradientColorAt, strokeGradientCurve, GRADIENT_SEGMENTS } from './renderer';
 
 /** 每支笔导出点数上限（超出抽样） */
 const MAX_EXPORT_POINTS_PER_PEN = 12_000;
@@ -25,7 +25,7 @@ export function buildSvg(items: RenderItem[], background: string, sizePx = 2048)
       const start = item.pen.gradientStart / 100;
       const length = item.pen.gradientLength / 100;
       const loop = item.pen.gradientLoop;
-      const segLen = Math.max(1, Math.floor(count / 120));
+      const segLen = Math.max(1, Math.floor(count / GRADIENT_SEGMENTS));
       for (let seg = 0; seg < count; seg += segLen) {
         const end = Math.min(count, seg + segLen);
         const prog = (seg + (end - seg) / 2) / count;
@@ -101,7 +101,7 @@ export function exportPng(items: RenderItem[], background: string, sizePx = 2048
     const w = item.pen.width * (sizePx / 1000);
     if (item.pen.gradient.length > 0) {
       strokeGradientCurve(
-        ctx, points, count, [item.pen.color, ...item.pen.gradient], w, t, 120,
+        ctx, points, count, [item.pen.color, ...item.pen.gradient], w, t, GRADIENT_SEGMENTS,
         item.pen.gradientStart / 100, item.pen.gradientLength / 100, item.pen.gradientLoop,
       );
       continue;
