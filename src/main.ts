@@ -189,8 +189,8 @@ subscribe(() => {
 
 panel.onPlayRequest(togglePlay);
 panel.onRandomRequest(() => randomSettings());
-panel.onExportPng(() => exportPng(buildItems(), getState().background));
-panel.onExportSvg(() => exportSvg(buildItems(), getState().background));
+panel.onExportPng((size) => exportPng(buildItems(), getState().background, size));
+panel.onExportSvg((size) => exportSvg(buildItems(), getState().background, size));
 
 // 任何状态变化（含速度）→ 防抖同步地址栏
 subscribe(syncUrl);

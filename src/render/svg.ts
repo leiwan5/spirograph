@@ -61,8 +61,8 @@ export function downloadBlob(blob: Blob, filename: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
-export function exportSvg(items: RenderItem[], background: string, filename = 'spirograph.svg'): void {
-  downloadBlob(new Blob([buildSvg(items, background)], { type: 'image/svg+xml;charset=utf-8' }), filename);
+export function exportSvg(items: RenderItem[], background: string, sizePx = 2048, filename = 'spirograph.svg'): void {
+  downloadBlob(new Blob([buildSvg(items, background, sizePx)], { type: 'image/svg+xml;charset=utf-8' }), filename);
 }
 
 export function exportPng(items: RenderItem[], background: string, sizePx = 2048, filename = 'spirograph.png'): void {

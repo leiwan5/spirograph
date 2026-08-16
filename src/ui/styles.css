@@ -166,6 +166,18 @@ input[type='color'] {
 }
 .add-pen:hover { color: var(--accent-2); border-color: var(--accent); }
 
+/* 下拉选择 */
+.size-select {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
 /* 复选框行 */
 .check-row {
   display: flex;

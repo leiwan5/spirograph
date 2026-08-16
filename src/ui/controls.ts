@@ -13,8 +13,8 @@ export interface PanelApi {
   setPlayingUI(playing: boolean, paused?: boolean): void;
   onPlayRequest(cb: () => void): void;
   onRandomRequest(cb: () => void): void;
-  onExportPng(cb: () => void): void;
-  onExportSvg(cb: () => void): void;
+  onExportPng(cb: (size: number) => void): void;
+  onExportSvg(cb: (size: number) => void): void;
 }
 
 /** 构建左侧控件面板 + 右侧画布容器，返回面板 API */
@@ -73,6 +73,17 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       <label class="check-row"><input type="checkbox" id="show-gears"><span>显示齿轮（多笔分步绘制）</span></label>
     </section>
 
+    <section>
+      <div class="row-label"><span>图片尺寸</span>
+        <select id="img-size" class="size-select">
+          <option value="512">512×512</option>
+          <option value="1000">1000×1000</option>
+          <option value="2048" selected>2048×2048</option>
+          <option value="4096">4096×4096</option>
+        </select>
+      </div>
+    </section>
+
     <section class="actions">
       <button class="btn btn-primary" id="play">▶ 播放绘制</button>
       <button class="btn btn-ghost" id="random">🎲 随机灵感</button>
@@ -111,6 +122,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   const exportPngBtn = $<HTMLButtonElement>('export-png');
   const exportSvgBtn = $<HTMLButtonElement>('export-svg');
   const copyLinkBtn = $<HTMLButtonElement>('copy-image-link');
+  const imgSizeSelect = $<HTMLSelectElement>('img-size');
   const infoRatio = $('info-ratio');
   const infoPetals = $('info-petals');
   const infoTurns = $('info-turns');
@@ -119,8 +131,8 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   // ---- 回调（由 main 注入）----
   let onPlay: () => void = () => {};
   let onRandom: () => void = () => {};
-  let onPng: () => void = () => {};
-  let onSvg: () => void = () => {};
+  let onPng: (size: number) => void = () => {};
+  let onSvg: (size: number) => void = () => {};
 
   // ---- 快捷 chips ----
   const ringChips: HTMLButtonElement[] = [];
@@ -265,14 +277,14 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   // ---- 操作按钮 ----
   playBtn.addEventListener('click', () => onPlay());
   randomBtn.addEventListener('click', () => onRandom());
-  exportPngBtn.addEventListener('click', () => onPng());
-  exportSvgBtn.addEventListener('click', () => onSvg());
+  exportPngBtn.addEventListener('click', () => onPng(Number(imgSizeSelect.value)));
+  exportSvgBtn.addEventListener('click', () => onSvg(Number(imgSizeSelect.value)));
 
   // 复制当前参数的图片链接（/api/image?...&format=png）
   copyLinkBtn.addEventListener('click', async () => {
     const qs = serializeState(getState());
     const dir = location.pathname.replace(/[^/]*$/, '');
-    const url = location.origin + dir + 'api/image?' + qs + '&format=png';
+    const url = location.origin + dir + 'api/image?' + qs + '&format=png&size=' + imgSizeSelect.value;
     try {
       await navigator.clipboard.writeText(url);
     } catch {
@@ -346,7 +358,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     },
     onPlayRequest(cb: () => void) { onPlay = cb; },
     onRandomRequest(cb: () => void) { onRandom = cb; },
-    onExportPng(cb: () => void) { onPng = cb; },
-    onExportSvg(cb: () => void) { onSvg = cb; },
+    onExportPng(cb: (size: number) => void) { onPng = cb; },
+    onExportSvg(cb: (size: number) => void) { onSvg = cb; },
   };
 }
