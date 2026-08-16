@@ -103,6 +103,7 @@ export function randomSettings(): void {
       gradient: [],
       gradientStart: 0,
       gradientLength: 100,
+      gradientLoop: false,
       width: round1(1 + Math.random() * 3),
     });
   }

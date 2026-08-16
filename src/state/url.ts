@@ -19,9 +19,10 @@ export function serializeState(s: AppState): string {
   for (const pen of s.pens) {
     const parts = [pen.hole, pen.color.replace('#', '').toLowerCase(), pen.width];
     if (pen.gradient.length > 0) {
-      // 渐变起点/长度非默认时用新格式（start,length 置于色前），否则旧格式（纯色段）
-      if (pen.gradientStart !== 0 || pen.gradientLength !== 100) {
+      // 渐变起点/长度/循环非默认时用新格式（start,length[,loop] 置于色前），否则旧格式（纯色段）
+      if (pen.gradientStart !== 0 || pen.gradientLength !== 100 || pen.gradientLoop) {
         parts.push(String(pen.gradientStart), String(pen.gradientLength));
+        if (pen.gradientLoop) parts.push('1');
       }
       for (const c of pen.gradient.slice(0, 3)) parts.push(c.replace('#', '').toLowerCase());
     }
@@ -88,8 +89,9 @@ function parsePen(raw: string): Omit<Pen, 'id'> | null {
 
   let gradientStart = 0;
   let gradientLength = 100;
+  let gradientLoop = false;
   let colorParts: string[] = parts.slice(3);
-  // 新格式（6-8 段）：hole,color,width,start,length,color2[,color3[,color4]]
+  // 新格式（6-9 段）：hole,color,width,start,length[,loop],color2[,color3[,color4]]
   // 判定：第 4、5 段均为 0-100 数字（旧格式该位置是 hex 颜色，非数字）
   const isNum = (v: string) => /^\d+(\.\d+)?$/.test(v);
   if (parts.length >= 6 && isNum(parts[3]) && isNum(parts[4])) {
@@ -98,7 +100,13 @@ function parsePen(raw: string): Omit<Pen, 'id'> | null {
     if (s < 0 || s > 100 || l < 0 || l > 100) return null;
     gradientStart = s;
     gradientLength = l;
-    colorParts = parts.slice(5);
+    // 第 6 段为 '0'/'1' → 循环标志（颜色从第 7 段开始）；否则为颜色
+    if (parts.length >= 7 && (parts[5] === '0' || parts[5] === '1')) {
+      gradientLoop = parts[5] === '1';
+      colorParts = parts.slice(6);
+    } else {
+      colorParts = parts.slice(5);
+    }
   }
   if (colorParts.length > 3) return null; // 附加色最多 3 个
   const gradient: string[] = [];
@@ -106,7 +114,7 @@ function parsePen(raw: string): Omit<Pen, 'id'> | null {
     if (!/^[0-9a-fA-F]{6}$/.test(c)) return null;
     gradient.push('#' + c.toLowerCase());
   }
-  return { hole, color: '#' + colorRaw.toLowerCase(), gradient, gradientStart, gradientLength, width };
+  return { hole, color: '#' + colorRaw.toLowerCase(), gradient, gradientStart, gradientLength, gradientLoop, width };
 }
 
 /** 页面加载时应用 URL 参数（须在 buildPanel 之前调用） */

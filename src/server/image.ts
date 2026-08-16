@@ -82,13 +82,14 @@ export function generatePng(search: string): Uint8Array {
     const hasGradient = colors.length > 1;
     const gs = item.pen.gradientStart / 100;
     const gl = item.pen.gradientLength / 100;
+    const loop = item.pen.gradientLoop;
     for (let i = 0; i < count - 1; i++) {
       const x0 = points[2 * i] * t.scale + t.offsetX;
       const y0 = points[2 * i + 1] * t.scale + t.offsetY;
       const x1 = points[2 * i + 2] * t.scale + t.offsetX;
       const y1 = points[2 * i + 3] * t.scale + t.offsetY;
       const color = hasGradient
-        ? hexToRgb(gradientColorAt(colors, i / Math.max(1, count - 1), gs, gl))
+        ? hexToRgb(gradientColorAt(colors, i / Math.max(1, count - 1), gs, gl, loop))
         : hexToRgb(item.pen.color);
       plotLine(rgba, size, x0, y0, x1, y1, color, w);
     }

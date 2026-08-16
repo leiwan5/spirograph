@@ -172,7 +172,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     b.textContent = p.name;
     b.title = `${p.ring}齿环 × ${p.rolling}齿轮，${p.mode === 'inside' ? '内切' : '外切'}`;
     b.addEventListener('click', () => {
-      setPens(p.pens.map((pp) => ({ hole: pp.hole, color: pp.color, gradient: pp.gradient ?? [], gradientStart: 0, gradientLength: 100, width: pp.width })));
+      setPens(p.pens.map((pp) => ({ hole: pp.hole, color: pp.color, gradient: pp.gradient ?? [], gradientStart: 0, gradientLength: 100, gradientLoop: false, width: pp.width })));
       setState({ mode: p.mode, ringTeeth: p.ring, rollingTeeth: p.rolling });
     });
     presetChipsEl.appendChild(b);
@@ -265,6 +265,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
         <input type="range" class="pen-grad-start" min="0" max="100" step="1" value="${pen.gradientStart}">
         <div class="row-label"><span>渐变长度（多长完成渐变）</span><span class="val">${pen.gradientLength}%</span></div>
         <input type="range" class="pen-grad-length" min="0" max="100" step="1" value="${pen.gradientLength}">
+        <label class="check-row"><input type="checkbox" class="pen-grad-loop"${pen.gradientLoop ? ' checked' : ''}><span>循环渐变（1/2/3/4/1/2/3/4…）</span></label>
       </div>
     `;
     const holeSlider = card.querySelector<HTMLInputElement>('.pen-hole')!;
@@ -344,6 +345,10 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       const v = Math.round(+gradLengthSlider.value);
       setPen(pen.id, { gradientLength: v });
       gradLengthVal.textContent = v + '%';
+    });
+    const gradLoopCheck = card.querySelector<HTMLInputElement>('.pen-grad-loop')!;
+    gradLoopCheck.addEventListener('change', () => {
+      setPen(pen.id, { gradientLoop: gradLoopCheck.checked });
     });
     renderGradSlots();
     card.querySelector<HTMLButtonElement>('.pen-del')!.addEventListener('click', () => {

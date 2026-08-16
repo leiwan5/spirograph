@@ -87,7 +87,7 @@ export function renderFull(
     if (item.pen.gradient.length > 0) {
       strokeGradientCurve(
         ctx, points, count, [item.pen.color, ...item.pen.gradient], item.pen.width, transform, 96,
-        item.pen.gradientStart / 100, item.pen.gradientLength / 100,
+        item.pen.gradientStart / 100, item.pen.gradientLength / 100, item.pen.gradientLoop,
       );
       continue;
     }
@@ -122,7 +122,7 @@ export function renderPartial(
     if (item.pen.gradient.length > 0) {
       strokeGradientCurve(
         ctx, points, drawn, [item.pen.color, ...item.pen.gradient], item.pen.width, transform, 48,
-        item.pen.gradientStart / 100, item.pen.gradientLength / 100,
+        item.pen.gradientStart / 100, item.pen.gradientLength / 100, item.pen.gradientLoop,
       );
       continue;
     }
@@ -167,13 +167,27 @@ export function lerpColor(a: string, b: string, t: number): string {
  * 多色渐变：t ∈ [0,1] 映射到颜色序列（1-4 色）的线性插值。
  * start/length（0-1）：t < start 取首色，t > start+length 取末色，之间渐变过渡。
  */
-export function gradientColorAt(colors: string[], t: number, start = 0, length = 1): string {
+export function gradientColorAt(
+  colors: string[],
+  t: number,
+  start = 0,
+  length = 1,
+  loop = false,
+): string {
   const n = colors.length;
   if (n <= 0) return '#000000';
   if (n === 1) return colors[0];
   if (t < start) return colors[0];
-  if (t > start + length) return colors[n - 1];
-  const u = length <= 0 ? 1 : Math.min(1, Math.max(0, (t - start) / length));
+  let u: number;
+  if (loop) {
+    // 循环：每 length 完成一轮渐变后回到首色（1/2/3/4/1/2/3/4...）
+    const span = Math.max(length, 1e-6);
+    u = ((t - start) % span) / span;
+  } else {
+    if (t > start + length) return colors[n - 1];
+    u = length <= 0 ? 1 : (t - start) / length;
+  }
+  u = Math.min(1, Math.max(0, u));
   const seg = u * (n - 1);
   const idx = Math.min(n - 2, Math.floor(seg));
   return lerpColor(colors[idx], colors[idx + 1], seg - idx);
@@ -193,6 +207,7 @@ export function strokeGradientCurve(
   segments = 96,
   start = 0,
   length = 1,
+  loop = false,
 ): void {
   ctx.lineWidth = lineWidth;
   ctx.lineCap = 'round';
@@ -201,7 +216,7 @@ export function strokeGradientCurve(
   for (let seg = 0; seg < count; seg += segLen) {
     const end = Math.min(count, seg + segLen);
     const t = (seg + (end - seg) / 2) / count;
-    ctx.strokeStyle = gradientColorAt(colors, t, start, length);
+    ctx.strokeStyle = gradientColorAt(colors, t, start, length, loop);
     ctx.beginPath();
     for (let j = seg; j < end; j++) {
       const [sx, sy] = applyTransform(transform, points[2 * j], points[2 * j + 1]);
@@ -492,7 +507,7 @@ export function renderSteps(
     if (items[i].pen.gradient.length > 0) {
       strokeGradientCurve(
         ctx, points, drawn, [items[i].pen.color, ...items[i].pen.gradient], items[i].pen.width, transform, 48,
-        items[i].pen.gradientStart / 100, items[i].pen.gradientLength / 100,
+        items[i].pen.gradientStart / 100, items[i].pen.gradientLength / 100, items[i].pen.gradientLoop,
       );
       continue;
     }

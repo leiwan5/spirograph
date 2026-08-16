@@ -8,6 +8,7 @@ export interface Pen {
   gradient: string[]; // 渐变附加色（0-3 个；总色数 1-4，沿绘制路径依次渐变；空数组 = 单色）
   gradientStart: number; // 渐变起点（% 曲线进度，画到此处才开始变色）
   gradientLength: number; // 渐变长度（% 曲线进度，从起点开始多长完成渐变）
+  gradientLoop: boolean; // 循环渐变：完成一轮渐变后回到首色继续（1/2/3/4/1/2/3/4...）
   width: number; // 屏幕像素
 }
 

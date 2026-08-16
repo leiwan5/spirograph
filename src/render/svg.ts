@@ -24,11 +24,12 @@ export function buildSvg(items: RenderItem[], background: string, sizePx = 2048)
       const colors = [item.pen.color, ...item.pen.gradient];
       const start = item.pen.gradientStart / 100;
       const length = item.pen.gradientLength / 100;
+      const loop = item.pen.gradientLoop;
       const segLen = Math.max(1, Math.floor(count / 120));
       for (let seg = 0; seg < count; seg += segLen) {
         const end = Math.min(count, seg + segLen);
         const prog = (seg + (end - seg) / 2) / count;
-        const color = gradientColorAt(colors, prog, start, length);
+        const color = gradientColorAt(colors, prog, start, length, loop);
         let d = '';
         for (let j = seg; j < end; j++) {
           const [sx, sy] = applySvgTransform(t, points[2 * j], points[2 * j + 1]);
