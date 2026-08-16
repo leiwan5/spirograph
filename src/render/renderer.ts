@@ -153,8 +153,10 @@ export function computeSteps(penCount: number, totalProgress: number): { penInde
 }
 
 /**
- * 绘制齿轮系统（画在曲线之下）：
- * 环形齿轮（静止内齿圈）、滚动齿轮（沿环滚动 + 自转 + 齿）、笔孔点。
+ * 绘制齿轮系统（画在曲线之下），真实万花尺外观 + 淡色半透明：
+ * - 环形齿轮：平滑外缘 + 内侧一圈平顶小齿（内齿圈，静止）
+ * - 滚动齿轮：外齿圆盘（齿朝外），盘面有装饰孔圈与中心孔，随动画滚动/自转
+ * - 笔孔点：彩色小点（当前笔高亮白圈）
  */
 export function drawGears(
   ctx: CanvasRenderingContext2D,
@@ -171,60 +173,123 @@ export function drawGears(
   const r = rollingTeeth;
   const centerR = mode === 'inside' ? R - r : R + r;
   const pose = computeGearPose(R, r, mode, t);
-  const toothH = 3 / scale; // 齿深（3px）
-  const ringColor = 'rgba(110,125,150,0.5)';
-  const toothColor = 'rgba(90,105,130,0.85)';
+  const toothH = 7 / scale; // 齿深（7px）
   const PI2 = Math.PI * 2;
+  const fill = 'rgba(150,162,182,0.14)'; // 盘体淡色
+  const toothFill = 'rgba(118,132,152,0.42)'; // 齿（比盘体深，齿形清晰）
+  const stroke = 'rgba(104,119,140,0.7)'; // 轮廓/齿形描边
+  const strokeSoft = 'rgba(130,144,164,0.35)'; // 次要轮廓
+  const holeStroke = 'rgba(118,132,152,0.55)'; // 孔
 
   ctx.save();
   ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 1.4;
 
-  // ---- 环形齿轮：外圆 + 内齿（静止） ----
-  ctx.strokeStyle = ringColor;
-  ctx.lineWidth = 2;
+  // ================= 环形齿轮（内齿圈，静止） =================
+  const ringOuter = R * scale; // 外缘
+  const ringRoot = (R - toothH * 1.5) * scale; // 齿根圆（环内缘）
+  const ringTip = (R - toothH * 0.5) * scale; // 齿顶圆（齿朝内）
+  const ringStep = PI2 / ringTeeth;
+
+  // 环带淡色填充：外圆与内缘圆的同心环（nonzero 规则下反向路径构成环带，不会漫入环内）
   ctx.beginPath();
-  ctx.arc(offsetX, offsetY, R * scale, 0, PI2);
-  ctx.stroke();
-  ctx.strokeStyle = toothColor;
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
+  ctx.arc(offsetX, offsetY, ringOuter, 0, PI2);
+  ctx.arc(offsetX, offsetY, ringRoot, 0, PI2, true);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+
+  // 逐齿梯形（平顶齿）：fill + stroke，齿形清晰可见
   for (let i = 0; i < ringTeeth; i++) {
-    const a = (i / ringTeeth) * PI2;
-    ctx.moveTo(offsetX + (R - toothH) * scale * Math.cos(a), offsetY + (R - toothH) * scale * Math.sin(a));
-    ctx.lineTo(offsetX + R * scale * Math.cos(a), offsetY + R * scale * Math.sin(a));
+    const a = i * ringStep;
+    ctx.beginPath();
+    ctx.moveTo(offsetX + ringRoot * Math.cos(a + ringStep * 0.2), offsetY + ringRoot * Math.sin(a + ringStep * 0.2));
+    ctx.lineTo(offsetX + ringTip * Math.cos(a + ringStep * 0.35), offsetY + ringTip * Math.sin(a + ringStep * 0.35));
+    ctx.lineTo(offsetX + ringTip * Math.cos(a + ringStep * 0.65), offsetY + ringTip * Math.sin(a + ringStep * 0.65));
+    ctx.lineTo(offsetX + ringRoot * Math.cos(a + ringStep * 0.8), offsetY + ringRoot * Math.sin(a + ringStep * 0.8));
+    ctx.closePath();
+    ctx.fillStyle = toothFill;
+    ctx.fill();
+    ctx.strokeStyle = stroke;
+    ctx.stroke();
   }
+
+  // 外缘圆（平滑）
+  ctx.beginPath();
+  ctx.arc(offsetX, offsetY, ringOuter, 0, PI2);
+  ctx.strokeStyle = stroke;
+  ctx.stroke();
+  // 内缘圆（齿根圆，弱化）
+  ctx.beginPath();
+  ctx.arc(offsetX, offsetY, ringRoot, 0, PI2);
+  ctx.strokeStyle = strokeSoft;
   ctx.stroke();
 
-  // ---- 滚动齿轮：外圆 + 齿（自转）+ 方向标记 ----
+  // ================= 滚动齿轮（外齿圆盘） =================
   const gx = centerR * Math.cos(pose.centerAngle) * scale + offsetX;
   const gy = centerR * Math.sin(pose.centerAngle) * scale + offsetY;
-  ctx.strokeStyle = ringColor;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(gx, gy, r * scale, 0, PI2);
-  ctx.stroke();
+  const discRoot = r * scale; // 盘缘（齿根）
+  const discTip = (r + toothH) * scale; // 齿顶（齿朝外）
+  const rollStep = PI2 / rollingTeeth;
+
   ctx.save();
   ctx.translate(gx, gy);
   ctx.rotate(pose.spinAngle);
-  ctx.strokeStyle = toothColor;
+
+  // 盘面填充（实心圆盘）
+  ctx.beginPath();
+  ctx.arc(0, 0, discRoot, 0, PI2);
+  ctx.fillStyle = fill;
+  ctx.fill();
+
+  // 逐齿外齿梯形：fill + stroke
+  for (let i = 0; i < rollingTeeth; i++) {
+    const a = i * rollStep;
+    ctx.beginPath();
+    ctx.moveTo(discRoot * Math.cos(a + rollStep * 0.2), discRoot * Math.sin(a + rollStep * 0.2));
+    ctx.lineTo(discTip * Math.cos(a + rollStep * 0.35), discTip * Math.sin(a + rollStep * 0.35));
+    ctx.lineTo(discTip * Math.cos(a + rollStep * 0.65), discTip * Math.sin(a + rollStep * 0.65));
+    ctx.lineTo(discRoot * Math.cos(a + rollStep * 0.8), discRoot * Math.sin(a + rollStep * 0.8));
+    ctx.closePath();
+    ctx.fillStyle = toothFill;
+    ctx.fill();
+    ctx.strokeStyle = stroke;
+    ctx.stroke();
+  }
+
+  // 盘缘圆
+  ctx.beginPath();
+  ctx.arc(0, 0, discRoot, 0, PI2);
+  ctx.strokeStyle = strokeSoft;
+  ctx.stroke();
+
+  // 装饰孔圈（万花尺盘面孔洞）：内圈 8 孔 + 外圈 12 孔
+  ctx.strokeStyle = holeStroke;
+  for (const [holeR, holeN] of [[0.5, 8], [0.75, 12]] as const) {
+    for (let i = 0; i < holeN; i++) {
+      const a = (i / holeN) * PI2;
+      ctx.beginPath();
+      ctx.arc(holeR * discRoot * Math.cos(a), holeR * discRoot * Math.sin(a), Math.max(1.2, 0.04 * discRoot), 0, PI2);
+      ctx.stroke();
+    }
+  }
+  // 中心孔
+  ctx.beginPath();
+  ctx.arc(0, 0, Math.max(1.5, 0.06 * discRoot), 0, PI2);
+  ctx.stroke();
+
+  // 自转标记（淡红短线，指向 0 号齿）
+  ctx.strokeStyle = 'rgba(220,90,90,0.55)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  for (let i = 0; i < rollingTeeth; i++) {
-    const a = (i / rollingTeeth) * PI2;
-    ctx.moveTo((r - toothH) * scale * Math.cos(a), (r - toothH) * scale * Math.sin(a));
-    ctx.lineTo(r * scale * Math.cos(a), r * scale * Math.sin(a));
-  }
-  ctx.stroke();
-  // 自转方向标记（局部 x 轴，指向 0 号齿）
-  ctx.strokeStyle = 'rgba(220,90,90,0.75)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
   ctx.moveTo(0, 0);
-  ctx.lineTo(r * scale * 0.55, 0);
+  ctx.lineTo(discRoot * 0.5, 0);
   ctx.stroke();
+  ctx.lineWidth = 1.2;
   ctx.restore();
 
-  // ---- 笔孔点：所有笔的孔位（当前笔高亮） ----
+  // ================= 笔孔点（彩色，当前笔高亮） =================
   for (let i = 0; i < pens.length; i++) {
     const d = (pens[i].hole / 100) * r;
     // 孔在齿轮局部坐标 (d, 0)，随齿轮自转
