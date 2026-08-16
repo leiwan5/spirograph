@@ -89,7 +89,7 @@ function renderStatic(): void {
   if (s.showGears) {
     // 齿轮画在曲线之下：静态显示初始位姿
     const pens = s.pens.length > 0 ? s.pens : DEFAULT_STATE.pens;
-    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, 0, pens);
+    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, 0, pens, 0);
   }
   renderFull(ctx, items, t);
   if (s.showGears) {
@@ -124,7 +124,7 @@ function renderProgress(progress: number): void {
       return;
     }
     const tParam = progressToT(penProgress, curve.periodTurns);
-    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, tParam, s.pens);
+    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, tParam, s.pens, penIndex);
     renderSteps(ctx, items, t, progress);
     // 笔孔与笔尖画在曲线之上：当前笔 = 曲线当前端点（笔头随画随动）；其他笔 = 各自曲线起点
     const drawnCount = Math.max(1, Math.floor(penProgress * curve.count));

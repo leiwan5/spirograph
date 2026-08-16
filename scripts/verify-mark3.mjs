@@ -1,0 +1,39 @@
+import { chromium } from 'playwright-core';
+const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
+const browser = await chromium.launch({
+  executablePath: EDGE,
+  headless: true,
+  args: ['--no-sandbox', '--disable-gpu'],
+});
+const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+await page.goto('http://localhost:5273/?ring=72&rolling=30&pen=40,e63946,2.5&pen=75,1d6fa5,2&scale=fixed&gears=1', { waitUntil: 'networkidle' });
+await page.waitForTimeout(700);
+
+try {
+  const r = await page.evaluate(() => {
+    const c = document.getElementById('canvas');
+    const ctx = c.getContext('2d');
+    const W = c.width, H = c.height;
+    const img = ctx.getImageData(0, 0, W, H).data;
+    const cx = W / 2, cy = H / 2;
+    const scale = 5.52;
+    const px = (x, y) => {
+      const i = (Math.round(y) * W + Math.round(x)) * 4;
+      return [img[i], img[i + 1], img[i + 2]];
+    };
+    const gcx = cx + 42 * scale, gcy = cy;
+    const spin = 5.96 * Math.PI / 180;
+    const trace = [];
+    for (let d = 4; d <= 66; d += 4) {
+      trace.push({ d, color: px(gcx + d * Math.cos(spin), gcy + d * Math.sin(spin)) });
+    }
+    return trace;
+  });
+  const reddish = (p) => p[0] > 140 && p[0] - p[2] > 40;
+  const bad = r.filter((t) => !reddish(t.color));
+  console.log('采样点:', r.length, '| 非红色点:', bad.length ? JSON.stringify(bad) : '无');
+  console.log('判定:', bad.length === 0 ? '✅ 红线从滚动中心连续延伸到笔尖' : '⚠');
+} catch (e) {
+  console.log('ERROR:', e.message);
+}
+await browser.close();

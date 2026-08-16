@@ -226,6 +226,7 @@ export function drawGears(
   mode: DrawingMode,
   t: number,
   pens: Pen[],
+  activePenIndex: number,
 ): void {
   const { scale, offsetX, offsetY } = transform;
   const R = ringTeeth;
@@ -340,12 +341,14 @@ export function drawGears(
   ctx.arc(0, 0, Math.max(1.5, 0.06 * discRoot), 0, PI2);
   ctx.stroke();
 
-  // 自转标记（淡红短线，指向 0 号齿）
-  ctx.strokeStyle = 'rgba(220,90,90,0.55)';
+  // 自转标记（淡红线）：从滚动中心延伸到当前笔的孔（笔尖）位置，
+  // 直观显示笔孔方向与齿轮自转；线头被笔尖盖住，不会"中途消失"
+  const markLen = pens[activePenIndex] ? Math.max(2, (pens[activePenIndex].hole / 100) * r * scale) : discRoot * 0.5;
+  ctx.strokeStyle = 'rgba(220,90,90,0.6)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(0, 0);
-  ctx.lineTo(discRoot * 0.5, 0);
+  ctx.lineTo(markLen, 0);
   ctx.stroke();
   ctx.lineWidth = 1.2;
   ctx.restore();
@@ -377,20 +380,11 @@ export function drawPenHoles(
     const hx = penPoints[i][0] * scale + offsetX;
     const hy = penPoints[i][1] * scale + offsetY;
     // 笔尖（彩色，填满孔内大部分：像笔杆插在孔里）。
-    // 注意：不在此加深孔描边（孔阵已统一淡色空心圆），
-    // 避免深色圆环截断穿过孔心的曲线。
+    // 不在此加深孔描边（孔阵已统一淡色空心圆），避免截断穿过孔心的曲线。
     ctx.beginPath();
     ctx.arc(hx, hy, isActive ? holeR * 0.72 : holeR * 0.45, 0, PI2);
     ctx.fillStyle = pens[i].color;
     ctx.fill();
-    // 当前笔白描边（细，仅标记使用中，几乎不遮曲线）
-    if (isActive) {
-      ctx.beginPath();
-      ctx.arc(hx, hy, holeR * 0.72 + 1, 0, PI2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
   }
   ctx.restore();
 }
