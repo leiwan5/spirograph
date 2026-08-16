@@ -5,8 +5,8 @@ export const DEFAULT_STATE: AppState = {
   ringTeeth: 72,
   rollingTeeth: 30,
   pens: [
-    { id: 1, hole: 40, color: '#e63946', width: 2.5 },
-    { id: 2, hole: 75, color: '#1d6fa5', width: 2 },
+    { id: 1, hole: 40, color: '#e63946', gradient: [], gradientStart: 0, gradientLength: 100, width: 2.5 },
+    { id: 2, hole: 75, color: '#1d6fa5', gradient: [], gradientStart: 0, gradientLength: 100, width: 2 },
   ],
   background: '#ffffff',
   speed: 1,
@@ -49,6 +49,9 @@ export function addPen(patch?: Partial<Pen>): void {
     id: nextPenId++,
     hole: 60,
     color: nextColor(state.pens.length),
+    gradient: [],
+    gradientStart: 0,
+    gradientLength: 100,
     width: 2,
     ...patch,
   };

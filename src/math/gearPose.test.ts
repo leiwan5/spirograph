@@ -1,6 +1,32 @@
 import { describe, it, expect } from 'vitest';
-import { computeGearPose, computeSteps } from '../render/renderer';
+import { computeGearPose, computeSteps, gradientColorAt, lerpColor } from '../render/renderer';
 import { sampleCurve } from '../math/curve';
+
+describe('渐变颜色插值', () => {
+  it('lerpColor 线性插值', () => {
+    expect(lerpColor('#ff0000', '#0000ff', 0)).toBe('rgb(255,0,0)');
+    expect(lerpColor('#ff0000', '#0000ff', 1)).toBe('rgb(0,0,255)');
+    expect(lerpColor('#ff0000', '#0000ff', 0.5)).toBe('rgb(128,0,128)');
+  });
+
+  it('gradientColorAt 多色渐变', () => {
+    const colors = ['#ff0000', '#00ff00', '#0000ff'];
+    expect(gradientColorAt(colors, 0)).toBe('rgb(255,0,0)');
+    expect(gradientColorAt(colors, 0.5)).toBe('rgb(0,255,0)');
+    expect(gradientColorAt(colors, 1)).toBe('rgb(0,0,255)');
+    expect(gradientColorAt(colors, 0.25)).toBe('rgb(128,128,0)');
+  });
+
+  it('gradientColorAt 起点/长度：前段纯首色、中段渐变、后段纯末色', () => {
+    const colors = ['#ff0000', '#0000ff'];
+    // t < start 返回原始首色；t > start+length 返回原始末色；之间返回插值 rgb
+    expect(gradientColorAt(colors, 0, 0.3, 0.4)).toBe('#ff0000');
+    expect(gradientColorAt(colors, 0.3, 0.3, 0.4)).toBe('rgb(255,0,0)'); // 渐变起点
+    expect(gradientColorAt(colors, 0.5, 0.3, 0.4)).toBe('rgb(128,0,128)'); // 渐变中点
+    expect(gradientColorAt(colors, 0.7, 0.3, 0.4)).toBe('rgb(0,0,255)'); // 渐变终点
+    expect(gradientColorAt(colors, 0.9, 0.3, 0.4)).toBe('#0000ff');
+  });
+});
 
 describe('computeSteps（多笔分步）', () => {
   it('总进度映射到笔索引与笔内进度', () => {

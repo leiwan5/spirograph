@@ -84,6 +84,13 @@ export function renderFull(
   ctx.lineJoin = 'round';
   for (const item of items) {
     const { points, count } = item.curve;
+    if (item.pen.gradient.length > 0) {
+      strokeGradientCurve(
+        ctx, points, count, [item.pen.color, ...item.pen.gradient], item.pen.width, transform, 96,
+        item.pen.gradientStart / 100, item.pen.gradientLength / 100,
+      );
+      continue;
+    }
     ctx.strokeStyle = item.pen.color;
     ctx.lineWidth = item.pen.width; // 屏幕像素：变换为均匀缩放，直接绘制即可
     ctx.beginPath();
@@ -112,6 +119,13 @@ export function renderPartial(
   for (const item of items) {
     const { points, count } = item.curve;
     const drawn = Math.max(1, Math.floor(progress * count));
+    if (item.pen.gradient.length > 0) {
+      strokeGradientCurve(
+        ctx, points, drawn, [item.pen.color, ...item.pen.gradient], item.pen.width, transform, 48,
+        item.pen.gradientStart / 100, item.pen.gradientLength / 100,
+      );
+      continue;
+    }
     ctx.strokeStyle = item.pen.color;
     ctx.lineWidth = item.pen.width;
     ctx.beginPath();
@@ -128,6 +142,74 @@ export function renderPartial(
 /** 孔阵孔半径（px）：基于节圆半径 r 与缩放，与笔孔真实位置（hole%·r）一致 */
 export function gearHoleRadius(transform: Transform, rollingTeeth: number): number {
   return Math.max(1.2, 0.035 * rollingTeeth * transform.scale);
+}
+
+// ==================== 多色渐变 ====================
+
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace('#', '');
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+
+/** RGB 线性插值 */
+export function lerpColor(a: string, b: string, t: number): string {
+  const [ar, ag, ab] = hexToRgb(a);
+  const [br, bg, bb] = hexToRgb(b);
+  return (
+    'rgb(' +
+    Math.round(ar + (br - ar) * t) + ',' +
+    Math.round(ag + (bg - ag) * t) + ',' +
+    Math.round(ab + (bb - ab) * t) + ')'
+  );
+}
+
+/**
+ * 多色渐变：t ∈ [0,1] 映射到颜色序列（1-4 色）的线性插值。
+ * start/length（0-1）：t < start 取首色，t > start+length 取末色，之间渐变过渡。
+ */
+export function gradientColorAt(colors: string[], t: number, start = 0, length = 1): string {
+  const n = colors.length;
+  if (n <= 0) return '#000000';
+  if (n === 1) return colors[0];
+  if (t < start) return colors[0];
+  if (t > start + length) return colors[n - 1];
+  const u = length <= 0 ? 1 : Math.min(1, Math.max(0, (t - start) / length));
+  const seg = u * (n - 1);
+  const idx = Math.min(n - 2, Math.floor(seg));
+  return lerpColor(colors[idx], colors[idx + 1], seg - idx);
+}
+
+/**
+ * 渐变曲线绘制：按绘制进度分段着色（每段一个插值色），沿路径平滑过渡。
+ * segments 越大过渡越平滑（默认 96 段）。
+ */
+export function strokeGradientCurve(
+  ctx: CanvasRenderingContext2D,
+  points: Float64Array,
+  count: number,
+  colors: string[],
+  lineWidth: number,
+  transform: Transform,
+  segments = 96,
+  start = 0,
+  length = 1,
+): void {
+  ctx.lineWidth = lineWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  const segLen = Math.max(1, Math.floor(count / segments));
+  for (let seg = 0; seg < count; seg += segLen) {
+    const end = Math.min(count, seg + segLen);
+    const t = (seg + (end - seg) / 2) / count;
+    ctx.strokeStyle = gradientColorAt(colors, t, start, length);
+    ctx.beginPath();
+    for (let j = seg; j < end; j++) {
+      const [sx, sy] = applyTransform(transform, points[2 * j], points[2 * j + 1]);
+      if (j === seg) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+  }
 }
 
 /** 孔阵中的一个孔（盘面局部坐标：frac = 半径比例，angle = 局部角） */
@@ -407,6 +489,13 @@ export function renderSteps(
     if (i > penIndex) break;
     const { points, count } = items[i].curve;
     const drawn = i < penIndex ? count : Math.max(1, Math.floor(penProgress * count));
+    if (items[i].pen.gradient.length > 0) {
+      strokeGradientCurve(
+        ctx, points, drawn, [items[i].pen.color, ...items[i].pen.gradient], items[i].pen.width, transform, 48,
+        items[i].pen.gradientStart / 100, items[i].pen.gradientLength / 100,
+      );
+      continue;
+    }
     ctx.strokeStyle = items[i].pen.color;
     ctx.lineWidth = items[i].pen.width;
     ctx.beginPath();

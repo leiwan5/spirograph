@@ -4,6 +4,17 @@ import { curveInfo } from '../math/curve';
 import { serializeState } from '../state/url';
 import { COMBO_PRESETS, RING_PRESETS, ROLLING_PRESETS } from './presets';
 
+/** 渐变附加色的默认取色（取色相轮上与当前色差异大的颜色） */
+function nextGradientColor(base: string): string {
+  const palette = [
+    '#e63946', '#1d6fa5', '#f4a261', '#2a9d8f', '#9b5de5',
+    '#f15bb5', '#00bbf9', '#d9a404', '#3a86ff', '#ff7b00',
+  ];
+  const b = base.toLowerCase();
+  const idx = palette.findIndex((c) => c === b);
+  return palette[(idx + 1 + Math.floor(Math.random() * (palette.length - 1))) % palette.length];
+}
+
 const RING_MIN = 40;
 const RING_MAX = 240;
 const ROLLING_MIN = 8;
@@ -161,7 +172,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     b.textContent = p.name;
     b.title = `${p.ring}齿环 × ${p.rolling}齿轮，${p.mode === 'inside' ? '内切' : '外切'}`;
     b.addEventListener('click', () => {
-      setPens(p.pens);
+      setPens(p.pens.map((pp) => ({ hole: pp.hole, color: pp.color, gradient: pp.gradient ?? [], gradientStart: 0, gradientLength: 100, width: pp.width })));
       setState({ mode: p.mode, ringTeeth: p.ring, rollingTeeth: p.rolling });
     });
     presetChipsEl.appendChild(b);
@@ -244,6 +255,17 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       </div>
       <div class="row-label"><span>粗细（px）</span><span class="val">${pen.width}</span></div>
       <input type="range" class="pen-width" min="0.5" max="8" step="0.5" value="${pen.width}">
+      <div class="pen-row">
+        <label class="check-row"><input type="checkbox" class="pen-grad"${pen.gradient.length > 0 ? ' checked' : ''}><span>渐变</span></label>
+        <span class="pen-grad-slots"></span>
+        <button class="pen-grad-add" title="添加渐变色">＋</button>
+      </div>
+      <div class="pen-grad-opts">
+        <div class="row-label"><span>渐变起点（画到此处开始变色）</span><span class="val">${pen.gradientStart}%</span></div>
+        <input type="range" class="pen-grad-start" min="0" max="100" step="1" value="${pen.gradientStart}">
+        <div class="row-label"><span>渐变长度（多长完成渐变）</span><span class="val">${pen.gradientLength}%</span></div>
+        <input type="range" class="pen-grad-length" min="0" max="100" step="1" value="${pen.gradientLength}">
+      </div>
     `;
     const holeSlider = card.querySelector<HTMLInputElement>('.pen-hole')!;
     const colorInput = card.querySelector<HTMLInputElement>('.pen-color')!;
@@ -264,6 +286,66 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       setPen(pen.id, { width: +widthSlider.value });
       widthVal.textContent = widthSlider.value;
     });
+
+    // ---- 渐变控件 ----
+    const gradCheck = card.querySelector<HTMLInputElement>('.pen-grad')!;
+    const gradSlots = card.querySelector<HTMLElement>('.pen-grad-slots')!;
+    const gradAdd = card.querySelector<HTMLButtonElement>('.pen-grad-add')!;
+    const gradOpts = card.querySelector<HTMLElement>('.pen-grad-opts')!;
+    const gradStartSlider = card.querySelector<HTMLInputElement>('.pen-grad-start')!;
+    const gradLengthSlider = card.querySelector<HTMLInputElement>('.pen-grad-length')!;
+    const gradStartVal = gradOpts.querySelectorAll('.row-label .val')[0] as HTMLElement;
+    const gradLengthVal = gradOpts.querySelectorAll('.row-label .val')[1] as HTMLElement;
+
+    function renderGradSlots(): void {
+      gradSlots.innerHTML = '';
+      const g = getState().pens.find((p) => p.id === pen.id)?.gradient ?? pen.gradient;
+      gradOpts.classList.toggle('show', g.length > 0);
+      g.forEach((c, idx) => {
+        const swatch = document.createElement('input');
+        swatch.type = 'color';
+        swatch.className = 'pen-grad-color';
+        swatch.value = c;
+        swatch.title = '渐变色 ' + (idx + 2);
+        swatch.addEventListener('input', () => {
+          const cur = getState().pens.find((p) => p.id === pen.id)?.gradient ?? [];
+          const next = cur.map((x, i) => (i === idx ? swatch.value : x));
+          setPen(pen.id, { gradient: next });
+        });
+        gradSlots.appendChild(swatch);
+      });
+      gradAdd.disabled = g.length >= 3;
+      gradAdd.textContent = g.length >= 3 ? '3' : '＋';
+    }
+
+    gradCheck.addEventListener('change', () => {
+      if (gradCheck.checked) {
+        const cur = getState().pens.find((p) => p.id === pen.id)?.gradient ?? [];
+        const next = cur.length > 0 ? cur : [nextGradientColor(pen.color)];
+        setPen(pen.id, { gradient: next });
+      } else {
+        setPen(pen.id, { gradient: [] });
+      }
+      renderGradSlots();
+    });
+    gradAdd.addEventListener('click', () => {
+      const cur = getState().pens.find((p) => p.id === pen.id)?.gradient ?? [];
+      if (cur.length >= 3) return;
+      const last = cur[cur.length - 1] ?? pen.color;
+      setPen(pen.id, { gradient: [...cur, nextGradientColor(last)] });
+      renderGradSlots();
+    });
+    gradStartSlider.addEventListener('input', () => {
+      const v = Math.round(+gradStartSlider.value);
+      setPen(pen.id, { gradientStart: v });
+      gradStartVal.textContent = v + '%';
+    });
+    gradLengthSlider.addEventListener('input', () => {
+      const v = Math.round(+gradLengthSlider.value);
+      setPen(pen.id, { gradientLength: v });
+      gradLengthVal.textContent = v + '%';
+    });
+    renderGradSlots();
     card.querySelector<HTMLButtonElement>('.pen-del')!.addEventListener('click', () => {
       removePen(pen.id);
     });

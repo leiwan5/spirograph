@@ -178,6 +178,25 @@ input[type='color'] {
   cursor: pointer;
 }
 
+/* 渐变控件 */
+.pen-grad-slots { display: inline-flex; gap: 4px; align-items: center; }
+.pen-grad-color { width: 26px !important; height: 22px !important; padding: 1px; }
+.pen-grad-add {
+  background: var(--panel-2);
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.pen-grad-add:hover:not(:disabled) { color: var(--accent-2); border-color: var(--accent); }
+.pen-grad-add:disabled { opacity: 0.5; cursor: default; }
+.pen-grad-opts { display: none; flex-direction: column; gap: 6px; }
+.pen-grad-opts.show { display: flex; }
+
 /* 复选框行 */
 .check-row {
   display: flex;

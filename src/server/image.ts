@@ -4,6 +4,7 @@ import { DEFAULT_STATE } from '../state/store';
 import { parseState } from '../state/url';
 import { sampleCurve } from '../math/curve';
 import { computeBounds, computeFixedBounds, computeTransform } from '../render/renderer';
+import { gradientColorAt } from '../render/renderer';
 import { buildSvg } from '../render/svg';
 
 export interface ImageParams {
@@ -73,16 +74,22 @@ export function generatePng(search: string): Uint8Array {
     rgba[i + 2] = bg[2];
     rgba[i + 3] = 255;
   }
-  // 逐笔绘制曲线（后画覆盖先画，与前端一致）
+  // 逐笔绘制曲线（后画覆盖先画，与前端一致；渐变笔逐段插值色）
   for (const item of items) {
-    const color = hexToRgb(item.pen.color);
     const w = item.pen.width * (size / 1000); // 笔宽按导出基准放大
     const { points, count } = item.curve;
+    const colors = [item.pen.color, ...item.pen.gradient];
+    const hasGradient = colors.length > 1;
+    const gs = item.pen.gradientStart / 100;
+    const gl = item.pen.gradientLength / 100;
     for (let i = 0; i < count - 1; i++) {
       const x0 = points[2 * i] * t.scale + t.offsetX;
       const y0 = points[2 * i + 1] * t.scale + t.offsetY;
       const x1 = points[2 * i + 2] * t.scale + t.offsetX;
       const y1 = points[2 * i + 3] * t.scale + t.offsetY;
+      const color = hasGradient
+        ? hexToRgb(gradientColorAt(colors, i / Math.max(1, count - 1), gs, gl))
+        : hexToRgb(item.pen.color);
       plotLine(rgba, size, x0, y0, x1, y1, color, w);
     }
   }

@@ -4,7 +4,10 @@ export type DrawingMode = 'inside' | 'outside';
 export interface Pen {
   id: number;
   hole: number; // 0-100, 百分比（真实 Spirograph 孔洞都在齿轮盘内，d ≤ r）
-  color: string;
+  color: string; // 起始颜色
+  gradient: string[]; // 渐变附加色（0-3 个；总色数 1-4，沿绘制路径依次渐变；空数组 = 单色）
+  gradientStart: number; // 渐变起点（% 曲线进度，画到此处才开始变色）
+  gradientLength: number; // 渐变长度（% 曲线进度，从起点开始多长完成渐变）
   width: number; // 屏幕像素
 }
 

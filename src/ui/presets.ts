@@ -14,7 +14,7 @@ export interface ComboPreset {
   mode: 'inside' | 'outside';
   ring: number;
   rolling: number;
-  pens: Array<{ hole: number; color: string; width: number }>;
+  pens: Array<{ hole: number; color: string; width: number; gradient?: string[] }>;
 }
 
 /** 经典齿轮组合预设（含多笔配色） */
@@ -100,6 +100,9 @@ export function randomSettings(): void {
     pens.push({
       hole: randInt(20, 100),
       color,
+      gradient: [],
+      gradientStart: 0,
+      gradientLength: 100,
       width: round1(1 + Math.random() * 3),
     });
   }

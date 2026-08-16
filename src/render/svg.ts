@@ -1,6 +1,6 @@
 import type { Bounds, Transform } from '../types';
 import type { RenderItem } from './renderer';
-import { computeBounds, computeTransform } from './renderer';
+import { computeBounds, computeTransform, gradientColorAt } from './renderer';
 
 /** 每支笔导出点数上限（超出抽样） */
 const MAX_EXPORT_POINTS_PER_PEN = 12_000;
@@ -13,8 +13,33 @@ export function buildSvg(items: RenderItem[], background: string, sizePx = 2048)
   const padding = sizePx * 0.04;
   const t: Transform = computeTransform(bounds, sizePx, sizePx, padding);
 
-  const paths = items.map((item) => {
+  const strokeWidth = (item: RenderItem) => (item.pen.width * (sizePx / 1000)).toFixed(2);
+
+  const pathEls: string[] = [];
+  for (const item of items) {
     const { points, count } = item.curve;
+    const w = strokeWidth(item);
+    if (item.pen.gradient.length > 0) {
+      // 渐变：逐段 path，每段一个插值色（沿绘制路径平滑过渡）
+      const colors = [item.pen.color, ...item.pen.gradient];
+      const start = item.pen.gradientStart / 100;
+      const length = item.pen.gradientLength / 100;
+      const segLen = Math.max(1, Math.floor(count / 120));
+      for (let seg = 0; seg < count; seg += segLen) {
+        const end = Math.min(count, seg + segLen);
+        const prog = (seg + (end - seg) / 2) / count;
+        const color = gradientColorAt(colors, prog, start, length);
+        let d = '';
+        for (let j = seg; j < end; j++) {
+          const [sx, sy] = applySvgTransform(t, points[2 * j], points[2 * j + 1]);
+          d += (j === seg ? 'M' : 'L') + sx.toFixed(2) + ' ' + sy.toFixed(2);
+        }
+        pathEls.push(
+          `  <path d="${d}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`,
+        );
+      }
+      continue;
+    }
     const step = Math.max(1, Math.floor(count / MAX_EXPORT_POINTS_PER_PEN));
     const n = Math.floor(count / step);
     let d = '';
@@ -26,17 +51,10 @@ export function buildSvg(items: RenderItem[], background: string, sizePx = 2048)
     // 闭合回起点，保证 SVG 无缺口
     const [sx0, sy0] = applySvgTransform(t, points[0], points[1]);
     d += 'L' + sx0.toFixed(2) + ' ' + sy0.toFixed(2);
-    return d;
-  });
-
-  const strokeWidth = (item: RenderItem) => (item.pen.width * (sizePx / 1000)).toFixed(2);
-
-  const pathEls = items
-    .map(
-      (item, i) =>
-        `  <path d="${paths[i]}" fill="none" stroke="${item.pen.color}" stroke-width="${strokeWidth(item)}" stroke-linecap="round" stroke-linejoin="round"/>`,
-    )
-    .join('\n');
+    pathEls.push(
+      `  <path d="${d}" fill="none" stroke="${item.pen.color}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`,
+    );
+  }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${sizePx}" height="${sizePx}" viewBox="0 0 ${sizePx} ${sizePx}">
