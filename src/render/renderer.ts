@@ -157,7 +157,7 @@ export function computeSteps(penCount: number, totalProgress: number): { penInde
  * 绘制齿轮系统（画在曲线之下），真实万花尺外观 + 淡色半透明：
  * - 环形齿轮：平滑外缘 + 内侧一圈平顶小齿（内齿圈，静止）
  * - 滚动齿轮：外齿圆盘（齿朝外），盘面有装饰孔圈与中心孔，随动画滚动/自转
- * - 笔孔点：彩色小点（当前笔高亮白圈）
+ * 笔孔与笔尖由 drawPenHoles 单独绘制（应画在曲线之上）。
  */
 export function drawGears(
   ctx: CanvasRenderingContext2D,
@@ -166,9 +166,6 @@ export function drawGears(
   rollingTeeth: number,
   mode: DrawingMode,
   t: number,
-  pens: Pen[],
-  activePenIndex: number,
-  penPoints?: Array<[number, number]>, // 各笔孔位（曲线坐标），缺省用齿轮自转公式
 ): void {
   const { scale, offsetX, offsetY } = transform;
   const R = ringTeeth;
@@ -267,13 +264,13 @@ export function drawGears(
   ctx.strokeStyle = strokeSoft;
   ctx.stroke();
 
-  // 装饰孔圈（万花尺盘面孔洞）：内圈 8 孔 + 外圈 12 孔
+  // 装饰孔圈（盘面可选孔位档位）：多圈均匀小孔
   ctx.strokeStyle = holeStroke;
-  for (const [holeR, holeN] of [[0.5, 8], [0.75, 12]] as const) {
+  for (const [ringFrac, holeN] of [[0.3, 8], [0.5, 8], [0.7, 10], [0.85, 10]] as const) {
     for (let i = 0; i < holeN; i++) {
       const a = (i / holeN) * PI2;
       ctx.beginPath();
-      ctx.arc(holeR * discRoot * Math.cos(a), holeR * discRoot * Math.sin(a), Math.max(1.2, 0.04 * discRoot), 0, PI2);
+      ctx.arc(ringFrac * discRoot * Math.cos(a), ringFrac * discRoot * Math.sin(a), Math.max(1.2, 0.035 * discRoot), 0, PI2);
       ctx.stroke();
     }
   }
@@ -292,25 +289,44 @@ export function drawGears(
   ctx.lineWidth = 1.2;
   ctx.restore();
 
-  // ================= 笔孔点（彩色，当前笔高亮） =================
+  ctx.restore();
+}
+
+/**
+ * 绘制笔孔与笔尖（画在曲线之上，保证可见）：
+ * 当前笔的孔 = 该笔孔洞参数对应的孔（位于 hole% 半径、局部角 0 处，
+ * 与曲线起点严格重合：曲线即孔中心的运动轨迹，笔划从孔正中间画出）。
+ */
+export function drawPenHoles(
+  ctx: CanvasRenderingContext2D,
+  transform: Transform,
+  pens: Pen[],
+  activePenIndex: number,
+  penPoints?: Array<[number, number]>,
+): void {
+  const { scale, offsetX, offsetY } = transform;
+  const PI2 = Math.PI * 2;
+  ctx.save();
+  ctx.lineCap = 'round';
   for (let i = 0; i < pens.length; i++) {
-    let hx: number;
-    let hy: number;
-    if (penPoints && penPoints[i]) {
-      // 曲线坐标系中的孔位（动画中 = 曲线当前端点，静态 = 曲线起点）
-      hx = penPoints[i][0] * scale + offsetX;
-      hy = penPoints[i][1] * scale + offsetY;
-    } else {
-      // 缺省：孔在齿轮局部坐标 (d, 0)，随齿轮自转
-      const d = (pens[i].hole / 100) * r;
-      hx = gx + d * scale * Math.cos(pose.spinAngle);
-      hy = gy + d * scale * Math.sin(pose.spinAngle);
-    }
+    if (!(penPoints && penPoints[i])) continue; // 调用方必须传笔孔曲线坐标
+    const isActive = i === activePenIndex;
+    const hx = penPoints[i][0] * scale + offsetX;
+    const hy = penPoints[i][1] * scale + offsetY;
+    // 孔底（深色圆，比装饰孔明显）
     ctx.beginPath();
-    ctx.arc(hx, hy, i === activePenIndex ? 5 : 3.2, 0, PI2);
+    ctx.arc(hx, hy, isActive ? 4.5 : 3.5, 0, PI2);
+    ctx.fillStyle = 'rgba(58,70,90,0.9)';
+    ctx.fill();
+    // 笔尖（彩色，画在孔正中间）
+    ctx.beginPath();
+    ctx.arc(hx, hy, isActive ? 2.5 : 2, 0, PI2);
     ctx.fillStyle = pens[i].color;
     ctx.fill();
-    if (i === activePenIndex) {
+    // 当前笔白圈高亮
+    if (isActive) {
+      ctx.beginPath();
+      ctx.arc(hx, hy, 6.5, 0, PI2);
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2;
       ctx.stroke();

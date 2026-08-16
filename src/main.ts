@@ -9,6 +9,7 @@ import {
   computeSteps,
   computeTransform,
   drawGears,
+  drawPenHoles,
   renderFull,
   renderPartial,
   renderSteps,
@@ -86,12 +87,16 @@ function renderStatic(): void {
     bounds: items.length ? computeBounds(items.map((i) => i.curve)) : null,
   };
   if (s.showGears) {
-    // 齿轮画在曲线之下：静态显示初始位姿，笔孔 = 各笔曲线起点
-    const pens = s.pens.length > 0 ? s.pens : DEFAULT_STATE.pens;
-    const penPoints = items.map((i) => [i.curve.points[0], i.curve.points[1]] as [number, number]);
-    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, 0, pens, 0, penPoints);
+    // 齿轮画在曲线之下：静态显示初始位姿
+    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, 0);
   }
   renderFull(ctx, items, t);
+  if (s.showGears) {
+    // 笔孔与笔尖画在曲线之上：笔孔 = 各笔曲线起点（曲线从孔正中间画出）
+    const pens = s.pens.length > 0 ? s.pens : DEFAULT_STATE.pens;
+    const penPoints = items.map((i) => [i.curve.points[0], i.curve.points[1]] as [number, number]);
+    drawPenHoles(ctx, t, pens, 0, penPoints);
+  }
 }
 
 /** 计算当前进度下动画的 t 参数（用于齿轮位姿） */
@@ -118,7 +123,9 @@ function renderProgress(progress: number): void {
       return;
     }
     const tParam = progressToT(penProgress, curve.periodTurns);
-    // 笔孔：当前笔 = 曲线当前端点（笔头随画随动）；其他笔 = 各自曲线起点
+    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, tParam);
+    renderSteps(ctx, items, t, progress);
+    // 笔孔与笔尖画在曲线之上：当前笔 = 曲线当前端点（笔头随画随动）；其他笔 = 各自曲线起点
     const drawnCount = Math.max(1, Math.floor(penProgress * curve.count));
     const penPoints = items.map((item, i) => {
       if (i === penIndex) {
@@ -127,8 +134,7 @@ function renderProgress(progress: number): void {
       }
       return [item.curve.points[0], item.curve.points[1]] as [number, number];
     });
-    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, tParam, s.pens, penIndex, penPoints);
-    renderSteps(ctx, items, t, progress);
+    drawPenHoles(ctx, t, s.pens, penIndex, penPoints);
   } else {
     renderPartial(ctx, items, t, progress);
   }
