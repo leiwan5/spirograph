@@ -20,6 +20,7 @@ describe('url serialize/parse', () => {
     expect(pairs.get('bg')).toBe('ffffff');
     expect(pairs.get('speed')).toBe('1');
     expect(pairs.get('scale')).toBe('auto');
+    expect(pairs.get('gears')).toBe('0');
   });
 
   it('解析后与状态一致（往返）', () => {
@@ -44,6 +45,15 @@ describe('url serialize/parse', () => {
     expect(patch.background).toBe('#1b1b2f');
     expect(patch.speed).toBe(2.5);
     expect(patch.scaleMode).toBe('fixed');
+  });
+
+  it('gears 参数解析', () => {
+    expect(parseState('?gears=1').showGears).toBe(true);
+    expect(parseState('?gears=true').showGears).toBe(true);
+    expect(parseState('?gears=0').showGears).toBe(false);
+    expect(parseState('?gears=false').showGears).toBe(false);
+    expect(parseState('?gears=maybe').showGears).toBeUndefined();
+    expect(parseState('?').showGears).toBeUndefined();
   });
 
   it('非法值被忽略', () => {

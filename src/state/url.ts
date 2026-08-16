@@ -5,7 +5,7 @@ import { getState, setPens, setState } from './store';
  * URL query 参数格式：
  *   ring=72&rolling=30&mode=inside
  *   &pen=40,e63946,2.5&pen=75,1d6fa5,2   （每支笔一个 pen 参数，可重复）
- *   &bg=ffffff&speed=1&scale=auto
+ *   &bg=ffffff&speed=1&scale=auto&gears=1
  * 颜色一律使用不带 # 的 6 位 hex（避免 # 截断 query）。
  */
 
@@ -21,6 +21,7 @@ export function serializeState(s: AppState): string {
   p.set('bg', s.background.replace('#', '').toLowerCase());
   p.set('speed', String(s.speed));
   p.set('scale', s.scaleMode);
+  p.set('gears', s.showGears ? '1' : '0');
   return p.toString();
 }
 
@@ -57,6 +58,10 @@ export function parseState(search: string): UrlPatch {
 
   const scale = p.get('scale');
   if (scale === 'auto' || scale === 'fixed') patch.scaleMode = scale;
+
+  const gears = p.get('gears');
+  if (gears === '1' || gears === 'true') patch.showGears = true;
+  else if (gears === '0' || gears === 'false') patch.showGears = false;
 
   return patch;
 }
