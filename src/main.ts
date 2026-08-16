@@ -96,7 +96,7 @@ function renderStatic(): void {
     // 笔孔与笔尖画在曲线之上：笔孔 = 各笔曲线起点（曲线从孔正中间画出）
     const pens = s.pens.length > 0 ? s.pens : DEFAULT_STATE.pens;
     const penPoints = items.map((i) => [i.curve.points[0], i.curve.points[1]] as [number, number]);
-    drawPenHoles(ctx, t, pens, 0, penPoints);
+    drawPenHoles(ctx, t, pens, 0, s.rollingTeeth, penPoints);
   }
 }
 
@@ -135,7 +135,7 @@ function renderProgress(progress: number): void {
       }
       return [item.curve.points[0], item.curve.points[1]] as [number, number];
     });
-    drawPenHoles(ctx, t, s.pens, penIndex, penPoints);
+    drawPenHoles(ctx, t, s.pens, penIndex, s.rollingTeeth, penPoints);
   } else {
     renderPartial(ctx, items, t, progress);
   }

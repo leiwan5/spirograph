@@ -125,6 +125,11 @@ export function renderPartial(
   ctx.restore();
 }
 
+/** 孔阵孔半径（px）：基于节圆半径 r 与缩放，与笔孔真实位置（hole%·r）一致 */
+export function gearHoleRadius(transform: Transform, rollingTeeth: number): number {
+  return Math.max(1.2, 0.035 * rollingTeeth * transform.scale);
+}
+
 /** 孔阵中的一个孔（盘面局部坐标：frac = 半径比例，angle = 局部角） */
 export interface HolePatternHole {
   frac: number;
@@ -320,12 +325,14 @@ export function drawGears(
   ctx.stroke();
 
   // 孔阵（含各笔参数圈 + 确定性随机补充圈）：统一空心圆样式
+  // 孔半径基于节圆 r（= 笔孔真实位置 hole%·r），保证笔尖与孔同心
   ctx.strokeStyle = holeStroke;
   ctx.lineWidth = 1.2;
   const pattern = generateHolePattern(pens);
+  const holeR = gearHoleRadius(transform, r);
   for (const h of pattern) {
     ctx.beginPath();
-    ctx.arc(h.frac * discRoot * Math.cos(h.angle), h.frac * discRoot * Math.sin(h.angle), Math.max(1.2, 0.035 * discRoot), 0, PI2);
+    ctx.arc(h.frac * r * scale * Math.cos(h.angle), h.frac * r * scale * Math.sin(h.angle), holeR, 0, PI2);
     ctx.stroke();
   }
   // 中心孔
@@ -356,10 +363,12 @@ export function drawPenHoles(
   transform: Transform,
   pens: Pen[],
   activePenIndex: number,
+  rollingTeeth: number,
   penPoints?: Array<[number, number]>,
 ): void {
   const { scale, offsetX, offsetY } = transform;
   const PI2 = Math.PI * 2;
+  const holeR = gearHoleRadius(transform, rollingTeeth);
   ctx.save();
   ctx.lineCap = 'round';
   for (let i = 0; i < pens.length; i++) {
@@ -367,19 +376,17 @@ export function drawPenHoles(
     const isActive = i === activePenIndex;
     const hx = penPoints[i][0] * scale + offsetX;
     const hy = penPoints[i][1] * scale + offsetY;
-    // 笔尖（彩色点，插在孔阵对应孔的正中间）
+    // 孔描边：当前笔加深加粗（高亮但保持与孔阵同族样式）
     ctx.beginPath();
-    ctx.arc(hx, hy, isActive ? 2.2 : 1.6, 0, PI2);
+    ctx.arc(hx, hy, holeR, 0, PI2);
+    ctx.strokeStyle = isActive ? 'rgba(58,70,90,0.9)' : 'rgba(118,132,152,0.55)';
+    ctx.lineWidth = isActive ? 2 : 1.2;
+    ctx.stroke();
+    // 笔尖（彩色，填满孔内大部分：像笔杆插在孔里）
+    ctx.beginPath();
+    ctx.arc(hx, hy, isActive ? holeR * 0.72 : holeR * 0.45, 0, PI2);
     ctx.fillStyle = pens[i].color;
     ctx.fill();
-    // 当前笔白圈高亮（正在使用的孔）
-    if (isActive) {
-      ctx.beginPath();
-      ctx.arc(hx, hy, 6.5, 0, PI2);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
   }
   ctx.restore();
 }
