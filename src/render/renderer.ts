@@ -125,6 +125,59 @@ export function renderPartial(
   ctx.restore();
 }
 
+/** 孔阵中的一个孔（盘面局部坐标：frac = 半径比例，angle = 局部角） */
+export interface HolePatternHole {
+  frac: number;
+  angle: number;
+}
+
+/** 确定性随机数（基于笔参数种子，同一组参数 → 同一孔阵） */
+function seededRandom(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+/**
+ * 根据笔参数生成盘面孔阵：
+ * - 每支笔的参数半径（hole%·r）处有一圈孔，0 号孔在局部角 0（与曲线起点严格重合）
+ *   → 所有笔的孔都是孔阵的一员，笔尖插在孔正中间
+ * - 再确定性随机补充若干圈装饰孔，使盘面像真实万花尺的钻孔布局
+ */
+export function generateHolePattern(pens: Array<{ hole: number }>): HolePatternHole[] {
+  const seed = pens.reduce((h, p) => h * 31 + Math.round(p.hole), 7) >>> 0;
+  const rnd = seededRandom(seed);
+  const holes: HolePatternHole[] = [];
+  const usedFracs = new Set<number>();
+
+  // 笔参数圈：0 号孔在局部角 0
+  for (const pen of pens) {
+    const frac = Math.max(0.08, pen.hole / 100);
+    if (usedFracs.has(frac)) continue;
+    for (let k = 0; k < 8; k++) {
+      holes.push({ frac, angle: (k / 8) * Math.PI * 2 });
+    }
+    usedFracs.add(frac);
+  }
+
+  // 补充圈（装饰，随机半径与孔数，避免与已有圈过近）
+  const target = Math.min(5, usedFracs.size + 2);
+  let guard = 0;
+  while (usedFracs.size < target && guard++ < 30) {
+    const frac = 0.12 + rnd() * 0.76;
+    if ([...usedFracs].some((f) => Math.abs(f - frac) < 0.14)) continue;
+    const n = 7 + Math.floor(rnd() * 3);
+    const offset = rnd() * ((Math.PI * 2) / n);
+    for (let k = 0; k < n; k++) {
+      holes.push({ frac, angle: offset + (k / n) * Math.PI * 2 });
+    }
+    usedFracs.add(frac);
+  }
+  return holes;
+}
+
 /** 齿轮位姿：滚动中心方向角 + 滚动齿轮自转角 */
 export interface GearPose {
   centerAngle: number;
@@ -157,7 +210,8 @@ export function computeSteps(penCount: number, totalProgress: number): { penInde
  * 绘制齿轮系统（画在曲线之下），真实万花尺外观 + 淡色半透明：
  * - 环形齿轮：平滑外缘 + 内侧一圈平顶小齿（内齿圈，静止）
  * - 滚动齿轮：外齿圆盘（齿朝外），盘面有装饰孔圈与中心孔，随动画滚动/自转
- * 笔孔与笔尖由 drawPenHoles 单独绘制（应画在曲线之上）。
+ * 盘面孔阵由笔参数确定性随机生成（generateHolePattern），笔孔与笔尖由
+ * drawPenHoles 单独绘制（应画在曲线之上）。
  */
 export function drawGears(
   ctx: CanvasRenderingContext2D,
@@ -166,6 +220,7 @@ export function drawGears(
   rollingTeeth: number,
   mode: DrawingMode,
   t: number,
+  pens: Pen[],
 ): void {
   const { scale, offsetX, offsetY } = transform;
   const R = ringTeeth;
@@ -264,15 +319,14 @@ export function drawGears(
   ctx.strokeStyle = strokeSoft;
   ctx.stroke();
 
-  // 装饰孔圈（盘面可选孔位档位）：多圈均匀小孔
+  // 孔阵（含各笔参数圈 + 确定性随机补充圈）：统一空心圆样式
   ctx.strokeStyle = holeStroke;
-  for (const [ringFrac, holeN] of [[0.3, 8], [0.5, 8], [0.7, 10], [0.85, 10]] as const) {
-    for (let i = 0; i < holeN; i++) {
-      const a = (i / holeN) * PI2;
-      ctx.beginPath();
-      ctx.arc(ringFrac * discRoot * Math.cos(a), ringFrac * discRoot * Math.sin(a), Math.max(1.2, 0.035 * discRoot), 0, PI2);
-      ctx.stroke();
-    }
+  ctx.lineWidth = 1.2;
+  const pattern = generateHolePattern(pens);
+  for (const h of pattern) {
+    ctx.beginPath();
+    ctx.arc(h.frac * discRoot * Math.cos(h.angle), h.frac * discRoot * Math.sin(h.angle), Math.max(1.2, 0.035 * discRoot), 0, PI2);
+    ctx.stroke();
   }
   // 中心孔
   ctx.beginPath();
@@ -313,17 +367,12 @@ export function drawPenHoles(
     const isActive = i === activePenIndex;
     const hx = penPoints[i][0] * scale + offsetX;
     const hy = penPoints[i][1] * scale + offsetY;
-    // 孔底（深色圆，比装饰孔明显）
+    // 笔尖（彩色点，插在孔阵对应孔的正中间）
     ctx.beginPath();
-    ctx.arc(hx, hy, isActive ? 4.5 : 3.5, 0, PI2);
-    ctx.fillStyle = 'rgba(58,70,90,0.9)';
-    ctx.fill();
-    // 笔尖（彩色，画在孔正中间）
-    ctx.beginPath();
-    ctx.arc(hx, hy, isActive ? 2.5 : 2, 0, PI2);
+    ctx.arc(hx, hy, isActive ? 2.2 : 1.6, 0, PI2);
     ctx.fillStyle = pens[i].color;
     ctx.fill();
-    // 当前笔白圈高亮
+    // 当前笔白圈高亮（正在使用的孔）
     if (isActive) {
       ctx.beginPath();
       ctx.arc(hx, hy, 6.5, 0, PI2);
