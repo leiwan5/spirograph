@@ -86,9 +86,10 @@ function renderStatic(): void {
     bounds: items.length ? computeBounds(items.map((i) => i.curve)) : null,
   };
   if (s.showGears) {
-    // 齿轮画在曲线之下：静态显示初始位姿
+    // 齿轮画在曲线之下：静态显示初始位姿，笔孔 = 各笔曲线起点
     const pens = s.pens.length > 0 ? s.pens : DEFAULT_STATE.pens;
-    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, 0, pens, 0);
+    const penPoints = items.map((i) => [i.curve.points[0], i.curve.points[1]] as [number, number]);
+    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, 0, pens, 0, penPoints);
   }
   renderFull(ctx, items, t);
 }
@@ -117,7 +118,16 @@ function renderProgress(progress: number): void {
       return;
     }
     const tParam = progressToT(penProgress, curve.periodTurns);
-    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, tParam, s.pens, penIndex);
+    // 笔孔：当前笔 = 曲线当前端点（笔头随画随动）；其他笔 = 各自曲线起点
+    const drawnCount = Math.max(1, Math.floor(penProgress * curve.count));
+    const penPoints = items.map((item, i) => {
+      if (i === penIndex) {
+        const idx = drawnCount - 1;
+        return [item.curve.points[2 * idx], item.curve.points[2 * idx + 1]] as [number, number];
+      }
+      return [item.curve.points[0], item.curve.points[1]] as [number, number];
+    });
+    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, tParam, s.pens, penIndex, penPoints);
     renderSteps(ctx, items, t, progress);
   } else {
     renderPartial(ctx, items, t, progress);

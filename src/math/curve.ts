@@ -1,5 +1,5 @@
 import type { CurveData, DrawingMode, GearRatio } from '../types';
-import { reduceRatio, validateGears } from './gear';
+import { meshPhase, reduceRatio, validateGears } from './gear';
 
 /** 每圈采样点数 */
 export const SAMPLES_PER_TURN = 1200;
@@ -63,14 +63,16 @@ export function sampleCurve(
   const d = (holePercent / 100) * r;
   const a = mode === 'inside' ? R - r : R + r;
   const k = mode === 'inside' ? (R - r) / r : (R + r) / r;
+  // 内切：齿轮自转含啮合相位 → 孔轨迹的 d 项相位 = -meshPhase
+  const phase = mode === 'inside' ? -meshPhase(R, r) : 0;
   const T = 2 * Math.PI * q;
 
   for (let i = 0; i <= total; i++) {
     const t = (i / total) * T;
     const c = Math.cos(t);
     const s = Math.sin(t);
-    const kc = Math.cos(k * t);
-    const ks = Math.sin(k * t);
+    const kc = Math.cos(k * t + phase);
+    const ks = Math.sin(k * t + phase);
     if (mode === 'inside') {
       pts[2 * i] = a * c + d * kc;
       pts[2 * i + 1] = a * s - d * ks;

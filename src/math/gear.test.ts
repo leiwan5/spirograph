@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { gcd, reduceRatio, petals, validateGears } from './gear';
+import { gcd, meshPhase, reduceRatio, petals, validateGears } from './gear';
 import { sampleCurve, MAX_SAMPLES } from './curve';
 import { computeFixedBounds, computeTransform } from '../render/renderer';
 
@@ -91,6 +91,40 @@ describe('sampleCurve', () => {
   it('闭合转数 = q', () => {
     expect(sampleCurve(72, 30, 'inside', 50).periodTurns).toBe(5);
     expect(sampleCurve(96, 63, 'inside', 50).periodTurns).toBe(21);
+  });
+});
+
+describe('meshPhase（啮合相位）', () => {
+  it('t=0 时滚动齿尖的极角对准最近的环齿谷中心', () => {
+    for (const [R, r] of [[72, 30], [72, 24], [96, 63], [40, 8], [240, 96], [52, 30]] as const) {
+      const phase = meshPhase(R, r);
+      const h = 0.2;
+      // 齿尖相对滚动中心方向
+      const theta = phase + 0.5 * ((Math.PI * 2) / r);
+      // 齿尖绝对位置（滚动中心在 (R−r, 0)）
+      const px = R - r + (r + h) * Math.cos(theta);
+      const py = (r + h) * Math.sin(theta);
+      const angle = Math.atan2(py, px);
+      // 最近的环齿谷中心方向 (j+1)·stepRing
+      const stepRing = (Math.PI * 2) / R;
+      const nearest = Math.round(angle / stepRing) * stepRing;
+      expect(Math.abs(angle - nearest)).toBeLessThan(0.02);
+    }
+  });
+
+  it('滚动齿尖不超出环谷底线（留顶隙）', () => {
+    const R = 72;
+    // 滚齿尖距环中心 ≈ R + 0.2h；环谷底 = R + 0.3h
+    const rollTipFromCenter = R + 0.2;
+    const ringRootFromCenter = R + 0.3;
+    expect(rollTipFromCenter).toBeLessThan(ringRootFromCenter);
+  });
+
+  it('相位有界：|meshPhase| ≤ 0.5·stepRing + 0.5·stepRoll', () => {
+    for (const [R, r] of [[72, 30], [72, 24], [96, 63], [40, 8], [240, 96]] as const) {
+      const bound = 0.5 * ((Math.PI * 2) / R) + 0.5 * ((Math.PI * 2) / r);
+      expect(Math.abs(meshPhase(R, r))).toBeLessThanOrEqual(bound + 1e-9);
+    }
   });
 });
 

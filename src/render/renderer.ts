@@ -1,4 +1,5 @@
 import type { Bounds, CurveData, DrawingMode, Pen, Transform } from '../types';
+import { meshPhase } from '../math/gear';
 
 /** 计算一组曲线的联合包围盒 */
 export function computeBounds(curves: Array<{ points: Float64Array; count: number }>): Bounds {
@@ -132,14 +133,14 @@ export interface GearPose {
 
 /**
  * 计算滚动齿轮在参数 t 时刻的位姿（纯滚动，曲线坐标单位 = 齿数）。
- * 内切：中心在半径 (R−r) 圆上，自转角 = −(R−r)/r·t
+ * 内切：中心在半径 (R−r) 圆上，自转角 = −(R−r)/r·t + 啮合相位（齿尖对准环齿谷）
  * 外切：中心在半径 (R+r) 圆上，自转角 = (R+r)/r·t + π
  */
 export function computeGearPose(ringTeeth: number, rollingTeeth: number, mode: DrawingMode, t: number): GearPose {
   const k = mode === 'inside' ? (ringTeeth - rollingTeeth) / rollingTeeth : (ringTeeth + rollingTeeth) / rollingTeeth;
   return {
     centerAngle: t,
-    spinAngle: mode === 'inside' ? -k * t : k * t + Math.PI,
+    spinAngle: mode === 'inside' ? -k * t + meshPhase(ringTeeth, rollingTeeth) : k * t + Math.PI,
   };
 }
 
@@ -167,6 +168,7 @@ export function drawGears(
   t: number,
   pens: Pen[],
   activePenIndex: number,
+  penPoints?: Array<[number, number]>, // 各笔孔位（曲线坐标），缺省用齿轮自转公式
 ): void {
   const { scale, offsetX, offsetY } = transform;
   const R = ringTeeth;
@@ -187,9 +189,10 @@ export function drawGears(
   ctx.lineWidth = 1.4;
 
   // ================= 环形齿轮（内齿圈，静止） =================
-  const ringOuter = R * scale; // 外缘
-  const ringRoot = (R - toothH * 1.5) * scale; // 齿根圆（环内缘）
-  const ringTip = (R - toothH * 0.5) * scale; // 齿顶圆（齿朝内）
+  // 内齿轮几何：谷底（齿根圆）在节圆外侧，齿尖（齿顶圆）在节圆内侧
+  const ringOuter = (R + toothH * 1.2) * scale; // 环外缘（光滑壁）
+  const ringRoot = (R + toothH * 0.3) * scale; // 齿根圆（谷底，节圆外侧）
+  const ringTip = (R - toothH * 0.7) * scale; // 齿顶圆（齿尖朝内）
   const ringStep = PI2 / ringTeeth;
 
   // 环带淡色填充：外圆与内缘圆的同心环（nonzero 规则下反向路径构成环带，不会漫入环内）
@@ -229,8 +232,8 @@ export function drawGears(
   // ================= 滚动齿轮（外齿圆盘） =================
   const gx = centerR * Math.cos(pose.centerAngle) * scale + offsetX;
   const gy = centerR * Math.sin(pose.centerAngle) * scale + offsetY;
-  const discRoot = r * scale; // 盘缘（齿根）
-  const discTip = (r + toothH) * scale; // 齿顶（齿朝外）
+  const discRoot = (r - toothH * 0.7) * scale; // 齿根圆（谷底，节圆内侧）
+  const discTip = (r + toothH * 0.2) * scale; // 齿顶圆（齿尖朝外，不超环谷底线）
   const rollStep = PI2 / rollingTeeth;
 
   ctx.save();
@@ -291,10 +294,18 @@ export function drawGears(
 
   // ================= 笔孔点（彩色，当前笔高亮） =================
   for (let i = 0; i < pens.length; i++) {
-    const d = (pens[i].hole / 100) * r;
-    // 孔在齿轮局部坐标 (d, 0)，随齿轮自转
-    const hx = gx + d * scale * Math.cos(pose.spinAngle);
-    const hy = gy + d * scale * Math.sin(pose.spinAngle);
+    let hx: number;
+    let hy: number;
+    if (penPoints && penPoints[i]) {
+      // 曲线坐标系中的孔位（动画中 = 曲线当前端点，静态 = 曲线起点）
+      hx = penPoints[i][0] * scale + offsetX;
+      hy = penPoints[i][1] * scale + offsetY;
+    } else {
+      // 缺省：孔在齿轮局部坐标 (d, 0)，随齿轮自转
+      const d = (pens[i].hole / 100) * r;
+      hx = gx + d * scale * Math.cos(pose.spinAngle);
+      hy = gy + d * scale * Math.sin(pose.spinAngle);
+    }
     ctx.beginPath();
     ctx.arc(hx, hy, i === activePenIndex ? 5 : 3.2, 0, PI2);
     ctx.fillStyle = pens[i].color;
