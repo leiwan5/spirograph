@@ -545,8 +545,16 @@ export function renderToCanvasAt(
   ctx.lineJoin = 'round';
   for (const item of items) {
     const { points, count } = item.curve;
+    const w = item.pen.width * (sizePx / 1000); // 导出尺寸按比例放大笔宽（以 1000px 为基准）
+    if (item.pen.gradient.length > 0) {
+      strokeGradientCurve(
+        ctx, points, count, [item.pen.color, ...item.pen.gradient], w, t, 120,
+        item.pen.gradientStart / 100, item.pen.gradientLength / 100, item.pen.gradientLoop,
+      );
+      continue;
+    }
     ctx.strokeStyle = item.pen.color;
-    ctx.lineWidth = item.pen.width * (sizePx / 1000); // 导出尺寸按比例放大笔宽（以 1000px 为基准）
+    ctx.lineWidth = w;
     ctx.beginPath();
     for (let i = 0; i < count; i++) {
       const [sx, sy] = applyTransform(t, points[2 * i], points[2 * i + 1]);

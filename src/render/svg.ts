@@ -1,6 +1,6 @@
 import type { Bounds, Transform } from '../types';
 import type { RenderItem } from './renderer';
-import { computeBounds, computeTransform, gradientColorAt } from './renderer';
+import { computeBounds, computeTransform, gradientColorAt, strokeGradientCurve } from './renderer';
 
 /** 每支笔导出点数上限（超出抽样） */
 const MAX_EXPORT_POINTS_PER_PEN = 12_000;
@@ -98,8 +98,16 @@ export function exportPng(items: RenderItem[], background: string, sizePx = 2048
   ctx.lineJoin = 'round';
   for (const item of items) {
     const { points, count } = item.curve;
+    const w = item.pen.width * (sizePx / 1000);
+    if (item.pen.gradient.length > 0) {
+      strokeGradientCurve(
+        ctx, points, count, [item.pen.color, ...item.pen.gradient], w, t, 120,
+        item.pen.gradientStart / 100, item.pen.gradientLength / 100, item.pen.gradientLoop,
+      );
+      continue;
+    }
     ctx.strokeStyle = item.pen.color;
-    ctx.lineWidth = item.pen.width * (sizePx / 1000);
+    ctx.lineWidth = w;
     ctx.beginPath();
     for (let i = 0; i < count; i++) {
       const [sx, sy] = applySvgTransform(t, points[2 * i], points[2 * i + 1]);
