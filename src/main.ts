@@ -6,9 +6,12 @@ import {
   clearCanvas,
   computeBounds,
   computeFixedBounds,
+  computeSteps,
   computeTransform,
+  drawGears,
   renderFull,
   renderPartial,
+  renderSteps,
 } from './render/renderer';
 import type { RenderItem } from './render/renderer';
 import { exportPng, exportSvg } from './render/export';
@@ -80,7 +83,16 @@ function renderStatic(): void {
     transform: t,
     bounds: items.length ? computeBounds(items.map((i) => i.curve)) : null,
   };
+  if (s.showGears) {
+    // 齿轮画在曲线之下：静态显示初始位姿
+    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, 0, s.pens, 0);
+  }
   renderFull(ctx, items, t);
+}
+
+/** 计算当前进度下动画的 t 参数（用于齿轮位姿） */
+function progressToT(progress: number, periodTurns: number): number {
+  return progress * 2 * Math.PI * periodTurns;
 }
 
 function renderProgress(progress: number): void {
@@ -88,7 +100,15 @@ function renderProgress(progress: number): void {
   const { width, height } = canvasSize();
   const ctx = clearCanvas(canvas, width, height, s.background);
   const { items, t } = computeTransformFor(width, height);
-  renderPartial(ctx, items, t, progress);
+  if (s.showGears) {
+    // 多笔分步：先画齿轮（当前笔的位姿），再画曲线
+    const { penIndex, penProgress } = computeSteps(items.length, progress);
+    const tParam = progressToT(penProgress, items[penIndex].curve.periodTurns);
+    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, tParam, s.pens, penIndex);
+    renderSteps(ctx, items, t, progress);
+  } else {
+    renderPartial(ctx, items, t, progress);
+  }
 }
 
 // ---- 动画 ----

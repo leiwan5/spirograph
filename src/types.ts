@@ -17,6 +17,7 @@ export interface AppState {
   background: string;
   speed: number; // 动画速度倍率 0.1-10
   scaleMode: 'auto' | 'fixed'; // auto=联合包围盒自适应充满；fixed=固定齿轮比例（调孔洞不影响整图缩放）
+  showGears: boolean; // 动画时显示齿轮（多笔分步完成）
 }
 
 /** 化简后的齿轮信息 */

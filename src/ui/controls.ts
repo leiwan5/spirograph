@@ -69,6 +69,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     <section>
       <div class="row-label"><span>动画速度</span><span class="val" id="speed-val">1×</span></div>
       <input type="range" id="speed" min="0.1" max="10" step="0.1">
+      <label class="check-row"><input type="checkbox" id="show-gears"><span>显示齿轮（多笔分步绘制）</span></label>
     </section>
 
     <section class="actions">
@@ -194,9 +195,11 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     });
   });
 
-  // ---- 背景色 / 速度 ----
+  // ---- 背景色 / 速度 / 显示齿轮 ----
   bgColor.addEventListener('input', () => setState({ background: bgColor.value }));
   speedSlider.addEventListener('input', () => setState({ speed: Math.round(+speedSlider.value * 10) / 10 }));
+  const gearsCheck = $<HTMLInputElement>('show-gears');
+  gearsCheck.addEventListener('change', () => setState({ showGears: gearsCheck.checked }));
 
   // ---- 笔列表 ----
   // 笔的 id 集合（结构指纹）：setPens/预设/随机/URL 整体替换时重建卡片，
@@ -273,6 +276,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     speedSlider.value = String(s.speed);
     speedVal.textContent = s.speed + '×';
     bgColor.value = s.background;
+    gearsCheck.checked = s.showGears;
 
     segButtons.forEach((b) => b.classList.toggle('active', b.dataset.mode === s.mode));
     scaleButtons.forEach((b) => b.classList.toggle('active', b.dataset.scale === s.scaleMode));

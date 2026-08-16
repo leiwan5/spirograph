@@ -166,6 +166,23 @@ input[type='color'] {
 }
 .add-pen:hover { color: var(--accent-2); border-color: var(--accent); }
 
+/* 复选框行 */
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+.check-row input[type='checkbox'] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 /* 操作按钮 */
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .btn {

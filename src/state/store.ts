@@ -11,6 +11,7 @@ export const DEFAULT_STATE: AppState = {
   background: '#ffffff',
   speed: 1,
   scaleMode: 'auto',
+  showGears: false,
 };
 
 let state: AppState = {
