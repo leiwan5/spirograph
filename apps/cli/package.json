@@ -1,0 +1,25 @@
+{
+  "name": "@spirograph/cli",
+  "version": "0.1.0",
+  "description": "万花尺 CLI：query/JSON 参数直接生成 PNG/SVG 文件，基于 @spirograph/core",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "spirograph": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@spirograph/core": "0.1.0"
+  },
+  "keywords": [
+    "spirograph",
+    "cli",
+    "png",
+    "svg"
+  ]
+}
