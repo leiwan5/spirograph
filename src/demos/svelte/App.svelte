@@ -108,11 +108,11 @@
 
 <section id="api" class="docs-section anchor">
   <h2>API</h2>
-  <p class="sub">Components accept an <code>AppState</code> and an optional mutable <code>control</code> object that the component fills with methods.</p>
+  <p class="sub">Components accept an <code>SpirographState</code> and an optional mutable <code>control</code> object that the component fills with methods.</p>
   <table class="api-table">
     <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Note</th></tr></thead>
     <tbody>
-      <tr><td><code>state</code></td><td><code>AppState</code></td><td>—</td><td>drawing state (see <code>@spirograph/core</code>)</td></tr>
+      <tr><td><code>state</code></td><td><code>SpirographState</code></td><td>—</td><td>drawing state (see <code>@spirograph/core</code>)</td></tr>
       <tr><td><code>control</code></td><td><code>SpirographControl</code></td><td>—</td><td>filled with <code>exportPng</code> / <code>exportSvg</code> (animated also <code>play/pause/resume/stop/setSpeed</code>)</td></tr>
       <tr><td><code>playMode</code></td><td><code>'sequential' | 'simultaneous'</code></td><td><code>sequential</code></td><td>one pen at a time / all together (animated)</td></tr>
       <tr><td><code>baseDurationMs</code></td><td><code>number?</code></td><td>derived</td><td>animation duration (constant pen speed by default)</td></tr>

@@ -1,17 +1,17 @@
 <script lang="ts">
-  import type { AppState } from '@spirograph/core';
+  import type { SpirographState } from '@spirograph/core';
   import { SpirographAnimated } from '@spirograph/svelte';
   import type { SpirographAnimationControl, PlayMode } from '@spirograph/svelte';
   import { applyPatch, buildDemoState, randomize } from '../state.js';
   import DemoCard from './DemoCard.svelte';
   import DemoControls from './DemoControls.svelte';
 
-  let state: AppState = $state(buildDemoState());
+  let state: SpirographState = $state(buildDemoState());
   let control: SpirographAnimationControl = $state({});
   let playMode: PlayMode = $state('sequential');
   let gears = $state(false);
 
-  function patch(p: Partial<AppState>) {
+  function patch(p: Partial<SpirographState>) {
     state = applyPatch(state, p);
   }
   function random() {

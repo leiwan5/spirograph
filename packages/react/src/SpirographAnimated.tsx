@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type { AppState } from '@spirograph/core';
+import type { SpirographState } from '@spirograph/core';
 import { DrawAnimation } from '@spirograph/anim';
 import { exportPng as downloadPng, exportSvg as downloadSvg } from '@spirograph/canvas';
 import type { CanvasRenderer } from '@spirograph/canvas';
@@ -26,7 +26,7 @@ export interface SpirographAnimationHandle extends SpirographHandle {
 
 export interface SpirographAnimatedProps extends Omit<SpirographCanvasProps, 'state'> {
   /** Full spirograph drawing state. */
-  state: AppState;
+  state: SpirographState;
   /** One pen at a time (default) or all pens together. */
   playMode?: PlayMode;
   /** Explicit animation duration in ms. Default: derived from segment count for constant pen speed. */

@@ -8,7 +8,7 @@ npm i @spirograph/react
 
 ## Render-only canvas
 
-Draws the finished pattern from an `AppState`; exposes PNG/SVG export through its ref handle.
+Draws the finished pattern from an `SpirographState`; exposes PNG/SVG export through its ref handle.
 
 ```tsx
 import { useRef } from 'react';
@@ -55,7 +55,7 @@ export default function App() {
 
 | Component | Prop | Type | Default | Note |
 |---|---|---|---|---|
-| both | `state` | `AppState` | — | drawing state (see `@spirograph/core`) |
+| both | `state` | `SpirographState` | — | drawing state (see `@spirograph/core`) |
 | both | `className` / `style` / `id` | — | — | passed to `<canvas>` |
 | `SpirographAnimated` | `playMode` | `'sequential' \| 'simultaneous'` | `'sequential'` | one pen at a time / all together |
 | `SpirographAnimated` | `baseDurationMs` | `number?` | derived | animation duration (constant pen speed by default) |

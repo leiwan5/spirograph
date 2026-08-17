@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type { AppState } from '@spirograph/core';
+import type { SpirographState } from '@spirograph/core';
 import { exportPng as downloadPng, exportSvg as downloadSvg } from '@spirograph/canvas';
 import type { CanvasRenderer } from '@spirograph/canvas';
 import { useRender } from './useRender.js';
@@ -13,8 +13,8 @@ export interface SpirographHandle {
 }
 
 export interface SpirographCanvasProps {
-  /** Full spirograph drawing state (see @spirograph/core AppState). */
-  state: AppState;
+  /** Full spirograph drawing state (see @spirograph/core SpirographState). */
+  state: SpirographState;
   /** Extra class for the <canvas> element. */
   className?: string;
   /** Inline style merged over the canvas' default 100% sizing. */

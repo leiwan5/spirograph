@@ -1,7 +1,7 @@
-import type { AppState, Pen } from '@spirograph/core';
+import type { SpirographState, Pen } from '@spirograph/core';
 import { DEFAULT_STATE } from '@spirograph/core';
 
-let state: AppState = {
+let state: SpirographState = {
   ...DEFAULT_STATE,
   pens: DEFAULT_STATE.pens.map((p) => ({ ...p, colors: [...p.colors] })),
 };
@@ -10,11 +10,11 @@ let nextPenId = 100;
 type Listener = () => void;
 const listeners = new Set<Listener>();
 
-export function getState(): AppState {
+export function getState(): SpirographState {
   return state;
 }
 
-export function setState(patch: Partial<AppState>): void {
+export function setState(patch: Partial<SpirographState>): void {
   state = { ...state, ...patch };
   emit();
 }

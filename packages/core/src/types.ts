@@ -12,7 +12,7 @@ export interface Pen {
 }
 
 /** App drawing params (no play state; play is managed by the UI layer) */
-export interface AppState {
+export interface SpirographState {
   mode: DrawingMode;
   ringTeeth: number;
   rollingTeeth: number;

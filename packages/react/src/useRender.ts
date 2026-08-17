@@ -4,7 +4,7 @@ import { CanvasRenderer } from '@spirograph/canvas';
 /**
  * Owns a <canvas> element + a CanvasRenderer lifecycle:
  *  - creates the renderer on mount and observes resizes (redraw via the latest renderStatic),
- *  - re-runs `renderStatic` whenever `depends` changes (e.g. the AppState).
+ *  - re-runs `renderStatic` whenever `depends` changes (e.g. the SpirographState).
  * `renderStatic` is captured in a ref so the ResizeObserver always calls the current closure.
  */
 export function useRender(

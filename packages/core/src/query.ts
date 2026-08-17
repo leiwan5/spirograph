@@ -1,4 +1,4 @@
-import type { AppState, Pen } from './types.js';
+import type { SpirographState, Pen } from './types.js';
 
 /**
  * URL query parameter format (identical to the web app's share links, image endpoints, and CLI):
@@ -52,7 +52,7 @@ export function getQueryValue(search: string, key: string): string | null {
 }
 
 /** Serialize state → query string (without ?), stable key order */
-export function serializeState(s: AppState): string {
+export function serializeState(s: SpirographState): string {
   const parts: string[] = [];
   parts.push('ring=' + String(s.ringTeeth));
   parts.push('rolling=' + String(s.rollingTeeth));
@@ -77,7 +77,7 @@ export function serializeState(s: AppState): string {
 }
 
 /** State patch parsed from a URL (pens have no id; assigned by the store) */
-export type UrlPatch = Partial<Omit<AppState, 'pens'>> & { pens?: Array<Omit<Pen, 'id'>> };
+export type UrlPatch = Partial<Omit<SpirographState, 'pens'>> & { pens?: Array<Omit<Pen, 'id'>> };
 
 /** Parse a query string → state patch (invalid values are always ignored, never throw) */
 export function parseState(search: string): UrlPatch {

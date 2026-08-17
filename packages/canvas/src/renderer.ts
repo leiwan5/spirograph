@@ -1,4 +1,4 @@
-import type { AppState, Pen, RenderItem, Transform } from '@spirograph/core';
+import type { SpirographState, Pen, RenderItem, Transform } from '@spirograph/core';
 import { DEFAULT_STATE, computeBounds, computeFixedBounds, computeTransform, sampleCurve } from '@spirograph/core';
 import { weightedSteps } from '@spirograph/core';
 import {
@@ -29,7 +29,7 @@ export class CanvasRenderer {
   constructor(private canvas: HTMLCanvasElement) {}
 
   /** Build the render items (cached by curve geometry), merging latest pen props. */
-  items(state: AppState): RenderItem[] {
+  items(state: SpirographState): RenderItem[] {
     const pens = state.pens.length > 0 ? state.pens : DEFAULT_STATE.pens;
     const key =
       state.mode + '|' + state.ringTeeth + '|' + state.rollingTeeth + '|' +
@@ -63,7 +63,7 @@ export class CanvasRenderer {
     return (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
   }
 
-  private transformOf(state: AppState, w: number, h: number): { items: RenderItem[]; t: Transform } {
+  private transformOf(state: SpirographState, w: number, h: number): { items: RenderItem[]; t: Transform } {
     const items = this.items(state);
     const padding = Math.max(24, Math.min(w, h) * 0.04);
     const bounds =
@@ -74,7 +74,7 @@ export class CanvasRenderer {
   }
 
   /** Draw the finished full pattern (optionally with stationary gears beneath the curve). */
-  renderStatic(state: AppState): void {
+  renderStatic(state: SpirographState): void {
     const { width, height } = this.canvasSize();
     const ctx = clearCanvas(this.canvas, width, height, state.background, this.devicePixelRatio());
     const { items, t } = this.transformOf(state, width, height);
@@ -90,7 +90,7 @@ export class CanvasRenderer {
    * sequential: one pen at a time (weighted by curve length); simultaneous: all pens in sync.
    * Gears are overlaid when showGears is set and rotate with the active pen.
    */
-  renderProgress(state: AppState, playMode: 'sequential' | 'simultaneous', progress: number): void {
+  renderProgress(state: SpirographState, playMode: 'sequential' | 'simultaneous', progress: number): void {
     const { width, height } = this.canvasSize();
     const ctx = clearCanvas(this.canvas, width, height, state.background, this.devicePixelRatio());
     const { items, t } = this.transformOf(state, width, height);
@@ -124,7 +124,7 @@ export class CanvasRenderer {
  */
 export function makeAnimationFrame(
   renderer: CanvasRenderer,
-  getState: () => AppState,
+  getState: () => SpirographState,
   playMode: 'sequential' | 'simultaneous',
 ): (progress: number) => void {
   return (progress: number) => {

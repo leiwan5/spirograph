@@ -4,14 +4,14 @@
   // `$state` rune is not ambiguous with a `state` binding (Svelte 5 would otherwise
   // treat `$state` as a store subscription of a variable named `state`).
   import { onDestroy } from 'svelte';
-  import type { AppState } from '@spirograph/core';
+  import type { SpirographState } from '@spirograph/core';
   import { CanvasRenderer, exportPng, exportSvg } from '@spirograph/canvas';
   import type { CanvasRenderer as CanvasRendererType } from '@spirograph/canvas';
   import type { SpirographControl } from './types.js';
 
   interface Props {
-    /** Full spirograph drawing state (see @spirograph/core AppState). */
-    state: AppState;
+    /** Full spirograph drawing state (see @spirograph/core SpirographState). */
+    state: SpirographState;
     className?: string;
     style?: string;
     id?: string;

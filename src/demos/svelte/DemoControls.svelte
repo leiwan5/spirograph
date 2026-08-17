@@ -1,9 +1,9 @@
 <script lang="ts">
-  import type { AppState } from '@spirograph/core';
+  import type { SpirographState } from '@spirograph/core';
 
   interface Props {
-    state: AppState;
-    onPatch?: (patch: Partial<AppState>) => void;
+    state: SpirographState;
+    onPatch?: (patch: Partial<SpirographState>) => void;
     onRandom?: () => void;
   }
 

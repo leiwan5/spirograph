@@ -1,7 +1,7 @@
-import type { AppState } from './types.js';
+import type { SpirographState } from './types.js';
 
 /** Default state: fallback values for query parsing, image endpoint, and CLI (matching the web app's initial state) */
-export const DEFAULT_STATE: AppState = {
+export const DEFAULT_STATE: SpirographState = {
   mode: 'inside',
   ringTeeth: 72,
   rollingTeeth: 30,

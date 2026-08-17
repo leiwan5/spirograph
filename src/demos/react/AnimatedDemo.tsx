@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import type { AppState } from '@spirograph/core';
+import type { SpirographState } from '@spirograph/core';
 import { SpirographAnimated } from '@spirograph/react';
 import type { SpirographAnimationHandle, PlayMode } from '@spirograph/react';
 import { applyPatch, buildDemoState, randomize } from '../state';
@@ -7,12 +7,12 @@ import { DemoCard } from './DemoCard';
 import { DemoControls } from './DemoControls';
 
 export function AnimatedDemo() {
-  const [state, setState] = useState<AppState>(() => buildDemoState());
+  const [state, setState] = useState<SpirographState>(() => buildDemoState());
   const [playMode, setPlayMode] = useState<PlayMode>('sequential');
   const [gears, setGears] = useState(false);
   const ref = useRef<SpirographAnimationHandle>(null);
 
-  const patch = (p: Partial<AppState>) => setState((s) => applyPatch(s, p));
+  const patch = (p: Partial<SpirographState>) => setState((s) => applyPatch(s, p));
   const random = () => setState((s) => randomize(s));
   const toggleGears = () => {
     setGears((g) => {

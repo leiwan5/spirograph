@@ -1,4 +1,4 @@
-import type { AppState, RenderItem } from './types.js';
+import type { SpirographState, RenderItem } from './types.js';
 import { DEFAULT_STATE } from './defaults.js';
 import { parseState, getQueryValue } from './query.js';
 import { sampleCurve } from './math/curve.js';
@@ -6,7 +6,7 @@ import { buildSvg } from './svg.js';
 import { rasterize, encodePng } from './png.js';
 
 export interface ImageParams {
-  state: AppState;
+  state: SpirographState;
   size: number;
 }
 
@@ -18,7 +18,7 @@ export function parseImageParams(search: string): ImageParams {
   let rolling = patch.rollingTeeth ?? DEFAULT_STATE.rollingTeeth;
   if (mode === 'inside' && rolling >= ring) rolling = ring - 1;
   const pens = patch.pens && patch.pens.length > 0 ? patch.pens : DEFAULT_STATE.pens;
-  const state: AppState = {
+  const state: SpirographState = {
     mode,
     ringTeeth: ring,
     rollingTeeth: rolling,
@@ -36,7 +36,7 @@ export function parseImageParams(search: string): ImageParams {
 }
 
 /** Build render items (same curve-sampling logic as the frontend buildItems) */
-export function buildItems(s: AppState): RenderItem[] {
+export function buildItems(s: SpirographState): RenderItem[] {
   return s.pens.map((pen) => ({
     curve: sampleCurve(s.ringTeeth, s.rollingTeeth, s.mode, pen.hole),
     pen: { ...pen },

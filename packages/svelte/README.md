@@ -8,7 +8,7 @@ npm i @spirograph/svelte
 
 ## Render-only canvas
 
-Draws the finished pattern from an `AppState`; exposes PNG/SVG export through a `control` object.
+Draws the finished pattern from an `SpirographState`; exposes PNG/SVG export through a `control` object.
 
 ```svelte
 <script lang="ts">
@@ -52,7 +52,7 @@ Adds a simulated drawing animation + `play`/`pause`/`resume`/`stop`/`setSpeed` c
 
 | Component | Prop | Type | Default | Note |
 |---|---|---|---|---|
-| both | `state` | `AppState` | — | drawing state (see `@spirograph/core`) |
+| both | `state` | `SpirographState` | — | drawing state (see `@spirograph/core`) |
 | both | `className` / `style` / `id` | — | — | passed to `<canvas>` |
 | both | `control` | `SpirographControl` | — | mutable object filled with export methods |
 | `SpirographAnimated` | `playMode` | `'sequential' \| 'simultaneous'` | `'sequential'` | one pen at a time / all together |

@@ -20,7 +20,7 @@ spirograph --help
 | Option | Description |
 |---|---|
 | `--params <query>` | URL query (same format as web share links / image endpoints) |
-| `--json <json>` | AppState JSON (takes precedence over --params) |
+| `--json <json>` | SpirographState JSON (takes precedence over --params) |
 | `--format <fmt>` | `png` / `svg` (default png) |
 | `--size <n>` | PNG size 64–4096 (default 1000) |
 | `--out <path>` | output path (default `spirograph.<fmt>`) |

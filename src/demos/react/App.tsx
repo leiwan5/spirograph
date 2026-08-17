@@ -125,7 +125,7 @@ export default function App() {
       <section id="api" className="docs-section anchor">
         <h2>API</h2>
         <p className="sub">
-          Components accept an <code>AppState</code>; the ref handle exposes exports (and, for the
+          Components accept an <code>SpirographState</code>; the ref handle exposes exports (and, for the
           animated component, <code>play/pause/resume/stop/setSpeed</code>).
         </p>
         <table className="api-table">
@@ -133,7 +133,7 @@ export default function App() {
             <tr><th>Prop</th><th>Type</th><th>Default</th><th>Note</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>state</code></td><td><code>AppState</code></td><td>—</td><td>drawing state (see <code>@spirograph/core</code>)</td></tr>
+            <tr><td><code>state</code></td><td><code>SpirographState</code></td><td>—</td><td>drawing state (see <code>@spirograph/core</code>)</td></tr>
             <tr><td><code>playMode</code></td><td><code>'sequential' | 'simultaneous'</code></td><td><code>sequential</code></td><td>one pen at a time / all together (animated)</td></tr>
             <tr><td><code>baseDurationMs</code></td><td><code>number?</code></td><td>derived</td><td>animation duration (constant pen speed by default)</td></tr>
             <tr><td><code>segmentsPerSecond</code></td><td><code>number?</code></td><td><code>350</code></td><td>target speed when duration is derived</td></tr>

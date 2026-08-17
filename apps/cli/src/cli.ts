@@ -5,7 +5,7 @@ import { generatePng, generateSvg } from '@spirograph/core';
 export interface CliOptions {
   /** query params (same as image endpoints / share links), e.g. ring=72&rolling=30&pen=40,e63946,2.5 */
   params?: string;
-  /** provide the AppState JSON directly (overrides params) */
+  /** provide the SpirographState JSON directly (overrides params) */
   json?: string;
   format: 'png' | 'svg';
   size?: number;
@@ -29,7 +29,7 @@ Usage:
 
 Options:
   --params <query>   query params (ring/rolling/mode/pen/bg/scale/speed/gears/size)
-  --json <json>      provide an AppState JSON directly (takes precedence over --params)
+  --json <json>      provide an SpirographState JSON directly (takes precedence over --params)
   --format <fmt>     png | svg (default png)
   --size <n>         png size 64–4096 (default 1000)
   --out <path>       output file path (default spirograph.<fmt>)
@@ -75,7 +75,7 @@ export function generate(opts: CliOptions): CliResult {
   return { format: 'png', data: generatePng(search), filename };
 }
 
-/** Simply convert AppState JSON to query (enough for the CLI scenario; input is colors semantics) */
+/** Simply convert SpirographState JSON to query (enough for the CLI scenario; input is colors semantics) */
 function jsonToQuery(json: string): string {
   const s = JSON.parse(json);
   const parts: string[] = [];

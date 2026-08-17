@@ -1,5 +1,5 @@
-// Demo helpers shared by the Svelte & React landing pages: build an AppState (URL-aware) and mutate it.
-import type { AppState, Pen } from '@spirograph/core';
+// Demo helpers shared by the Svelte & React landing pages: build a SpirographState (URL-aware) and mutate it.
+import type { SpirographState, Pen } from '@spirograph/core';
 import { DEFAULT_STATE, parseState } from '@spirograph/core';
 
 /** Unique pen ids for demo state (the library renderer caches curves by pen id + hole). */
@@ -8,8 +8,8 @@ function withIds(pens: Array<Omit<Pen, 'id'>>): Pen[] {
   return pens.map((p) => ({ ...p, id: nextId++ }));
 }
 
-/** Build a fresh demo AppState, seeded from the URL query (same params as the main app) or defaults. */
-export function buildDemoState(): AppState {
+/** Build a fresh demo SpirographState, seeded from the URL query (same params as the main app) or defaults. */
+export function buildDemoState(): SpirographState {
   const hasQuery = typeof location !== 'undefined' && location.search.length > 1;
   const patch = hasQuery ? parseState(location.search) : {};
   const pens =
@@ -27,7 +27,7 @@ export function buildDemoState(): AppState {
 }
 
 /** Clamp inside-mode so rolling < ring (mirrors the main app). */
-export function clampInside(state: Pick<AppState, 'mode' | 'ringTeeth' | 'rollingTeeth'>): AppState['rollingTeeth'] {
+export function clampInside(state: Pick<SpirographState, 'mode' | 'ringTeeth' | 'rollingTeeth'>): SpirographState['rollingTeeth'] {
   if (state.mode === 'inside' && state.rollingTeeth >= state.ringTeeth) {
     return state.ringTeeth - 1;
   }
@@ -36,9 +36,9 @@ export function clampInside(state: Pick<AppState, 'mode' | 'ringTeeth' | 'rollin
 
 /** Apply a partial patch to a demo state, clamping inside-mode rolling < ring. */
 export function applyPatch(
-  state: AppState,
-  patch: Partial<AppState>,
-): AppState {
+  state: SpirographState,
+  patch: Partial<SpirographState>,
+): SpirographState {
   const merged = { ...state, ...patch };
   const mode = merged.mode;
   const ring = merged.ringTeeth;
@@ -55,8 +55,8 @@ export function applyPatch(
 }
 
 /** Random inspiration for the demo (teeth + solid color pens + background). */
-export function randomize(state: AppState): AppState {
-  const mode: AppState['mode'] = Math.random() < 0.75 ? 'inside' : 'outside';
+export function randomize(state: SpirographState): SpirographState {
+  const mode: SpirographState['mode'] = Math.random() < 0.75 ? 'inside' : 'outside';
   const ring = 40 + Math.floor(Math.random() * 140);
   const rollingRaw = mode === 'inside' ? 8 + Math.floor(Math.random() * Math.min(88, ring - 9)) : 8 + Math.floor(Math.random() * 88);
   const count = 1 + Math.floor(Math.random() * 2);

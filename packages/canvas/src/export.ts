@@ -1,4 +1,4 @@
-import type { AppState, RenderItem } from '@spirograph/core';
+import type { SpirographState, RenderItem } from '@spirograph/core';
 import { buildSvg } from '@spirograph/core';
 import { renderToCanvasAt } from '@spirograph/core/browser';
 import type { CanvasElementLike } from '@spirograph/core/browser';
@@ -38,7 +38,7 @@ export function exportPng(items: RenderItem[], background: string, sizePx = 2048
 /** Download exports keyed by rendering state (convenience for framework components). */
 export function exportState(
   items: RenderItem[],
-  state: AppState,
+  state: SpirographState,
   format: 'png' | 'svg',
   sizePx = 2048,
 ): void {

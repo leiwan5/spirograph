@@ -3,14 +3,14 @@
   // The public prop is named `state`; it is aliased to `pattern` so the `$state` rune is not
   // ambiguous with a `state` binding (see SpirographCanvas.svelte).
   import { onDestroy } from 'svelte';
-  import type { AppState } from '@spirograph/core';
+  import type { SpirographState } from '@spirograph/core';
   import { DrawAnimation } from '@spirograph/anim';
   import { CanvasRenderer, exportPng, exportSvg } from '@spirograph/canvas';
   import type { CanvasRenderer as CanvasRendererType } from '@spirograph/canvas';
   import type { SpirographAnimationControl, PlayMode } from './types.js';
 
   interface Props {
-    state: AppState;
+    state: SpirographState;
     playMode?: PlayMode;
     baseDurationMs?: number;
     segmentsPerSecond?: number;
