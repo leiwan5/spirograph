@@ -3,12 +3,12 @@ import '@fortawesome/fontawesome-free/css/solid.min.css';
 import './ui/styles.css';
 import { buildPanel } from './ui/controls';
 import { getState, subscribe } from './state/store';
-import { DEFAULT_STATE, computeBounds, computeFixedBounds, computeTransform } from '@spirograph/core';
+import { DEFAULT_STATE, computeBounds, computeFixedBounds, computeTransform, weightedSteps } from '@spirograph/core';
 import { sampleCurve } from '@spirograph/core';
 import type { RenderItem } from '@spirograph/core';
-import { clearCanvas, drawGears, drawPenHoles, renderFull, renderPartial, renderSteps } from '@spirograph/core/browser';
+import { clearCanvas, drawGears, renderFull, renderPartial, renderSteps } from '@spirograph/core/browser';
 import { exportPng, exportSvg } from './render/export';
-import { DrawAnimation, createFramePlan } from '@spirograph/anim';
+import { DrawAnimation } from '@spirograph/anim';
 import { randomSettings } from './ui/presets';
 import { applyUrlParams, syncUrl } from './state/url';
 
@@ -84,15 +84,12 @@ function renderStatic(): void {
     drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, 0, pens, 0);
   }
   renderFull(ctx, items, t);
-  if (s.showGears) {
-    // 笔孔与笔尖画在曲线之上：笔孔 = 各笔曲线起点（曲线从孔正中间画出）
-    const pens = s.pens.length > 0 ? s.pens : DEFAULT_STATE.pens;
-    const penPoints = items.map((i) => [i.curve.points[0], i.curve.points[1]] as [number, number]);
-    drawPenHoles(ctx, t, pens, 0, s.rollingTeeth, penPoints);
-  }
 }
 
-/** 渲染当前进度（动画帧）：用 @spirograph/anim 的帧计划决定每笔画多少 */
+// 播放模式：单笔一次（默认） / 多笔同时
+let playMode: 'simultaneous' | 'sequential' = 'sequential';
+
+/** 渲染当前进度（动画帧）：按播放模式绘制曲线，齿轮为可选叠加 */
 function renderProgress(progress: number): void {
   const s = getState();
   const { width, height } = canvasSize();
@@ -103,29 +100,27 @@ function renderProgress(progress: number): void {
     renderStatic();
     return;
   }
-  const plan = createFramePlan(items, progress, { step: s.showGears });
-  if (s.showGears) {
-    // 多笔分步：先画齿轮（当前笔的位姿），再画曲线
-    const curve = items[plan.penIndex]?.curve;
-    if (!curve) {
-      renderStatic();
-      return;
-    }
-    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, plan.gearT, s.pens, plan.penIndex);
-    renderSteps(ctx, items, t, progress);
-    // 笔孔与笔尖画在曲线之上：当前笔 = 曲线当前端点（笔头随画随动）；其他笔 = 各自曲线起点
-    const drawnCount = plan.perPenPoints[plan.penIndex];
-    const penPoints = items.map((item, i) => {
-      if (i === plan.penIndex) {
-        const idx = Math.max(0, drawnCount - 1);
-        return [item.curve.points[2 * idx], item.curve.points[2 * idx + 1]] as [number, number];
+  if (playMode === 'sequential') {
+    // 单笔一次：一次画一支（按曲线长度加权，真实恒定速度），画完画下一支
+    if (s.showGears) {
+      const { penIndex, penProgress } = weightedSteps(items.map((i) => i.curve.count - 1), progress);
+      const curve = items[penIndex]?.curve;
+      if (curve) {
+        // 齿轮跟随当前激活笔的局部进度：齿尖随笔尖同步移动/转动
+        const gearT = penProgress * 2 * Math.PI * curve.periodTurns;
+        drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, gearT, s.pens, penIndex);
       }
-      return [item.curve.points[0], item.curve.points[1]] as [number, number];
-    });
-    drawPenHoles(ctx, t, s.pens, plan.penIndex, s.rollingTeeth, penPoints);
-  } else {
-    renderPartial(ctx, items, t, progress);
+    }
+    renderSteps(ctx, items, t, progress);
+    return;
   }
+  // 多笔同时：所有笔同步绘制
+  if (s.showGears) {
+    // 齿轮随基准笔（第一支）的总进度转动
+    const gearT = items[0].curve ? progress * 2 * Math.PI * items[0].curve.periodTurns : 0;
+    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, gearT, s.pens, 0);
+  }
+  renderPartial(ctx, items, t, progress);
 }
 
 // ---- 动画 ----
@@ -143,6 +138,10 @@ function togglePlay(): void {
     }
     return;
   }
+  // 基准时长按总段数动态计算，保证"笔划速度一致"（恒定段/秒，与图形复杂度和笔数无关）
+  const totalSegs = buildItems().reduce((n, i) => n + (i.curve.count - 1), 0);
+  const SEGS_PER_SEC = 350; // 每笔恒定绘制段速
+  const baseDurationMs = Math.max(1000, (totalSegs / SEGS_PER_SEC) * 1000);
   anim = new DrawAnimation(
     renderProgress,
     () => {
@@ -150,20 +149,26 @@ function togglePlay(): void {
       panel.setPlayingUI(false);
       renderStatic();
     },
-    15_000,
+    baseDurationMs,
   );
   anim.setSpeed(s.speed);
   anim.start();
   panel.setPlayingUI(true, false);
 }
 
-// 参数变更 → 停止动画并重绘静态图；仅速度变更 → 只调速度
+// 参数变更 → 停止动画并重绘静态图；速度/显示齿轮变更 → 只调速度/更新齿轮（不中断动画）
 let prevSpeed = getState().speed;
+let prevGears = getState().showGears;
 subscribe(() => {
   const s = getState();
   if (s.speed !== prevSpeed) {
     prevSpeed = s.speed;
     if (anim) anim.setSpeed(s.speed);
+    return;
+  }
+  if (s.showGears !== prevGears) {
+    prevGears = s.showGears;
+    // 齿轮仅叠加显示，不影响进度 → 不停止动画，下一帧自然生效
     return;
   }
   if (anim) {
@@ -174,20 +179,20 @@ subscribe(() => {
   renderStatic();
 });
 
-// 浮动工具栏播放按钮：与动画模式共用 togglePlay
+// 浮动工具栏播放按钮：共用 togglePlay（播放/暂停/恢复）
 panel.onPlayRequest(togglePlay);
-// 动画模式切换：进入即开始绘制，退出则停止并回静态图
-panel.onAnimationMode((active) => {
-  if (active) {
-    togglePlay();
-  } else {
-    if (anim) {
-      anim.stop();
-      anim = null;
-    }
-    panel.setPlayingUI(false);
-    renderStatic();
+// 浮动工具栏停止按钮：停止动画并回静态图
+panel.onStopRequest(() => {
+  if (anim) {
+    anim.stop();
+    anim = null;
   }
+  panel.setPlayingUI(false);
+  renderStatic();
+});
+// 播放模式切换（多笔同时 / 单笔一次）：仅改下一帧绘制方式，不中断动画
+panel.onPlayModeChange((mode) => {
+  playMode = mode;
 });
 panel.onRandomRequest(() => randomSettings());
 panel.onExportPng((size) => exportPng(buildItems(), getState().background, size));

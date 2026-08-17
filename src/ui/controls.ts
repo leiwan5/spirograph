@@ -23,8 +23,9 @@ const ROLLING_MAX = 96;
 
 export interface PanelApi {
   setPlayingUI(playing: boolean, paused?: boolean): void;
-  onAnimationMode(cb: (active: boolean) => void): void;
   onPlayRequest(cb: () => void): void;
+  onStopRequest(cb: () => void): void;
+  onPlayModeChange(cb: (mode: 'simultaneous' | 'sequential') => void): void;
   onRandomRequest(cb: () => void): void;
   onExportPng(cb: (size: number) => void): void;
   onExportSvg(cb: (size: number) => void): void;
@@ -42,7 +43,6 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     </div>
 
     <div class="toolbar-group">
-      <button class="btn btn-ghost toolbar-btn toolbar-play" id="anim-mode" data-i18n-title="animModeTitle"><i class="fa-solid fa-film"></i></button>
       <button class="btn btn-ghost toolbar-btn" id="settings-btn" data-i18n-title="settingsTitle"><i class="fa-solid fa-gear"></i></button>
     </div>
 
@@ -106,16 +106,20 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   stage.className = 'stage';
   stage.appendChild(canvas);
 
-  // ---- 画布右下角浮动工具栏（动画模式：播放/暂停 + 速度 + 退出）----
+  // ---- 画布右下角浮动工具栏（常驻：播放 + 显示齿轮；播放中展开暂停/停止/速度）----
   const animFloat = document.createElement('div');
   animFloat.className = 'anim-float';
-  animFloat.hidden = true;
   animFloat.innerHTML = `
     <button class="anim-float-play" id="float-play" data-i18n-title="playTitle"><i class="fa-solid fa-play"></i></button>
-    <button class="anim-float-btn" id="speed-down" data-i18n-title="speedDownTitle"><i class="fa-solid fa-minus"></i></button>
-    <span class="anim-float-speed" id="float-speed">1×</span>
-    <button class="anim-float-btn" id="speed-up" data-i18n-title="speedUpTitle"><i class="fa-solid fa-plus"></i></button>
-    <button class="anim-float-btn anim-float-exit" id="anim-exit" data-i18n-title="animModeExitTitle"><i class="fa-solid fa-xmark"></i></button>
+    <div class="anim-float-mode" id="float-mode">
+      <button data-mode="sequential" class="active" data-i18n-title="playModeSequentialTitle"><i class="fa-solid fa-minus"></i></button>
+      <button data-mode="simultaneous" data-i18n-title="playModeSimultaneousTitle"><i class="fa-solid fa-align-justify"></i></button>
+    </div>
+    <button class="anim-float-btn anim-float-stop" id="float-stop" data-i18n-title="stopTitle" hidden><i class="fa-solid fa-stop"></i></button>
+    <button class="anim-float-btn" id="speed-down" data-i18n-title="speedDownTitle" hidden><i class="fa-solid fa-minus"></i></button>
+    <span class="anim-float-speed" id="float-speed" hidden>1×</span>
+    <button class="anim-float-btn" id="speed-up" data-i18n-title="speedUpTitle" hidden><i class="fa-solid fa-plus"></i></button>
+    <button class="anim-float-toggle" id="float-gears" aria-pressed="false" title="${t('showGears')}"><i class="fa-solid fa-gear"></i></button>
   `;
   stage.appendChild(animFloat);
 
@@ -180,7 +184,6 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   const ringChipsEl = $panel('ring-chips');
   const rollingChipsEl = $panel('rolling-chips');
   const presetChipsEl = $panel('preset-chips');
-  const playBtn = $toolbar<HTMLButtonElement>('anim-mode');
   const randomBtn = $toolbar<HTMLButtonElement>('random');
   const exportPngBtn = $toolbar<HTMLButtonElement>('export-png');
   const exportSvgBtn = $toolbar<HTMLButtonElement>('export-svg');
@@ -196,19 +199,22 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   const gearsCheck = $modal<HTMLInputElement>('show-gears');
   const imgSizeSelect = $modal<HTMLSelectElement>('img-size');
   const settingsCloseBtn = $modal<HTMLButtonElement>('settings-close');
-  // 浮动工具栏（动画模式）
+  // 浮动工具栏（常驻）
   const floatPlayBtn = animFloat.querySelector<HTMLButtonElement>('#float-play')!;
+  const floatStopBtn = animFloat.querySelector<HTMLButtonElement>('#float-stop')!;
   const speedDownBtn = animFloat.querySelector<HTMLButtonElement>('#speed-down')!;
   const speedUpBtn = animFloat.querySelector<HTMLButtonElement>('#speed-up')!;
   const floatSpeedVal = animFloat.querySelector<HTMLElement>('#float-speed')!;
-  const animExitBtn = animFloat.querySelector<HTMLButtonElement>('#anim-exit')!;
+  const floatGearsBtn = animFloat.querySelector<HTMLButtonElement>('#float-gears')!;
+  const floatModeBtns = Array.from(animFloat.querySelectorAll<HTMLButtonElement>('#float-mode button'));
 
   // ---- 回调（由 main 注入）----
   let onPlay: () => void = () => {};
+  let onStop: () => void = () => {};
+  let onPlayModeChange: (mode: 'simultaneous' | 'sequential') => void = () => {}
   let onRandom: () => void = () => {};
   let onPng: (size: number) => void = () => {};
   let onSvg: (size: number) => void = () => {};
-  let onAnimMode: (active: boolean) => void = () => {};
 
   // ---- 快捷 chips ----
   const ringChips: HTMLButtonElement[] = [];
@@ -458,31 +464,45 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     return card;
   }
 
-  // ---- 操作按钮 ----
-  // 动画模式开关：切入后画布右下角出现浮动工具栏
-  let animModeActive = false;
-  function setAnimMode(active: boolean): void {
-    if (animModeActive === active) return;
-    animModeActive = active;
-    playBtn.classList.toggle('active', active);
-    playBtn.title = t(active ? 'animModeExitTitle' : 'animModeTitle');
-    animFloat.hidden = !active;
-    onAnimMode(active);
-  }
-  playBtn.addEventListener('click', () => setAnimMode(!animModeActive));
-
-  // 浮动工具栏：播放/暂停
+  // ---- 浮动工具栏（常驻）----
+  // 播放/暂停：进入播放时额外展开 停止 + 速度组
   floatPlayBtn.addEventListener('click', () => onPlay());
-  // 速度 −/+（步进 0.5，范围 0.1-10，保留 1 位小数）
+  // 停止（方块 fa-stop）
+  floatStopBtn.addEventListener('click', () => onStop());
+  // 速度 −/+：整数步进（步长 1，范围 1-10）
   function nudgeSpeed(delta: number): void {
     const s = getState();
-    const next = Math.min(10, Math.max(0.1, Math.round((s.speed + delta) * 10) / 10));
+    const next = Math.min(10, Math.max(1, Math.round(s.speed) + delta));
     setState({ speed: next });
   }
-  speedDownBtn.addEventListener('click', () => nudgeSpeed(-0.5));
-  speedUpBtn.addEventListener('click', () => nudgeSpeed(0.5));
-  // 退出动画模式
-  animExitBtn.addEventListener('click', () => setAnimMode(false));
+  speedDownBtn.addEventListener('click', () => nudgeSpeed(-1));
+  speedUpBtn.addEventListener('click', () => nudgeSpeed(1));
+  // 播放模式切换（多笔同时 / 单笔一次）→ 主逻辑
+  floatModeBtns.forEach((b) => {
+    b.addEventListener('click', () => {
+      const mode = b.dataset.mode as 'simultaneous' | 'sequential';
+      floatModeBtns.forEach((x) => x.classList.toggle('active', x === b));
+      onPlayModeChange(mode);
+    });
+  });
+  // 显示齿轮（带 toggle state 的按钮）
+  function setGearsOn(on: boolean): void {
+    floatGearsBtn.classList.toggle('active', on);
+    floatGearsBtn.setAttribute('aria-pressed', String(on));
+  }
+  floatGearsBtn.addEventListener('click', () => {
+    const next = !getState().showGears;
+    setState({ showGears: next });
+    setGearsOn(next);
+  });
+  // 播放状态变化 → 展开/收起 停止 + 速度组
+  function syncFloatBar(playing: boolean): void {
+    const show = playing;
+    floatStopBtn.hidden = !show;
+    speedDownBtn.hidden = !show;
+    floatSpeedVal.hidden = !show;
+    speedUpBtn.hidden = !show;
+  }
 
   // ---- 设置 modal：打开/关闭 ----
   function openSettings(): void {
@@ -553,9 +573,11 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     rollingSlider.max = String(s.mode === 'inside' ? Math.min(ROLLING_MAX, s.ringTeeth - 1) : ROLLING_MAX);
     rollingSlider.value = String(s.rollingTeeth);
     rollingVal.textContent = String(s.rollingTeeth);
-    floatSpeedVal.textContent = s.speed + '×';
+    floatSpeedVal.textContent = Math.round(s.speed) + '×';
     bgColor.value = s.background;
     gearsCheck.checked = s.showGears;
+    floatGearsBtn.classList.toggle('active', s.showGears);
+    floatGearsBtn.setAttribute('aria-pressed', String(s.showGears));
 
     segButtons.forEach((b) => b.classList.toggle('active', b.dataset.mode === s.mode));
     scaleButtons.forEach((b) => b.classList.toggle('active', b.dataset.scale === s.scaleMode));
@@ -609,8 +631,6 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     if (s.pens.length > 0) renderPens();
     // 播放按钮状态保持
     setPlayingUI(playState.playing, playState.paused);
-    // 动画模式按钮 title 按当前状态
-    playBtn.title = t(animModeActive ? 'animModeExitTitle' : 'animModeTitle');
     // 复制链接按钮图标复位（FA）
     copyLinkBtn.innerHTML = '<i class="fa-solid fa-link"></i>';
     // 信息区
@@ -620,6 +640,8 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   }
   function setPlayingUI(playing: boolean, paused = false): void {
     playState = { playing, paused };
+    // 播放状态 → 停止/速度组显隐
+    syncFloatBar(playing);
     // 浮动工具栏播放按钮（Font Awesome 图标）
     floatPlayBtn.innerHTML = !playing || paused
       ? '<i class="fa-solid fa-play"></i>'
@@ -636,8 +658,9 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
 
   return {
     setPlayingUI,
-    onAnimationMode(cb: (active: boolean) => void) { onAnimMode = cb; },
     onPlayRequest(cb: () => void) { onPlay = cb; },
+    onStopRequest(cb: () => void) { onStop = cb; },
+    onPlayModeChange(cb: (mode: 'simultaneous' | 'sequential') => void) { onPlayModeChange = cb; },
     onRandomRequest(cb: () => void) { onRandom = cb; },
     onExportPng(cb: (size: number) => void) { onPng = cb; },
     onExportSvg(cb: (size: number) => void) { onSvg = cb; },

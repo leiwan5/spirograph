@@ -546,8 +546,52 @@ input[type='color'] {
   font-variant-numeric: tabular-nums;
   user-select: none;
 }
-.anim-float-exit { color: var(--muted); font-size: 16px; }
-.anim-float-exit:hover { color: var(--danger); border-color: var(--danger); background: rgba(229,72,77,0.15); }
+/* 停止按钮（方块 fa-stop） */
+.anim-float-stop { color: var(--danger); font-size: 16px; }
+.anim-float-stop:hover { color: #fff; border-color: var(--danger); background: rgba(229,72,77,0.25); }
+
+/* 播放模式切换（多笔同时 / 单笔一次） */
+.anim-float-mode {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2px;
+}
+.anim-float-mode button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 9px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.anim-float-mode button:hover { color: var(--text); }
+.anim-float-mode button.active { background: var(--accent); color: #fff; }
+
+/* 显示齿轮切换（按钮，带 toggle active 态） */
+.anim-float-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel-2);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  user-select: none;
+}
+.anim-float-toggle:hover { color: var(--accent-2); border-color: var(--accent); }
+.anim-float-toggle.active { color: #fff; background: var(--accent); border-color: var(--accent); }
 
 /* 动画模式按钮激活态（工具栏） */
 .toolbar-play.active { background: var(--accent); color: #fff; }

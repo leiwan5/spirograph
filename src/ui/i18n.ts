@@ -58,15 +58,16 @@ const en = {
   playTitle: 'Play drawing',
   pauseTitle: 'Pause',
   resumeTitle: 'Resume',
+  playModeSimultaneousTitle: 'Draw all pens together',
+  playModeSequentialTitle: 'Draw one pen at a time',
   randomTitle: 'Random inspiration',
   exportPng: 'PNG',
   exportPngTitle: 'Export PNG',
   exportSvg: 'SVG',
   exportSvgTitle: 'Export SVG',
   copyImageLinkTitle: 'Copy image link',
-  // 动画模式（浮动工具栏）
-  animModeTitle: 'Animation mode',
-  animModeExitTitle: 'Exit animation mode',
+  // 浮动工具栏（常驻）
+  stopTitle: 'Stop',
   speedDownTitle: 'Slower',
   speedUpTitle: 'Faster',
   // 设置 modal
@@ -115,15 +116,16 @@ const zh: Record<keyof typeof en, string> = {
   playTitle: '播放绘制',
   pauseTitle: '暂停',
   resumeTitle: '继续',
+  playModeSimultaneousTitle: '多笔同时播放',
+  playModeSequentialTitle: '单笔依次播放',
   randomTitle: '随机灵感',
   exportPng: 'PNG',
   exportPngTitle: '导出 PNG',
   exportSvg: 'SVG',
   exportSvgTitle: '导出 SVG',
   copyImageLinkTitle: '复制图片链接',
-  // 动画模式（浮动工具栏）
-  animModeTitle: '动画模式',
-  animModeExitTitle: '退出动画模式',
+  // 浮动工具栏（常驻）
+  stopTitle: '停止',
   speedDownTitle: '减速',
   speedUpTitle: '加速',
   // 设置 modal
