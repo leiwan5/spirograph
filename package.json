@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:packages && tsc && vite build",
-    "build:packages": "tsc -b packages/core packages/anim",
+    "build:packages": "tsc -b packages/core packages/anim packages/canvas packages/react && npm --prefix packages/svelte run build",
     "build:cli": "tsc -b apps/cli",
     "preview": "vite preview",
     "test": "npm run build:packages && vitest run",
@@ -18,8 +18,16 @@
     "check:purity": "node scripts/check-core-purity.mjs"
   },
   "devDependencies": {
+    "@sveltejs/package": "2.5.8",
+    "@sveltejs/vite-plugin-svelte": "5.1.1",
     "@types/node": "^24.0.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "@vitejs/plugin-react": "4.7.0",
     "playwright-core": "^1.62.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "svelte": "5.56.9",
     "typescript": "^5.6.3",
     "vite": "^6.0.5",
     "vitest": "^2.1.8"

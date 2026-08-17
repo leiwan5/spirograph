@@ -1,0 +1,36 @@
+{
+  "name": "@spirograph/react",
+  "version": "0.1.0",
+  "description": "React components for Spirograph: a render-only <SpirographCanvas> and an animated, controllable <SpirographAnimated>, on @spirograph/core + @spirograph/canvas",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@spirograph/core": "0.1.0",
+    "@spirograph/anim": "0.1.0",
+    "@spirograph/canvas": "0.1.0"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "keywords": [
+    "spirograph",
+    "react",
+    "canvas",
+    "generative-art",
+    "hypotrochoid",
+    "epitrochoid"
+  ]
+}

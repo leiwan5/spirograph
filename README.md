@@ -5,8 +5,11 @@ A browser-ready Spirograph pattern generator (demo UI) + **cross-platform spirog
 ```
 packages/core/    @spirograph/core   Pure core library: math / geometry / gradients / segment-level render contract / SVG / PNG, zero DOM/Node dependencies
 packages/anim/    @spirograph/anim   Optional animation driver (injectable frame scheduler), used with core
+packages/canvas/  @spirograph/canvas Browser-only Canvas 2D glue (renderer + export) shared by the framework layers
+packages/react/   @spirograph/react  React components: <SpirographCanvas> (render-only) + <SpirographAnimated> (controllable)
+packages/svelte/  @spirograph/svelte Svelte 5 components: <SpirographCanvas> + <SpirographAnimated>
 apps/cli/         @spirograph/cli    CLI: query/JSON → PNG/SVG files (bin: spirograph)
-src/  api/  functions/               web app (root, Vercel/CF deployment config retained)
+src/  api/  functions/               web apps (root Vite multi-page): vanilla demo (index.html) + framework demo pages (svelte.html, react.html), plus Vercel/CF deployment config
 ```
 
 ## Features
@@ -25,12 +28,23 @@ src/  api/  functions/               web app (root, Vercel/CF deployment config 
 
 ```bash
 npm install
-npm run dev          # dev server http://localhost:5173
-npm test             # build packages + Vitest unit tests (60+)
-npm run build        # build packages + typecheck + production build → dist/
+npm run dev          # dev server http://localhost:5173 — vanilla at /, demos at /svelte.html and /react.html
+npm test             # build packages + Vitest unit tests (77 tests)
+npm run build        # build packages + typecheck + production build (multi-page) → dist/
 npm run check:purity # purity guard: core library zero platform-dependency check
 npm run build:cli    # build CLI
 ```
+
+### Framework demo pages (multi-page)
+
+The Vite build is a multi-page app (`build.rollupOptions.input`): the original vanilla demo plus an
+independent docs/demo landing page per framework library (see `svelte.html` / `react.html`):
+
+- `/svelte.html` — docs landing + live demo for `@spirograph/svelte`
+- `/react.html` — docs landing + live demo for `@spirograph/react`
+
+Each landing page shows render-only and animated usage, plus install/API documentation. All three
+entries share the same `base` (GitHub Pages subpath via `BASE_URL` works for all of them).
 
 ## Using the library (@spirograph/core)
 
@@ -64,7 +78,7 @@ npx @spirograph/cli generate --json '{"ringTeeth":72,"rollingTeeth":30,"pens":[{
 
 ## Future expansion (not yet implemented)
 
-- `@spirograph/react-native` (react-native-svg adapter), `@spirograph/react`, `@spirograph/svelte`: thin wrappers on core
+- `@spirograph/react-native` (react-native-svg adapter): thin wrapper on core (React & Svelte wrappers are implemented)
 - Consumed contracts: `RenderData` (segment-level data), `createFramePlan` (frame plan), `generatePng/generateSvg` (serialization)
 
 ## URL parameters

@@ -1,0 +1,38 @@
+{
+  "name": "@spirograph/svelte",
+  "version": "0.1.0",
+  "description": "Svelte components for Spirograph: a render-only <SpirographCanvas> and an animated, controllable <SpirographAnimated>, on @spirograph/core + @spirograph/canvas",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "svelte": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "svelte": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "svelte-package --input src --tsconfig tsconfig.json"
+  },
+  "dependencies": {
+    "@spirograph/core": "0.1.0",
+    "@spirograph/anim": "0.1.0",
+    "@spirograph/canvas": "0.1.0"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  },
+  "keywords": [
+    "spirograph",
+    "svelte",
+    "canvas",
+    "generative-art",
+    "hypotrochoid",
+    "epitrochoid"
+  ]
+}

@@ -1,5 +1,8 @@
 import { defineConfig } from 'vite';
 import type { Plugin, Connect } from 'vite';
+import react from '@vitejs/plugin-react';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { resolve } from 'node:path';
 
 /** Intercept ?format=png|svg requests and return the image directly (usable in <img>, saveable via right-click) */
 function spirographImagePlugin(): Plugin {
@@ -51,11 +54,23 @@ function imageMiddleware(server: any): Connect.NextHandleFunction {
   };
 }
 
+const root = import.meta.dirname;
+
 export default defineConfig({
-  plugins: [spirographImagePlugin()],
+  plugins: [spirographImagePlugin(), react(), svelte()],
   // base is inferred from the environment variable, for GitHub Pages subpath deploys (e.g. /spirograph/).
   // Local dev/preview uses the relative path './'; CI passes the repo-name subpath via BASE_URL.
   base: process.env.BASE_URL || './',
   server: { port: 5173, open: false },
-  build: { target: 'es2022' },
+  build: {
+    target: 'es2022',
+    // Multi-page app: vanilla demo + one independent docs/demo landing page per framework library
+    rollupOptions: {
+      input: {
+        main: resolve(root, 'index.html'),
+        svelte: resolve(root, 'svelte.html'),
+        react: resolve(root, 'react.html'),
+      },
+    },
+  },
 });
