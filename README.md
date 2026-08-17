@@ -69,14 +69,14 @@ npx @spirograph/cli generate --json '{"ringTeeth":72,"rollingTeeth":30,"pens":[{
 
 ## URL 参数
 
-`?ring=144&rolling=60&mode=inside&pen=40,3a86ff,1.8&pen=70,00bbf9,1.5&bg=1b1b2f&speed=2.5&scale=fixed`
+`?ring=144&rolling=60&mode=inside&pen=40,1.8,3a86ff&pen=70,1.5,10,00bbf9,f4a261&bg=1b1b2f&speed=2.5&scale=fixed`
 
 | 参数 | 含义 | 范围 |
 |---|---|---|
 | `ring` | 环形齿轮齿数 | 40–240 |
 | `rolling` | 滚动齿轮齿数 | 8–96 |
 | `mode` | 绘制模式 | `inside` / `outside` |
-| `pen` | 一支笔：孔洞,颜色,粗细（可重复）；渐变笔：`孔洞,起始色,粗细,间距,附加色1[,附加色2[,附加色3]]`（总色数 2–4，间距为渐变间隔 %） | 孔洞 0–100 / 粗细 0.5–8 / 间距 1–100 |
+| `pen` | 一支笔（可重复）：`孔洞,粗细,颜色1` = 单色；`孔洞,粗细,间隔,颜色1[,颜色2[,颜色3[,颜色4]]]` = 多色渐变（间隔在颜色组前，与 6 位 hex 无歧义）。**1 个颜色 = 单色，≥ 2 个颜色 = 渐变** | 孔洞 0–100 / 粗细 0.5–8 / 间隔 1–100 |
 | `bg` | 背景色 | 6 位 hex（无 #） |
 | `speed` | 动画速度 | 0.1–10 |
 | `scale` | 缩放模式 | `auto` / `fixed` |
