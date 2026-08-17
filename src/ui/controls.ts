@@ -43,10 +43,6 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
 
     <div class="toolbar-group">
       <button class="btn btn-ghost toolbar-btn toolbar-play" id="anim-mode" data-i18n="animMode" data-i18n-title="animModeTitle">🎬</button>
-      <div class="toolbar-control" title="${t('animSpeed')}">
-        <input type="range" id="speed" min="0.1" max="10" step="0.1">
-        <span class="val" id="speed-val">1×</span>
-      </div>
       <button class="btn btn-ghost toolbar-btn" id="settings-btn" data-i18n="settings" data-i18n-title="settingsTitle">⚙</button>
     </div>
 
@@ -178,8 +174,6 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   const rollingSlider = $panel<HTMLInputElement>('rolling');
   const ringVal = $panel('ring-val');
   const rollingVal = $panel('rolling-val');
-  const speedSlider = $toolbar<HTMLInputElement>('speed');
-  const speedVal = $toolbar('speed-val');
   const settingsBtn = $toolbar<HTMLButtonElement>('settings-btn');
   const pensEl = $panel('pens');
   const ringChipsEl = $panel('ring-chips');
@@ -311,7 +305,6 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
 
   // ---- 背景色 / 速度 / 显示齿轮 ----
   bgColor.addEventListener('input', () => setState({ background: bgColor.value }));
-  speedSlider.addEventListener('input', () => setState({ speed: Math.round(+speedSlider.value * 10) / 10 }));
   gearsCheck.addEventListener('change', () => setState({ showGears: gearsCheck.checked }));
 
   // ---- 笔列表 ----
@@ -525,8 +518,6 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     rollingSlider.max = String(s.mode === 'inside' ? Math.min(ROLLING_MAX, s.ringTeeth - 1) : ROLLING_MAX);
     rollingSlider.value = String(s.rollingTeeth);
     rollingVal.textContent = String(s.rollingTeeth);
-    speedSlider.value = String(s.speed);
-    speedVal.textContent = s.speed + '×';
     floatSpeedVal.textContent = s.speed + '×';
     bgColor.value = s.background;
     gearsCheck.checked = s.showGears;
