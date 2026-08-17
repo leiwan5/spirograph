@@ -1,11 +1,22 @@
+<p align="center">
+  <img alt="@spirograph/anim" src="https://img.shields.io/npm/v/@spirograph/anim?label=@spirograph/anim&color=cb3837">
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-blue">
+  <img alt="pure" src="https://img.shields.io/badge/optional%20driver-brightgreen">
+</p>
+
+<p align="center">
+  <img alt="anim preview" src="../../docs/images/preview-anim.png" width="280" />
+</p>
+
 # @spirograph/anim
 
-Optional **animation driver** library for the spirograph: handles the "how much to draw at a given progress" frame-plan computation and the scheduling rhythm of the drawing animation. Used together with [`@spirograph/core`](https://www.npmjs.com/package/@spirograph/core).
+**Optional animation driver** for the spirograph: decides *how much to draw at a given progress* (frame plans) and *schedules the drawing rhythm*. It pairs with [`@spirograph/core`](https://www.npmjs.com/package/@spirograph/core) — add it only when you need the simulated "pen tracing the pattern" animation.
 
-Features:
-- **No pollution of core**: all animation support lives in core's pure data operations (`buildRenderData`'s `perPenLimit` prefix truncation, `computeSteps`, `computeGearPose`); this library only handles scheduling and frame plans — it never stuffs timers/DOM into core.
-- **Injectable scheduler**: browsers / RN use rAF, Node falls back to setTimeout; the `FrameScheduler` interface is plug-and-play.
-- **Cross-platform consistency**: `createFramePlan` is a pure function; the browser canvas and a future react-native-svg consume the same frame plan.
+## What it adds (and what it deliberately doesn't)
+
+- **No pollution of core** — all animation math lives in core's pure data operations (`buildRenderData`'s `perPenLimit` prefix truncation, `computeSteps`, `computeGearPose`). This library only handles **scheduling** and **frame plans**; it never stuffs timers / DOM into core.
+- **Injectable scheduler** — browsers / RN use `requestAnimationFrame`, Node falls back to `setTimeout`; the `FrameScheduler` interface is plug-and-play.
+- **Cross-platform consistency** — `createFramePlan` is a pure function; the browser canvas and a future react-native-svg consume the *same* frame plan.
 
 ## Install
 
@@ -38,16 +49,18 @@ anim.start();
 anim.pause(); anim.resume(); anim.stop();
 ```
 
-### Schedulers
+## Schedulers
 
 | Scheduler | Platform | Description |
 |---|---|---|
-| `rafScheduler()` | browser / RN | global `requestAnimationFrame` + `performance.now`, falls back to ~16ms timer without rAF |
+| `rafScheduler()` | browser / RN | global `requestAnimationFrame` + `performance.now`; falls back to ~16ms timer without rAF |
 | `timerScheduler()` | Node | setTimeout fallback (~16ms) |
-| `autoScheduler()` | any | uses rAF when available, otherwise timer (default) |
+| `autoScheduler()` | any | uses rAF when available, otherwise timer **(default)** |
 
 ## Build / publish
 
 ```bash
 npm run build   # tsc -b → dist/
 ```
+
+↳ Part of the [spirograph-generator monorepo](../../README.md).

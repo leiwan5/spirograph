@@ -1,6 +1,18 @@
+<p align="center">
+  <img alt="@spirograph/react" src="https://img.shields.io/npm/v/@spirograph/react?label=@spirograph/react&color=cb3837">
+  <img alt="react" src="https://img.shields.io/badge/React-19-blue">
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-blue">
+</p>
+
+<p align="center">
+  <img alt="react preview" src="../../docs/images/preview-react.png" width="280" />
+</p>
+
 # @spirograph/react
 
-React components for [Spirograph](https://github.com/your-org/spirograph-generator): a render-only canvas and an animated, controllable canvas, wrapping the pure [@spirograph/core](../core) math + [@spirograph/canvas](../canvas) Canvas 2D glue.
+React components for Spirograph — a render-only canvas and an animated, controllable canvas. They wrap the pure [`@spirograph/core`](../core) math + [`@spirograph/canvas`](../canvas) Canvas 2D glue, so patterns, gradients, and animation frames stay pixel-consistent with every other renderer.
+
+## Install
 
 ```bash
 npm i @spirograph/react
@@ -8,7 +20,7 @@ npm i @spirograph/react
 
 ## Render-only canvas
 
-Draws the finished pattern from an `SpirographState`; exposes PNG/SVG export through its ref handle.
+Draws the finished pattern from a `SpirographState`; exposes PNG/SVG export through a ref handle.
 
 ```tsx
 import { useRef } from 'react';
@@ -29,7 +41,7 @@ export default function App() {
 
 ## Animated, controllable canvas
 
-Adds a simulated drawing animation + `play`/`pause`/`resume`/`stop`/`setSpeed` control through the ref.
+Adds a simulated drawing animation plus `play` / `pause` / `resume` / `stop` / `setSpeed` control through the ref.
 
 ```tsx
 import { useRef } from 'react';
@@ -51,18 +63,32 @@ export default function App() {
 }
 ```
 
-## Props & API
+## Props
 
 | Component | Prop | Type | Default | Note |
 |---|---|---|---|---|
 | both | `state` | `SpirographState` | — | drawing state (see `@spirograph/core`) |
 | both | `className` / `style` / `id` | — | — | passed to `<canvas>` |
 | `SpirographAnimated` | `playMode` | `'sequential' \| 'simultaneous'` | `'sequential'` | one pen at a time / all together |
-| `SpirographAnimated` | `baseDurationMs` | `number?` | derived | animation duration (constant pen speed by default) |
+| `SpirographAnimated` | `baseDurationMs` | `number?` | derived | explicit animation duration |
 | `SpirographAnimated` | `segmentsPerSecond` | `number?` | `350` | target speed when duration is derived |
 | `SpirographAnimated` | `onDone` | `() => void?` | — | fired when the animation completes |
 | `SpirographAnimated` | `onPlayingChange` | `(playing) => void?` | — | fired when play state flips |
 
-Ref handle: `exportPng(size?, filename?)`, `exportSvg(size?, filename?)`, and for the animated component `play()`, `pause()`, `resume()`, `stop()`, `setSpeed(speed)`.
+## Ref handles
 
-When `state` changes while animating, the animation stops and the static pattern is redrawn (same as the vanilla demo).
+| Handle | Type | Methods |
+|---|---|---|
+| `SpirographHandle` | render-only | `exportPng(size?, filename?)`, `exportSvg(size?, filename?)` |
+| `SpirographAnimationHandle` | animated | extends render-only + `play()`, `pause()`, `resume()`, `stop()`, `setSpeed(speed)`, `onPlayingChange?` |
+
+> **Behavior**: when `state` changes while animating, the animation stops and the static pattern is redrawn (same as the vanilla demo).
+
+## Development / demo
+
+```bash
+npm run dev        # from the monorepo root → React demo at /react.html
+npm run build      # tsc -b → dist/
+```
+
+↳ Part of the [spirograph-generator monorepo](../../README.md). See also the [Svelte sibling](../svelte).
