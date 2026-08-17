@@ -75,7 +75,7 @@ export function generate(opts: CliOptions): CliResult {
   return { format: 'png', data: generatePng(search), filename };
 }
 
-/** 简单把 AppState JSON 转成 query（CLI 场景够用；或直接用 core 的 parseState 无法反序列化整状态） */
+/** 简单把 AppState JSON 转成 query（CLI 场景够用；输入为 colors 语义） */
 function jsonToQuery(json: string): string {
   const s = JSON.parse(json);
   const parts: string[] = [];
@@ -84,10 +84,12 @@ function jsonToQuery(json: string): string {
   if (s.rollingTeeth) parts.push('rolling=' + s.rollingTeeth);
   if (Array.isArray(s.pens)) {
     for (const p of s.pens) {
-      const pen = [p.hole, (p.color || '').replace('#', '').toLowerCase(), p.width].join(',');
-      if (p.gradient && p.gradient.length > 1) {
-        const extra = [p.gradientSpacing ?? 20, ...p.gradient.slice(0, 3).map((c: string) => c.replace('#', '').toLowerCase())].join(',');
-        parts.push('pen=' + pen + ',' + extra);
+      const colors: string[] = Array.isArray(p.colors) ? p.colors : [p.color].filter(Boolean);
+      const pen = [p.hole, p.width, ...colors.map((c: string) => c.replace('#', '').toLowerCase())].join(',');
+      if (colors.length > 1) {
+        // 多色：hole,width,spacing,c1[,c2...]
+        const sp = p.spacing ?? p.gradientSpacing ?? 20;
+        parts.push(`pen=${p.hole},${p.width},${sp},${colors.map((c: string) => c.replace('#', '').toLowerCase()).join(',')}`);
       } else {
         parts.push('pen=' + pen);
       }

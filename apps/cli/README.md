@@ -11,9 +11,9 @@ npm install -g @spirograph/cli   # 或 npx @spirograph/cli
 ## 用法
 
 ```bash
-spirograph generate --params "ring=72&rolling=30&pen=40,e63946,2.5&pen=75,1d6fa5,2" --format png --size 2048 --out out.png
-spirograph generate --params "ring=72&rolling=30&pen=40,e63946,2.5,10,1d6fa5,f4a261" --format svg --out out.svg
-spirograph generate --json '{"ringTeeth":72,"rollingTeeth":30,"pens":[{"hole":40,"color":"#e63946","width":2.5}]}' --format png
+spirograph generate --params "ring=72&rolling=30&pen=40,2.5,e63946&pen=75,2,1d6fa5" --format png --size 2048 --out out.png
+spirograph generate --params "ring=72&rolling=30&pen=40,2.5,10,e63946,1d6fa5,f4a261" --format svg --out out.svg
+spirograph generate --json '{"ringTeeth":72,"rollingTeeth":30,"pens":[{"hole":40,"colors":["#e63946"],"width":2.5}]}' --format png
 spirograph --help
 ```
 
@@ -29,5 +29,5 @@ spirograph --help
 
 ```bash
 npm run build   # tsc -b → dist/cli.js（bin: spirograph）
-node dist/cli.js generate --params "ring=72&rolling=30&pen=40,e63946,2.5"
+node dist/cli.js generate --params "ring=72&rolling=30&pen=40,2.5,e63946"
 ```

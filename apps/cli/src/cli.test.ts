@@ -29,7 +29,7 @@ describe('parseArgs', () => {
 
 describe('generate（纯逻辑）', () => {
   it('生成合法 PNG', () => {
-    const r = generate({ params: 'ring=72&rolling=30&pen=40,e63946,2.5', format: 'png' });
+    const r = generate({ params: 'ring=72&rolling=30&pen=40,2.5,e63946', format: 'png' });
     expect(r.format).toBe('png');
     const data = r.data as Uint8Array;
     expect(data[0]).toBe(137);
@@ -39,15 +39,23 @@ describe('generate（纯逻辑）', () => {
   });
 
   it('生成 SVG', () => {
-    const r = generate({ params: 'ring=72&rolling=30&pen=40,e63946,2.5', format: 'svg' });
+    const r = generate({ params: 'ring=72&rolling=30&pen=40,2.5,e63946', format: 'svg' });
     expect(r.data).toContain('<?xml');
     expect(r.data).toContain('</svg>');
     expect(r.filename).toBe('spirograph.svg');
   });
 
   it('json 参数可用', () => {
-    const r = generate({ json: '{"mode":"inside","ringTeeth":72,"rollingTeeth":30,"pens":[{"hole":40,"color":"#e63946","width":2.5}]}', format: 'png' });
+    const r = generate({ json: '{"mode":"inside","ringTeeth":72,"rollingTeeth":30,"pens":[{"hole":40,"colors":["#e63946"],"width":2.5}]}', format: 'png' });
     expect((r.data as Uint8Array)[0]).toBe(137);
+  });
+
+  it('json 多色笔（colors ≥ 2）带间隔', () => {
+    const r = generate({ json: '{"pens":[{"hole":40,"colors":["#e63946","#1d6fa5","#f4a261"],"spacing":10,"width":2.5}]}', format: 'svg' });
+    const svg = r.data as string;
+    // 渐变逐段 path 用 rgb(...) 颜色
+    expect(svg).toContain('stroke="rgb(230,57,70)"'); // #e63946 起点
+    expect(svg).toContain('stroke="rgb(29,111,165)"'); // #1d6fa5
   });
 });
 
@@ -56,7 +64,7 @@ describe('main（写文件）', () => {
     const written: Array<[string, Uint8Array | string]> = [];
     const logs: string[] = [];
     const code = main(
-      ['generate', '--params', 'ring=72&rolling=30&pen=40,e63946,2.5', '--format', 'svg', '--out', '/tmp/x.svg'],
+      ['generate', '--params', 'ring=72&rolling=30&pen=40,2.5,e63946', '--format', 'svg', '--out', '/tmp/x.svg'],
       (path, data) => written.push([path, data]),
       (m) => logs.push(m),
     );
