@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeGearPose, computeSteps } from './pose.js';
+import { computeGearPose, computeSteps, weightedSteps } from './pose.js';
 import { gradientColorAt, lerpColor } from './gradient.js';
 import { sampleCurve } from './math/curve.js';
 
@@ -61,6 +61,33 @@ describe('computeSteps（多笔分步）', () => {
     expect(computeSteps(3, 1).penProgress).toBeCloseTo(1, 10);
     expect(computeSteps(1, 1).penIndex).toBe(0);
     expect(computeSteps(1, 1).penProgress).toBeCloseTo(1, 10);
+  });
+});
+
+describe('weightedSteps（按曲线长度加权的真实速度分步）', () => {
+  const counts = [100, 300, 100]; // 总 500：笔1(300/500=60% 时间，笔划多→占时多)
+  it('笔划多的笔占更多时间，进度按长度加权', () => {
+    // 笔0 占 [0,100/500)=[0,0.2)
+    expect(weightedSteps(counts, 0.1).penIndex).toBe(0);
+    expect(weightedSteps(counts, 0.1).penProgress).toBeCloseTo(0.5, 10); // 50/100
+    // 0.2 → 100，进入笔1；笔1 占 [0.2, 0.8)
+    expect(weightedSteps(counts, 0.2).penIndex).toBe(1);
+    expect(weightedSteps(counts, 0.2).penProgress).toBeCloseTo(0, 10);
+    // 0.5 → 250，笔1 内 (250-100)/300 = 0.5
+    expect(weightedSteps(counts, 0.5).penIndex).toBe(1);
+    expect(weightedSteps(counts, 0.5).penProgress).toBeCloseTo(0.5, 10);
+    // 笔2 占 [0.8,1]
+    expect(weightedSteps(counts, 0.85).penIndex).toBe(2);
+    expect(weightedSteps(counts, 0.9).penProgress).toBeCloseTo(0.5, 10); // (450-400)/100
+  });
+  it('边界：0 → 第一笔 0；1 → 最后一笔 1', () => {
+    expect(weightedSteps(counts, 0).penIndex).toBe(0);
+    expect(weightedSteps(counts, 0).penProgress).toBe(0);
+    expect(weightedSteps(counts, 1).penIndex).toBe(2);
+    expect(weightedSteps(counts, 1).penProgress).toBe(1);
+  });
+  it('空数组返回 (0,0)', () => {
+    expect(weightedSteps([], 0.5)).toEqual({ penIndex: 0, penProgress: 0 });
   });
 });
 

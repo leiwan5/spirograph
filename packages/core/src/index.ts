@@ -28,7 +28,7 @@ export {
   generateHolePattern, type HolePatternHole,
 } from './pattern.js';
 export {
-  computeGearPose, computeSteps, type GearPose,
+  computeGearPose, computeSteps, weightedSteps, type GearPose,
 } from './pose.js';
 
 // segments（统一渲染契约）

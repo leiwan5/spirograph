@@ -28,3 +28,26 @@ export function computeSteps(penCount: number, totalProgress: number): { penInde
   const local = Math.min(1, (totalProgress - idx * seg) / seg);
   return { penIndex: idx, penProgress: local };
 }
+
+/**
+ * 按曲线长度加权的分步进度（真实速度）：每支笔的完成时间与其曲线段数成正比，
+ * 而不是固定总时长下各笔等分时间片（否则笔划少的太慢、笔划多的太快）。
+ * counts = 各笔曲线段数（count-1 或 totalSamples）。
+ */
+export function weightedSteps(
+  counts: number[],
+  totalProgress: number,
+): { penIndex: number; penProgress: number } {
+  const total = counts.reduce((a, b) => a + Math.max(0, b), 0);
+  if (total <= 0) return { penIndex: 0, penProgress: 0 };
+  const target = Math.min(1, Math.max(0, totalProgress)) * total;
+  let acc = 0;
+  for (let i = 0; i < counts.length; i++) {
+    const w = Math.max(0, counts[i]);
+    if (acc + w > target) {
+      return { penIndex: i, penProgress: Math.min(1, Math.max(0, (target - acc) / (w || 1))) };
+    }
+    acc += w;
+  }
+  return { penIndex: counts.length - 1, penProgress: 1 };
+}

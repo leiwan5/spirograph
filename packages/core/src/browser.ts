@@ -5,7 +5,7 @@ import type { Bounds, Pen, RenderItem, Transform, DrawingMode } from './types.js
 import { computeBounds, computeTransform, applyTransform, gearHoleRadius } from './geometry.js';
 import { segmentColor, closureColor } from './segments.js';
 import { generateHolePattern } from './pattern.js';
-import { computeGearPose, computeSteps } from './pose.js';
+import { computeGearPose, weightedSteps } from './pose.js';
 
 /** 最小 Canvas 2D 上下文接口（仅本包用到的成员，编译无需 DOM lib） */
 export interface Canvas2D {
@@ -333,7 +333,8 @@ export function renderSteps(
   transform: Transform,
   totalProgress: number,
 ): number {
-  const { penIndex, penProgress } = computeSteps(items.length, totalProgress);
+  // 按曲线长度加权：笔划多的占更多时间（真实恒定绘制速度）
+  const { penIndex, penProgress } = weightedSteps(items.map((i) => i.curve.count - 1), totalProgress);
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
