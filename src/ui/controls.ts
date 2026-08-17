@@ -47,19 +47,10 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
         <input type="range" id="speed" min="0.1" max="10" step="0.1">
         <span class="val" id="speed-val">1×</span>
       </div>
-      <label class="toolbar-check" title="${t('showGears')}">
-        <input type="checkbox" id="show-gears"><span>⚙</span>
-      </label>
-      <input type="color" id="bg" class="toolbar-bg" title="${t('canvasBackground')}">
+      <button class="btn btn-ghost toolbar-btn" id="settings-btn" data-i18n="settings" data-i18n-title="settingsTitle">⚙</button>
     </div>
 
     <div class="toolbar-group">
-      <select id="img-size" class="size-select" title="${t('imgSize')}">
-        <option value="512">512</option>
-        <option value="1000">1000</option>
-        <option value="2048" selected>2048</option>
-        <option value="4096">4096</option>
-      </select>
       <button class="btn btn-ghost toolbar-btn" id="export-png" data-i18n-title="exportPngTitle">PNG</button>
       <button class="btn btn-ghost toolbar-btn" id="export-svg" data-i18n-title="exportSvgTitle">SVG</button>
       <button class="btn btn-ghost toolbar-btn" id="copy-image-link" data-i18n="copyImageLink" data-i18n-title="copyImageLinkTitle">🔗</button>
@@ -109,14 +100,6 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       <div class="chips" id="preset-chips"></div>
     </section>
 
-    <section>
-      <div class="section-title" data-i18n="sectionScale">Canvas Scale</div>
-      <div class="seg" id="scale-seg">
-        <button data-scale="auto" class="active" data-i18n="scaleAuto" data-i18n-title="scaleAutoTitle">Fixed image</button>
-        <button data-scale="fixed" data-i18n="scaleFixed" data-i18n-title="scaleFixedTitle">Fixed ring</button>
-      </div>
-    </section>
-
     <section class="info">
       <div><span data-i18n="infoRatio">Ratio</span> <b id="info-ratio">–</b> · <span data-i18n="infoPetals">Petals</span> <b id="info-petals">–</b> · <span data-i18n="infoTurns">Turns</span> <b id="info-turns">–</b></div>
       <div id="info-samples-row">–</div>
@@ -148,6 +131,46 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   root.appendChild(toolbarEl);
   root.appendChild(workspace);
 
+  // ---- 设置 modal（画布相关设置：背景色 / 显示齿轮 / 图片尺寸）----
+  const settingsModal = document.createElement('div');
+  settingsModal.className = 'settings-modal';
+  settingsModal.hidden = true;
+  settingsModal.innerHTML = `
+    <div class="settings-modal-card">
+      <div class="settings-modal-head">
+        <span data-i18n="settingsTitle">Settings</span>
+        <button class="settings-modal-close" id="settings-close" data-i18n="settingsCloseTitle">✕</button>
+      </div>
+      <div class="settings-modal-body">
+        <div class="settings-row">
+          <span class="settings-label" data-i18n="canvasBackground">Canvas background</span>
+          <input type="color" id="bg">
+        </div>
+        <label class="settings-row settings-check">
+          <span class="settings-label" data-i18n="showGears">Show gears (pens drawn in sequence)</span>
+          <input type="checkbox" id="show-gears">
+        </label>
+        <div class="settings-row settings-row-scale">
+          <span class="settings-label" data-i18n="sectionScale">Canvas Scale</span>
+          <div class="seg settings-seg" id="scale-seg">
+            <button data-scale="auto" class="active" data-i18n="scaleAuto" data-i18n-title="scaleAutoTitle">Fixed image</button>
+            <button data-scale="fixed" data-i18n="scaleFixed" data-i18n-title="scaleFixedTitle">Fixed ring</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label" data-i18n="imgSize">Image size</span>
+          <select id="img-size" class="size-select">
+            <option value="512">512×512</option>
+            <option value="1000">1000×1000</option>
+            <option value="2048" selected>2048×2048</option>
+            <option value="4096">4096×4096</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  `;
+  root.appendChild(settingsModal);
+
   // ---- 元素引用 ----
   const $panel = <T extends HTMLElement>(id: string): T => panelEl.querySelector('#' + id) as T;
   const $toolbar = <T extends HTMLElement>(id: string): T => toolbarEl.querySelector('#' + id) as T;
@@ -157,7 +180,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   const rollingVal = $panel('rolling-val');
   const speedSlider = $toolbar<HTMLInputElement>('speed');
   const speedVal = $toolbar('speed-val');
-  const bgColor = $toolbar<HTMLInputElement>('bg');
+  const settingsBtn = $toolbar<HTMLButtonElement>('settings-btn');
   const pensEl = $panel('pens');
   const ringChipsEl = $panel('ring-chips');
   const rollingChipsEl = $panel('rolling-chips');
@@ -167,12 +190,17 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   const exportPngBtn = $toolbar<HTMLButtonElement>('export-png');
   const exportSvgBtn = $toolbar<HTMLButtonElement>('export-svg');
   const copyLinkBtn = $toolbar<HTMLButtonElement>('copy-image-link');
-  const imgSizeSelect = $toolbar<HTMLSelectElement>('img-size');
   const infoRatio = $panel('info-ratio');
   const infoPetals = $panel('info-petals');
   const infoTurns = $panel('info-turns');
   const infoSamplesRow = $panel('info-samples-row');
   const langSeg = $toolbar<HTMLElement>('lang-seg');
+  // 设置 modal
+  const $modal = <T extends HTMLElement>(id: string): T => settingsModal.querySelector('#' + id) as T;
+  const bgColor = $modal<HTMLInputElement>('bg');
+  const gearsCheck = $modal<HTMLInputElement>('show-gears');
+  const imgSizeSelect = $modal<HTMLSelectElement>('img-size');
+  const settingsCloseBtn = $modal<HTMLButtonElement>('settings-close');
   // 浮动工具栏（动画模式）
   const floatPlayBtn = animFloat.querySelector<HTMLButtonElement>('#float-play')!;
   const speedDownBtn = animFloat.querySelector<HTMLButtonElement>('#speed-down')!;
@@ -269,7 +297,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   });
 
   // ---- 缩放模式 ----
-  const scaleButtons = panelEl.querySelectorAll<HTMLButtonElement>('#scale-seg button');
+  const scaleButtons = settingsModal.querySelectorAll<HTMLButtonElement>('#scale-seg button');
   scaleButtons.forEach((b) => {
     b.addEventListener('click', () => {
       setState({ scaleMode: b.dataset.scale as 'auto' | 'fixed' });
@@ -284,7 +312,6 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   // ---- 背景色 / 速度 / 显示齿轮 ----
   bgColor.addEventListener('input', () => setState({ background: bgColor.value }));
   speedSlider.addEventListener('input', () => setState({ speed: Math.round(+speedSlider.value * 10) / 10 }));
-  const gearsCheck = $toolbar<HTMLInputElement>('show-gears');
   gearsCheck.addEventListener('change', () => setState({ showGears: gearsCheck.checked }));
 
   // ---- 笔列表 ----
@@ -432,6 +459,26 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   // 退出动画模式
   animExitBtn.addEventListener('click', () => setAnimMode(false));
 
+  // ---- 设置 modal：打开/关闭 ----
+  function openSettings(): void {
+    settingsModal.hidden = false;
+    settingsBtn.classList.add('active');
+  }
+  function closeSettings(): void {
+    settingsModal.hidden = true;
+    settingsBtn.classList.remove('active');
+  }
+  settingsBtn.addEventListener('click', () => (settingsModal.hidden ? openSettings() : closeSettings()));
+  settingsCloseBtn.addEventListener('click', closeSettings);
+  // 点遮罩（modal 本体）关闭
+  settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) closeSettings();
+  });
+  // Esc 关闭
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !settingsModal.hidden) closeSettings();
+  });
+
   randomBtn.addEventListener('click', () => onRandom());
   exportPngBtn.addEventListener('click', () => onPng(Number(imgSizeSelect.value)));
   exportSvgBtn.addEventListener('click', () => onSvg(Number(imgSizeSelect.value)));
@@ -514,8 +561,8 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   // ---- 语言本地化（不重建面板；笔卡片重建以保证新文案） ----
   let playState: { playing: boolean; paused: boolean } = { playing: false, paused: false };
   function localize(): void {
-    // 静态文案（工具栏 + 面板 + 浮动工具栏）
-    [toolbarEl, panelEl, animFloat].forEach((scope) => {
+    // 静态文案（工具栏 + 面板 + 浮动工具栏 + 设置 modal）
+    [toolbarEl, panelEl, animFloat, settingsModal].forEach((scope) => {
       scope.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
         const key = el.dataset.i18n as I18nKey | undefined;
         if (key) el.textContent = t(key);

@@ -50,15 +50,12 @@ const en = {
   scaleFixed: 'Fixed ring',
   scaleAutoTitle: 'Image size fixed: pattern always fills the canvas; resizes with gear/hole changes',
   scaleFixedTitle: 'Ring size fixed: ring stays constant size on canvas, pattern drawn at true scale inside; hole changes do not affect other pens',
-  // 背景/速度/齿轮
+  // 背景/速度/齿轮/尺寸（设置 modal）
   canvasBackground: 'Canvas background',
-  canvasBackgroundShort: 'Background',
   animSpeed: 'Animation speed',
   animSpeedShort: 'Speed',
   showGears: 'Show gears (pens drawn in sequence)',
-  showGearsShort: 'Show gears',
   imgSize: 'Image size',
-  imgSizeShort: 'Size',
   // 操作（工具栏图标/缩写，完整文案放 title）
   play: '▶',
   pause: '⏸',
@@ -84,6 +81,10 @@ const en = {
   speedDownTitle: 'Slower',
   speedUp: '+',
   speedUpTitle: 'Faster',
+  // 设置 modal
+  settings: '⚙',
+  settingsTitle: 'Settings',
+  settingsCloseTitle: 'Close settings',
   // 信息区
   infoRatio: 'Ratio',
   infoPetals: 'Petals',
@@ -122,13 +123,10 @@ const zh: Record<keyof typeof en, string> = {
   scaleAutoTitle: '图像尺寸固定：图案始终充满画布；调孔洞/齿轮时整图会缩放适配',
   scaleFixedTitle: '环尺寸固定：齿轮环在画布上大小恒定，图案按真实比例画在环内；调孔洞不影响任何笔',
   canvasBackground: '画布背景',
-  canvasBackgroundShort: '背景',
   animSpeed: '动画速度',
   animSpeedShort: '速度',
   showGears: '显示齿轮（多笔分步绘制）',
-  showGearsShort: '显示齿轮',
   imgSize: '图片尺寸',
-  imgSizeShort: '尺寸',
   play: '▶',
   pause: '⏸',
   resume: '▶',
@@ -153,6 +151,10 @@ const zh: Record<keyof typeof en, string> = {
   speedDownTitle: '减速',
   speedUp: '+',
   speedUpTitle: '加速',
+  // 设置 modal
+  settings: '⚙',
+  settingsTitle: '设置',
+  settingsCloseTitle: '关闭设置',
   infoRatio: '化简比',
   infoPetals: '花瓣数',
   infoTurns: '闭合转数',
