@@ -172,7 +172,21 @@ subscribe(() => {
   renderStatic();
 });
 
+// 浮动工具栏播放按钮：与动画模式共用 togglePlay
 panel.onPlayRequest(togglePlay);
+// 动画模式切换：进入即开始绘制，退出则停止并回静态图
+panel.onAnimationMode((active) => {
+  if (active) {
+    togglePlay();
+  } else {
+    if (anim) {
+      anim.stop();
+      anim = null;
+    }
+    panel.setPlayingUI(false);
+    renderStatic();
+  }
+});
 panel.onRandomRequest(() => randomSettings());
 panel.onExportPng((size) => exportPng(buildItems(), getState().background, size));
 panel.onExportSvg((size) => exportSvg(buildItems(), getState().background, size));

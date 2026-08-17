@@ -391,6 +391,70 @@ input[type='color'] {
   touch-action: none;
 }
 
+/* 动画模式浮动工具栏（画布右下角，触摸友好 ≥44px） */
+.anim-float {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(21, 25, 34, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+  z-index: 10;
+}
+.anim-float[hidden] { display: none; }
+.anim-float-play {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.anim-float-play:hover { background: var(--accent-2); }
+.anim-float-play.playing { background: var(--ok); }
+.anim-float-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.anim-float-btn:hover { border-color: var(--accent); color: var(--accent-2); }
+.anim-float-btn:active { background: var(--panel); }
+.anim-float-speed {
+  min-width: 46px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+.anim-float-exit { color: var(--muted); font-size: 16px; }
+.anim-float-exit:hover { color: var(--danger); border-color: var(--danger); background: rgba(229,72,77,0.15); }
+
+/* 动画模式按钮激活态（工具栏） */
+.toolbar-play.active { background: var(--accent); color: #fff; }
+
 /* 小屏适配 */
 @media (max-width: 760px) {
   .workspace { flex-direction: column; }
@@ -399,4 +463,7 @@ input[type='color'] {
   .toolbar { padding: 6px 10px; gap: 6px; }
   .toolbar-group { padding: 0 6px; gap: 6px; }
   .toolbar-group-lang { margin-left: 0; }
+  .anim-float { right: 12px; bottom: 12px; padding: 8px 10px; gap: 6px; }
+  .anim-float-play { width: 52px; height: 52px; font-size: 22px; }
+  .anim-float-btn { width: 48px; height: 48px; }
 }
