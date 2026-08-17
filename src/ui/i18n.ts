@@ -32,6 +32,7 @@ const en = {
   // 笔
   sectionPens: 'Pens (stacked)',
   addPen: '＋ Add Pen',
+  addPenTitle: 'Add pen',
   penLabel: 'Pen {n}',
   penDelete: 'Delete this pen',
   penHole: 'Hole (% of rolling radius)',
@@ -104,6 +105,7 @@ const zh: Record<keyof typeof en, string> = {
   sectionRolling: '滚动齿轮',
   sectionPens: '笔（多支笔叠加绘制）',
   addPen: '＋ 添加笔',
+  addPenTitle: '添加笔',
   penLabel: '笔 {n}',
   penDelete: '删除此笔',
   penHole: '孔洞位置（%滚动半径）',

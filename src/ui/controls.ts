@@ -87,8 +87,8 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
 
     <section>
       <div class="section-title" data-i18n="sectionPens">Pens (stacked)</div>
+      <div class="pens-tabs" id="pens-tabs"></div>
       <div class="pens" id="pens"></div>
-      <button class="add-pen" id="add-pen" data-i18n="addPen">＋ Add Pen</button>
     </section>
 
     <section>
@@ -175,6 +175,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   const ringVal = $panel('ring-val');
   const rollingVal = $panel('rolling-val');
   const settingsBtn = $toolbar<HTMLButtonElement>('settings-btn');
+  const pensTabsEl = $panel('pens-tabs');
   const pensEl = $panel('pens');
   const ringChipsEl = $panel('ring-chips');
   const rollingChipsEl = $panel('rolling-chips');
@@ -238,6 +239,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       const b = document.createElement('button');
       b.className = 'chip';
       b.addEventListener('click', () => {
+        activePenIndex = 0; // 整体替换 → 焦点回第一个
         setPens(p.pens.map((pp) => ({ hole: pp.hole, colors: [...pp.colors], spacing: 20, width: pp.width })));
         setState({ mode: p.mode, ringTeeth: p.ring, rollingTeeth: p.rolling });
       });
@@ -311,11 +313,45 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   // 笔的 id 集合（结构指纹）：setPens/预设/随机/URL 整体替换时重建卡片，
   // 单纯值变化（拖动滑块）不重建，保证拖动流畅
   let lastPenIds = '';
+  let activePenIndex = 0;
 
+  /** 渲染笔标签页 + 当前笔卡片（tab view） */
   function renderPens(): void {
-    pensEl.innerHTML = '';
     const s = getState();
-    s.pens.forEach((pen, idx) => pensEl.appendChild(buildPenCard(pen, idx + 1)));
+    const pens = s.pens;
+    if (pens.length === 0) return;
+    // 焦点越界（如删除）时回退
+    if (activePenIndex >= pens.length) activePenIndex = pens.length - 1;
+    if (activePenIndex < 0) activePenIndex = 0;
+
+    // ---- 标签行：各笔 + 添加 ----
+    pensTabsEl.innerHTML = '';
+    pens.forEach((pen, idx) => {
+      const tab = document.createElement('button');
+      tab.className = 'pen-tab' + (idx === activePenIndex ? ' active' : '');
+      tab.innerHTML = `<span class="pen-tab-dot" style="background:${pen.colors[0] ?? '#888'}"></span>${t('penLabel', { n: idx + 1 })}`;
+      tab.addEventListener('click', () => {
+        if (idx !== activePenIndex) {
+          activePenIndex = idx;
+          renderPens();
+        }
+      });
+      pensTabsEl.appendChild(tab);
+    });
+    // 添加笔标签
+    const addTab = document.createElement('button');
+    addTab.className = 'pen-tab pen-tab-add';
+    addTab.textContent = '+';
+    addTab.title = t('addPenTitle');
+    addTab.addEventListener('click', () => {
+      activePenIndex = getState().pens.length; // 新笔追加在末尾
+      addPen();
+    });
+    pensTabsEl.appendChild(addTab);
+
+    // ---- 当前笔卡片 ----
+    pensEl.innerHTML = '';
+    pensEl.appendChild(buildPenCard(pens[activePenIndex], activePenIndex + 1));
   }
 
   function buildPenCard(pen: Pen, index: number): HTMLElement {
@@ -422,10 +458,6 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     return card;
   }
 
-  $panel<HTMLButtonElement>('add-pen').addEventListener('click', () => {
-    addPen();
-  });
-
   // ---- 操作按钮 ----
   // 动画模式开关：切入后画布右下角出现浮动工具栏
   let animModeActive = false;
@@ -472,7 +504,10 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     if (e.key === 'Escape' && !settingsModal.hidden) closeSettings();
   });
 
-  randomBtn.addEventListener('click', () => onRandom());
+  randomBtn.addEventListener('click', () => {
+    activePenIndex = 0; // 随机整体替换 → 焦点回第一个
+    onRandom();
+  });
   exportPngBtn.addEventListener('click', () => onPng(Number(imgSizeSelect.value)));
   exportSvgBtn.addEventListener('click', () => onSvg(Number(imgSizeSelect.value)));
 

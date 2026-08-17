@@ -282,6 +282,31 @@ input[type='color'] {
 }
 .seg button.active { background: var(--accent); color: #fff; font-weight: 600; }
 
+/* 笔标签页（tab view） */
+.pens-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pen-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  border-radius: 8px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.pen-tab:hover { color: var(--text); border-color: var(--accent); }
+.pen-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.pen-tab-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); flex-shrink: 0; }
+.pen-tab-add { border-style: dashed; font-size: 14px; padding: 2px 11px; }
+
 /* 笔卡片 */
 .pens { display: flex; flex-direction: column; gap: 10px; }
 .pen-card {
@@ -312,19 +337,6 @@ input[type='color'] {
 .pen-row { display: flex; align-items: center; gap: 10px; }
 .pen-row .row-label { flex: 1; }
 .pen-row input[type='color'] { width: 32px; height: 24px; }
-
-.add-pen {
-  background: var(--panel-2);
-  border: 1px dashed var(--border);
-  color: var(--muted);
-  border-radius: 8px;
-  padding: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  font-family: inherit;
-  transition: all 0.15s;
-}
-.add-pen:hover { color: var(--accent-2); border-color: var(--accent); }
 
 /* 渐变断点行 */
 .grad-stop {
