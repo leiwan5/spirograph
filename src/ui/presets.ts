@@ -16,7 +16,7 @@ export interface ComboPreset {
   mode: 'inside' | 'outside';
   ring: number;
   rolling: number;
-  pens: Array<{ hole: number; color: string; width: number; gradient?: string[]; gradientSpacing?: number }>;
+  pens: Array<{ hole: number; colors: string[]; width: number }>;
 }
 
 /** 经典齿轮组合预设（含多笔配色） */
@@ -25,57 +25,57 @@ export const COMBO_PRESETS: ComboPreset[] = [
     name: '经典星花 72×30', nameEn: 'Classic Star 72×30',
     mode: 'inside', ring: 72, rolling: 30,
     pens: [
-      { hole: 45, color: '#e63946', width: 2.5 },
-      { hole: 80, color: '#1d6fa5', width: 2 },
+      { hole: 45, colors: ['#e63946'], width: 2.5 },
+      { hole: 80, colors: ['#1d6fa5'], width: 2 },
     ],
   },
   {
     name: '三叶草 72×24', nameEn: 'Clover 72×24',
     mode: 'inside', ring: 72, rolling: 24,
     pens: [
-      { hole: 55, color: '#2a9d8f', width: 2.5 },
-      { hole: 95, color: '#f4a261', width: 2 },
+      { hole: 55, colors: ['#2a9d8f'], width: 2.5 },
+      { hole: 95, colors: ['#f4a261'], width: 2 },
     ],
   },
   {
     name: '繁花 96×63', nameEn: 'Blossom 96×63',
     mode: 'inside', ring: 96, rolling: 63,
     pens: [
-      { hole: 35, color: '#f15bb5', width: 2.5 },
-      { hole: 65, color: '#9b5de5', width: 2 },
+      { hole: 35, colors: ['#f15bb5'], width: 2.5 },
+      { hole: 65, colors: ['#9b5de5'], width: 2 },
     ],
   },
   {
     name: '蛛网 144×60', nameEn: 'Spiderweb 144×60',
     mode: 'inside', ring: 144, rolling: 60,
     pens: [
-      { hole: 40, color: '#3a86ff', width: 1.8 },
-      { hole: 70, color: '#00bbf9', width: 1.5 },
-      { hole: 90, color: '#d9a404', width: 1.5 },
+      { hole: 40, colors: ['#3a86ff'], width: 1.8 },
+      { hole: 70, colors: ['#00bbf9'], width: 1.5 },
+      { hole: 90, colors: ['#d9a404'], width: 1.5 },
     ],
   },
   {
     name: '外切花环 48×24', nameEn: 'Garland 48×24',
     mode: 'outside', ring: 48, rolling: 24,
     pens: [
-      { hole: 60, color: '#ff7b00', width: 2.5 },
-      { hole: 100, color: '#e63946', width: 2 },
+      { hole: 60, colors: ['#ff7b00'], width: 2.5 },
+      { hole: 100, colors: ['#e63946'], width: 2 },
     ],
   },
   {
     name: '星芒 96×32', nameEn: 'Starburst 96×32',
     mode: 'inside', ring: 96, rolling: 32,
     pens: [
-      { hole: 100, color: '#d9a404', width: 2.5 },
-      { hole: 60, color: '#1d6fa5', width: 2 },
+      { hole: 100, colors: ['#d9a404'], width: 2.5 },
+      { hole: 60, colors: ['#1d6fa5'], width: 2 },
     ],
   },
   {
     name: '涟漪 192×72', nameEn: 'Ripples 192×72',
     mode: 'inside', ring: 192, rolling: 72,
     pens: [
-      { hole: 50, color: '#2a9d8f', width: 2 },
-      { hole: 90, color: '#f15bb5', width: 1.5 },
+      { hole: 50, colors: ['#2a9d8f'], width: 2 },
+      { hole: 90, colors: ['#f15bb5'], width: 1.5 },
     ],
   },
 ];
@@ -101,9 +101,8 @@ export function randomSettings(): void {
     const color = PALETTE[randInt(0, PALETTE.length - 1)];
     pens.push({
       hole: randInt(20, 100),
-      color,
-      gradient: [],
-      gradientSpacing: 20,
+      colors: [color],
+      spacing: 20,
       width: round1(1 + Math.random() * 3),
     });
   }

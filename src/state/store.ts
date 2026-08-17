@@ -3,7 +3,7 @@ import { DEFAULT_STATE } from '@spirograph/core';
 
 let state: AppState = {
   ...DEFAULT_STATE,
-  pens: DEFAULT_STATE.pens.map((p) => ({ ...p })),
+  pens: DEFAULT_STATE.pens.map((p) => ({ ...p, colors: [...p.colors] })),
 };
 let nextPenId = 100;
 
@@ -35,9 +35,8 @@ export function addPen(patch?: Partial<Pen>): void {
   const pen: Pen = {
     id: nextPenId++,
     hole: 60,
-    color: nextColor(state.pens.length),
-    gradient: [],
-    gradientSpacing: 20,
+    colors: [nextColor(state.pens.length)],
+    spacing: 20,
     width: 2,
     ...patch,
   };

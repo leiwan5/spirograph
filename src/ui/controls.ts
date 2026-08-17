@@ -182,7 +182,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       const b = document.createElement('button');
       b.className = 'chip';
       b.addEventListener('click', () => {
-        setPens(p.pens.map((pp) => ({ hole: pp.hole, color: pp.color, gradient: pp.gradient ?? [], gradientSpacing: pp.gradientSpacing ?? 20, width: pp.width })));
+        setPens(p.pens.map((pp) => ({ hole: pp.hole, colors: [...pp.colors], spacing: 20, width: pp.width })));
         setState({ mode: p.mode, ringTeeth: p.ring, rollingTeeth: p.rolling });
       });
       presetChipsEl.appendChild(b);
@@ -269,30 +269,25 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     card.className = 'pen-card';
     card.innerHTML = `
       <div class="pen-head">
-        <span class="pen-dot" style="background:${pen.color}"></span>
+        <span class="pen-dot" style="background:${pen.colors[0] ?? '#888'}"></span>
         <span class="grow">${t('penLabel', { n: index })}</span>
         <button class="pen-del" title="${t('penDelete')}">✕</button>
       </div>
       <div class="row-label"><span>${t('penHole')}</span><span class="val">${pen.hole}%</span></div>
       <input type="range" class="pen-hole" min="0" max="100" step="1" value="${pen.hole}">
       <div class="pen-row">
-        <span class="row-label" style="flex:1"><span>${t('penColor')}</span></span>
-        <input type="color" class="pen-color" value="${pen.color}">
+        <span class="row-label" style="flex:1"><span>${t('penColors')}</span></span>
+        <div class="pen-grad-colors"></div>
+        <button class="pen-grad-add" title="${t('addColor')}" disabled="true">＋</button>
+      </div>
+      <div class="pen-grad-opts">
+        <div class="row-label"><span>${t('penGradSpacing')}</span><span class="val">${pen.spacing}%</span></div>
+        <input type="range" class="pen-grad-spacing" min="1" max="100" step="1" value="${pen.spacing}">
       </div>
       <div class="row-label"><span>${t('penWidth')}</span><span class="val">${pen.width}</span></div>
       <input type="range" class="pen-width" min="0.5" max="8" step="0.5" value="${pen.width}">
-      <div class="pen-row">
-        <label class="check-row"><input type="checkbox" class="pen-grad"${pen.gradient.length > 1 ? ' checked' : ''}><span>${t('penGradient')}</span></label>
-        <button class="pen-grad-add" title="${t('penGradAdd')}">＋</button>
-      </div>
-      <div class="pen-grad-opts">
-        <div class="row-label"><span>${t('penGradSpacing')}</span><span class="val">${pen.gradientSpacing}%</span></div>
-        <input type="range" class="pen-grad-spacing" min="1" max="100" step="1" value="${pen.gradientSpacing}">
-        <div class="pen-grad-colors"></div>
-      </div>
     `;
     const holeSlider = card.querySelector<HTMLInputElement>('.pen-hole')!;
-    const colorInput = card.querySelector<HTMLInputElement>('.pen-color')!;
     const widthSlider = card.querySelector<HTMLInputElement>('.pen-width')!;
     const dot = card.querySelector<HTMLElement>('.pen-dot')!;
     const holeVal = card.querySelectorAll<HTMLElement>('.row-label .val')[0];
@@ -302,35 +297,30 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       setPen(pen.id, { hole: Math.round(+holeSlider.value) });
       holeVal.textContent = holeSlider.value + '%';
     });
-    colorInput.addEventListener('input', () => {
-      setPen(pen.id, { color: colorInput.value });
-      dot.style.background = colorInput.value;
-    });
     widthSlider.addEventListener('input', () => {
       setPen(pen.id, { width: +widthSlider.value });
       widthVal.textContent = widthSlider.value;
     });
 
-    // ---- 渐变控件（统一间隔模型）----
-    const gradCheck = card.querySelector<HTMLInputElement>('.pen-grad')!;
+    // ---- 颜色列表（1 个 = 单色；≥ 2 个 = 渐变）----
     const gradAdd = card.querySelector<HTMLButtonElement>('.pen-grad-add')!;
     const gradOpts = card.querySelector<HTMLElement>('.pen-grad-opts')!;
     const gradSpacing = card.querySelector<HTMLInputElement>('.pen-grad-spacing')!;
     const gradColorsEl = card.querySelector<HTMLElement>('.pen-grad-colors')!;
     const gradSpacingVal = gradOpts.querySelector('.row-label .val') as HTMLElement;
 
-    function currentGradient(): string[] {
-      return getState().pens.find((p) => p.id === pen.id)?.gradient ?? pen.gradient;
+    function currentColors(): string[] {
+      return getState().pens.find((p) => p.id === pen.id)?.colors ?? pen.colors;
     }
 
-    /** 渲染渐变色槽列表（2-4 个颜色） */
-    function renderGrad(): void {
-      const g = currentGradient();
-      gradOpts.classList.toggle('show', g.length > 1);
-      gradAdd.disabled = g.length >= 4;
-      gradAdd.textContent = g.length >= 4 ? '4' : '＋';
+    /** 渲染颜色槽列表（1-4 个颜色）：≥2 个才显示删除与间隔 */
+    function renderColors(): void {
+      const cs = currentColors();
+      gradOpts.classList.toggle('show', cs.length > 1);
+      gradAdd.disabled = cs.length >= 4;
+      gradAdd.textContent = cs.length >= 4 ? '4' : '＋';
       gradColorsEl.innerHTML = '';
-      g.forEach((c, idx) => {
+      cs.forEach((c, idx) => {
         const slot = document.createElement('div');
         slot.className = 'pen-grad-slot';
         const swatch = document.createElement('input');
@@ -338,15 +328,18 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
         swatch.value = c;
         swatch.title = t('gradSlotTitle', { n: idx + 1 });
         swatch.addEventListener('input', () => {
-          setPen(pen.id, { gradient: currentGradient().map((x, i) => (i === idx ? swatch.value : x)) });
+          setPen(pen.id, { colors: currentColors().map((x, i) => (i === idx ? swatch.value : x)) });
+          // 首色 → 更新笔头圆点
+          if (idx === 0) dot.style.background = swatch.value;
         });
         const del = document.createElement('button');
         del.className = 'pen-grad-del';
-        del.textContent = 'X';
-        del.style.display = g.length <= 2 ? 'none' : 'inline-block';
+        del.textContent = '✕';
+        del.style.display = cs.length <= 1 ? 'none' : 'inline-block';
         del.addEventListener('click', () => {
-          setPen(pen.id, { gradient: currentGradient().filter((_, i) => i !== idx) });
-          renderGrad();
+          // 删除后至少保留 1 个颜色（少于 2 个即回到单色）
+          setPen(pen.id, { colors: currentColors().filter((_, i) => i !== idx) });
+          renderColors();
         });
         slot.appendChild(swatch);
         slot.appendChild(del);
@@ -354,35 +347,21 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       });
     }
 
-    gradCheck.addEventListener('change', () => {
-      const cur = currentGradient();
-      if (gradCheck.checked && cur.length <= 1) {
-        setPen(pen.id, {
-          gradient:
-            cur.length === 0
-              ? [pen.color, nextGradientColor(pen.color)]
-              : [cur[0], nextGradientColor(cur[0])],
-        });
-      } else if (!gradCheck.checked) {
-        setPen(pen.id, { gradient: [] });
-      }
-      renderGrad();
-    });
     gradAdd.addEventListener('click', () => {
-      const cur = currentGradient();
+      const cur = currentColors();
       if (cur.length >= 4) return;
       const last = cur[cur.length - 1];
-      setPen(pen.id, { gradient: [...cur, nextGradientColor(last)] });
-      renderGrad();
+      setPen(pen.id, { colors: [...cur, nextGradientColor(last)] });
+      renderColors();
     });
     gradSpacing.addEventListener('input', () => {
       const v = Math.round(+gradSpacing.value);
-      setPen(pen.id, { gradientSpacing: v });
+      setPen(pen.id, { spacing: v });
       gradSpacingVal.textContent = v + '%';
-      const spacingVal = getState().pens.find((p) => p.id === pen.id)?.gradientSpacing;
+      const spacingVal = getState().pens.find((p) => p.id === pen.id)?.spacing;
       gradSpacing.value = String(spacingVal ?? v);
     });
-    renderGrad();
+    renderColors();
     card.querySelector<HTMLButtonElement>('.pen-del')!.addEventListener('click', () => {
       removePen(pen.id);
     });
