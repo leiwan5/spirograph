@@ -22,7 +22,69 @@ body {
   overflow: hidden;
 }
 
-#app { display: flex; height: 100%; }
+#app { display: flex; flex-direction: column; height: 100%; }
+
+/* ===== 顶部水平工具栏（显示/动画/导出等非图形参数功能） ===== */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.toolbar-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-right: auto; /* 品牌靠左，其余工具组全部推到右侧 */
+  flex-shrink: 0;
+}
+.toolbar-brand .brand-title { font-size: 16px; font-weight: 700; letter-spacing: 0.5px; }
+.toolbar-brand .brand-sub { font-size: 11px; font-weight: 400; color: var(--muted); }
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border-left: 1px solid var(--border);
+}
+.toolbar-group:first-of-type { border-left: none; }
+.toolbar-group-lang { margin-left: 0; }
+/* 双类选择器提高特异性：覆盖 .btn { padding: 9px 0 } 的默认水平 padding */
+.toolbar .toolbar-btn {
+  padding: 4px 10px;
+  font-size: 12.5px;
+  border-radius: 7px;
+  white-space: nowrap;
+  min-width: 0;
+}
+/* 动画模式按钮：稍大，留足左右空间，便于点击与高亮辨识 */
+.toolbar .toolbar-play {
+  padding: 4px 14px;
+  min-width: 42px;
+  text-align: center;
+}
+.toolbar-control { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.toolbar-control input[type='range'] { width: 80px; height: 16px; }
+.toolbar-bg { width: 26px !important; height: 22px !important; padding: 1px; }
+.toolbar-check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+.toolbar-check input[type='checkbox'] { width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; }
+.toolbar .size-select { padding: 3px 6px; font-size: 12.5px; }
+.toolbar .val { color: var(--text); font-weight: 600; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+
+/* 工作区：面板 + 画布 */
+.workspace { display: flex; flex: 1; min-height: 0; }
 
 /* ===== 左侧面板 ===== */
 .panel {
@@ -41,23 +103,6 @@ body {
 .panel::-webkit-scrollbar { width: 8px; }
 .panel::-webkit-scrollbar-thumb { background: #2e3648; border-radius: 4px; }
 
-h1 {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-h1 .sub { font-size: 11px; font-weight: 400; color: var(--muted); }
-
-/* 面板头部：标题 + 语言切换 */
-.panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
 .lang-seg {
   display: flex;
   background: var(--panel-2);
@@ -334,6 +379,7 @@ input[type='color'] {
   min-width: 0;
   padding: 18px;
   display: flex;
+  position: relative; /* 浮动工具栏定位基准 */
 }
 #canvas {
   flex: 1;
@@ -347,7 +393,10 @@ input[type='color'] {
 
 /* 小屏适配 */
 @media (max-width: 760px) {
-  #app { flex-direction: column; }
-  .panel { width: 100%; min-width: 0; height: auto; max-height: 45vh; border-right: none; border-bottom: 1px solid var(--border); }
+  .workspace { flex-direction: column; }
+  .panel { width: 100%; min-width: 0; height: auto; max-height: 40vh; border-right: none; border-bottom: 1px solid var(--border); }
   .stage { padding: 10px; }
+  .toolbar { padding: 6px 10px; gap: 6px; }
+  .toolbar-group { padding: 0 6px; gap: 6px; }
+  .toolbar-group-lang { margin-left: 0; }
 }

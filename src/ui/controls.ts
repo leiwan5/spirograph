@@ -29,19 +29,54 @@ export interface PanelApi {
   onExportSvg(cb: (size: number) => void): void;
 }
 
-/** 构建左侧控件面板 + 右侧画布容器，返回面板 API */
+/** 构建顶部工具栏 + 左侧控件面板 + 右侧画布容器，返回面板 API */
 export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelApi {
-  const panelEl = document.createElement('aside');
-  panelEl.className = 'panel';
-  panelEl.innerHTML = `
-    <div class="panel-head">
-      <h1>🌀 Spirograph <span class="sub" data-i18n="appTitleSub">Generator</span></h1>
+  // ---- 顶部水平工具栏（显示/动画/导出等与图形参数无关的功能）----
+  const toolbarEl = document.createElement('header');
+  toolbarEl.className = 'toolbar';
+  toolbarEl.innerHTML = `
+    <div class="toolbar-brand">
+      <span class="brand-title">🌀 Spirograph</span>
+      <span class="brand-sub" data-i18n="appTitleSub">Generator</span>
+    </div>
+
+    <div class="toolbar-group">
+      <button class="btn btn-primary toolbar-btn toolbar-play" id="play" data-i18n="play" data-i18n-title="playTitle">▶</button>
+      <div class="toolbar-control" title="${t('animSpeed')}">
+        <input type="range" id="speed" min="0.1" max="10" step="0.1">
+        <span class="val" id="speed-val">1×</span>
+      </div>
+      <label class="toolbar-check" title="${t('showGears')}">
+        <input type="checkbox" id="show-gears"><span>⚙</span>
+      </label>
+      <input type="color" id="bg" class="toolbar-bg" title="${t('canvasBackground')}">
+    </div>
+
+    <div class="toolbar-group">
+      <select id="img-size" class="size-select" title="${t('imgSize')}">
+        <option value="512">512</option>
+        <option value="1000">1000</option>
+        <option value="2048" selected>2048</option>
+        <option value="4096">4096</option>
+      </select>
+      <button class="btn btn-ghost toolbar-btn" id="export-png" data-i18n-title="exportPngTitle">PNG</button>
+      <button class="btn btn-ghost toolbar-btn" id="export-svg" data-i18n-title="exportSvgTitle">SVG</button>
+      <button class="btn btn-ghost toolbar-btn" id="copy-image-link" data-i18n="copyImageLink" data-i18n-title="copyImageLinkTitle">🔗</button>
+      <button class="btn btn-ghost toolbar-btn" id="random" data-i18n="random" data-i18n-title="randomTitle">🎲</button>
+    </div>
+
+    <div class="toolbar-group toolbar-group-lang">
       <div class="lang-seg" id="lang-seg">
         <button data-lang="en" class="active">EN</button>
         <button data-lang="zh">中文</button>
       </div>
     </div>
+  `;
 
+  // ---- 左侧面板（仅图形参数）----
+  const panelEl = document.createElement('aside');
+  panelEl.className = 'panel';
+  panelEl.innerHTML = `
     <section>
       <div class="section-title" data-i18n="sectionMode">Drawing Mode</div>
       <div class="seg" id="mode-seg">
@@ -81,35 +116,6 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       </div>
     </section>
 
-    <section>
-      <div class="row-label"><span data-i18n="canvasBackground">Canvas background</span><input type="color" id="bg"></div>
-    </section>
-
-    <section>
-      <div class="row-label"><span data-i18n="animSpeed">Animation speed</span><span class="val" id="speed-val">1×</span></div>
-      <input type="range" id="speed" min="0.1" max="10" step="0.1">
-      <label class="check-row"><input type="checkbox" id="show-gears"><span data-i18n="showGears">Show gears (pens drawn in sequence)</span></label>
-    </section>
-
-    <section>
-      <div class="row-label"><span data-i18n="imgSize">Image size</span>
-        <select id="img-size" class="size-select">
-          <option value="512">512×512</option>
-          <option value="1000">1000×1000</option>
-          <option value="2048" selected>2048×2048</option>
-          <option value="4096">4096×4096</option>
-        </select>
-      </div>
-    </section>
-
-    <section class="actions">
-      <button class="btn btn-primary" id="play" data-i18n="play">▶ Play drawing</button>
-      <button class="btn btn-ghost" id="random" data-i18n="random">🎲 Random</button>
-      <button class="btn btn-ghost" id="export-png" data-i18n="exportPng">⬇ Export PNG</button>
-      <button class="btn btn-ghost" id="export-svg" data-i18n="exportSvg">⬇ Export SVG</button>
-      <button class="btn btn-ghost full" id="copy-image-link" data-i18n="copyImageLink">🔗 Copy image link</button>
-    </section>
-
     <section class="info">
       <div><span data-i18n="infoRatio">Ratio</span> <b id="info-ratio">–</b> · <span data-i18n="infoPetals">Petals</span> <b id="info-petals">–</b> · <span data-i18n="infoTurns">Turns</span> <b id="info-turns">–</b></div>
       <div id="info-samples-row">–</div>
@@ -119,33 +125,40 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   const stage = document.createElement('main');
   stage.className = 'stage';
   stage.appendChild(canvas);
-  root.appendChild(panelEl);
-  root.appendChild(stage);
+
+  const workspace = document.createElement('div');
+  workspace.className = 'workspace';
+  workspace.appendChild(panelEl);
+  workspace.appendChild(stage);
+
+  root.appendChild(toolbarEl);
+  root.appendChild(workspace);
 
   // ---- 元素引用 ----
-  const $ = <T extends HTMLElement>(id: string): T => panelEl.querySelector('#' + id) as T;
-  const ringSlider = $<HTMLInputElement>('ring');
-  const rollingSlider = $<HTMLInputElement>('rolling');
-  const ringVal = $('ring-val');
-  const rollingVal = $('rolling-val');
-  const speedSlider = $<HTMLInputElement>('speed');
-  const speedVal = $('speed-val');
-  const bgColor = $<HTMLInputElement>('bg');
-  const pensEl = $('pens');
-  const ringChipsEl = $('ring-chips');
-  const rollingChipsEl = $('rolling-chips');
-  const presetChipsEl = $('preset-chips');
-  const playBtn = $<HTMLButtonElement>('play');
-  const randomBtn = $<HTMLButtonElement>('random');
-  const exportPngBtn = $<HTMLButtonElement>('export-png');
-  const exportSvgBtn = $<HTMLButtonElement>('export-svg');
-  const copyLinkBtn = $<HTMLButtonElement>('copy-image-link');
-  const imgSizeSelect = $<HTMLSelectElement>('img-size');
-  const infoRatio = $('info-ratio');
-  const infoPetals = $('info-petals');
-  const infoTurns = $('info-turns');
-  const infoSamplesRow = $('info-samples-row');
-  const langSeg = $<HTMLElement>('lang-seg');
+  const $panel = <T extends HTMLElement>(id: string): T => panelEl.querySelector('#' + id) as T;
+  const $toolbar = <T extends HTMLElement>(id: string): T => toolbarEl.querySelector('#' + id) as T;
+  const ringSlider = $panel<HTMLInputElement>('ring');
+  const rollingSlider = $panel<HTMLInputElement>('rolling');
+  const ringVal = $panel('ring-val');
+  const rollingVal = $panel('rolling-val');
+  const speedSlider = $toolbar<HTMLInputElement>('speed');
+  const speedVal = $toolbar('speed-val');
+  const bgColor = $toolbar<HTMLInputElement>('bg');
+  const pensEl = $panel('pens');
+  const ringChipsEl = $panel('ring-chips');
+  const rollingChipsEl = $panel('rolling-chips');
+  const presetChipsEl = $panel('preset-chips');
+  const playBtn = $toolbar<HTMLButtonElement>('play');
+  const randomBtn = $toolbar<HTMLButtonElement>('random');
+  const exportPngBtn = $toolbar<HTMLButtonElement>('export-png');
+  const exportSvgBtn = $toolbar<HTMLButtonElement>('export-svg');
+  const copyLinkBtn = $toolbar<HTMLButtonElement>('copy-image-link');
+  const imgSizeSelect = $toolbar<HTMLSelectElement>('img-size');
+  const infoRatio = $panel('info-ratio');
+  const infoPetals = $panel('info-petals');
+  const infoTurns = $panel('info-turns');
+  const infoSamplesRow = $panel('info-samples-row');
+  const langSeg = $toolbar<HTMLElement>('lang-seg');
 
   // ---- 回调（由 main 注入）----
   let onPlay: () => void = () => {};
@@ -250,7 +263,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   // ---- 背景色 / 速度 / 显示齿轮 ----
   bgColor.addEventListener('input', () => setState({ background: bgColor.value }));
   speedSlider.addEventListener('input', () => setState({ speed: Math.round(+speedSlider.value * 10) / 10 }));
-  const gearsCheck = $<HTMLInputElement>('show-gears');
+  const gearsCheck = $toolbar<HTMLInputElement>('show-gears');
   gearsCheck.addEventListener('change', () => setState({ showGears: gearsCheck.checked }));
 
   // ---- 笔列表 ----
@@ -368,7 +381,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     return card;
   }
 
-  $<HTMLButtonElement>('add-pen').addEventListener('click', () => {
+  $panel<HTMLButtonElement>('add-pen').addEventListener('click', () => {
     addPen();
   });
 
@@ -455,14 +468,16 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   // ---- 语言本地化（不重建面板；笔卡片重建以保证新文案） ----
   let playState: { playing: boolean; paused: boolean } = { playing: false, paused: false };
   function localize(): void {
-    // 静态文案
-    panelEl.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
-      const key = el.dataset.i18n as I18nKey | undefined;
-      if (key) el.textContent = t(key);
-    });
-    panelEl.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach((el) => {
-      const key = el.dataset.i18nTitle as I18nKey | undefined;
-      if (key) el.title = t(key);
+    // 静态文案（工具栏 + 面板）
+    [toolbarEl, panelEl].forEach((scope) => {
+      scope.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
+        const key = el.dataset.i18n as I18nKey | undefined;
+        if (key) el.textContent = t(key);
+      });
+      scope.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach((el) => {
+        const key = el.dataset.i18nTitle as I18nKey | undefined;
+        if (key) el.title = t(key);
+      });
     });
     // 语言按钮高亮
     langSeg.querySelectorAll<HTMLButtonElement>('button').forEach((b) => {
@@ -484,13 +499,10 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   }
   function setPlayingUI(playing: boolean, paused = false): void {
     playState = { playing, paused };
-    if (!playing) {
-      playBtn.textContent = t('play');
-      playBtn.classList.remove('playing');
-    } else {
-      playBtn.textContent = paused ? t('resume') : t('pause');
-      playBtn.classList.add('playing');
-    }
+    // 工具栏播放按钮
+    playBtn.textContent = !playing ? t('play') : paused ? t('resume') : t('pause');
+    playBtn.title = !playing ? t('playTitle') : paused ? t('resumeTitle') : t('pauseTitle');
+    playBtn.classList.toggle('playing', playing);
   }
 
   subscribe(syncControls);
