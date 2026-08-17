@@ -2,6 +2,8 @@ import { RenderDemo } from './RenderDemo';
 import { AnimatedDemo } from './AnimatedDemo';
 
 const base = import.meta.env.BASE_URL ?? './';
+const GITHUB_URL = 'https://github.com/leiwan5/spirograph';
+const NPM_URL = 'https://www.npmjs.com/package/@spirograph/react';
 
 export function App() {
   return (
@@ -16,6 +18,14 @@ export function App() {
           <a href="#features">Features</a>
           <a href="#install">Install</a>
           <a href="#api">API</a>
+        </div>
+        <div className="docs-external">
+          <a href={NPM_URL} target="_blank" rel="noreferrer">
+            <i className="fa-brands fa-npm" /> npm
+          </a>
+          <a href={GITHUB_URL} target="_blank" rel="noreferrer">
+            <i className="fa-brands fa-github" /> GitHub
+          </a>
         </div>
         <a className="docs-source" href={base}>
           <i className="fa-solid fa-arrow-up-right-from-square" /> Spirograph Generator
@@ -164,12 +174,14 @@ export default function App() {
       </section>
 
       <footer className="docs-footer">
-        <p>
-          Spirograph Generator · <a href={base}>Spirograph Generator</a> ·{' '}
-          <a href="https://github.com/leiwan5/svelte-gallery-view" target="_blank" rel="noreferrer">
-            svelte-gallery-view
-          </a>{' '}
-          style documentation page
+        <p className="footer-brand">Spirograph Generator · <strong>@spirograph/react</strong></p>
+        <p className="footer-links">
+          <a href={NPM_URL} target="_blank" rel="noreferrer">
+            <i className="fa-brands fa-npm" /> npm
+          </a>
+          <a href={GITHUB_URL} target="_blank" rel="noreferrer">
+            <i className="fa-brands fa-github" /> GitHub
+          </a>
         </p>
       </footer>
     </>

@@ -4,6 +4,8 @@
 
   const base = (import.meta as unknown as { env: { BASE_URL: string } }).env.BASE_URL ?? './';
   const code = (s: string): string => s;
+  const GITHUB_URL = 'https://github.com/leiwan5/spirograph';
+  const NPM_URL = 'https://www.npmjs.com/package/@spirograph/svelte';
 </script>
 
 <nav class="docs-nav">
@@ -16,6 +18,10 @@
     <a href="#features">Features</a>
     <a href="#install">Install</a>
     <a href="#api">API</a>
+  </div>
+  <div class="docs-external">
+    <a href="{NPM_URL}" target="_blank" rel="noreferrer"><i class="fa-brands fa-npm"></i> npm</a>
+    <a href="{GITHUB_URL}" target="_blank" rel="noreferrer"><i class="fa-brands fa-github"></i> GitHub</a>
   </div>
   <a class="docs-source" href="{base}"><i class="fa-solid fa-arrow-up-right-from-square"></i> Spirograph Generator</a>
 </nav>
@@ -141,5 +147,9 @@
 </section>
 
 <footer class="docs-footer">
-  <p>Spirograph Generator · <a href="{base}">主生成器</a> · <a href="https://github.com/leiwan5/svelte-gallery-view" target="_blank" rel="noreferrer">svelte-gallery-view</a> style documentation page</p>
+  <p class="footer-brand">Spirograph Generator · <strong>@spirograph/svelte</strong></p>
+  <p class="footer-links">
+    <a href="{NPM_URL}" target="_blank" rel="noreferrer"><i class="fa-brands fa-npm"></i> npm</a>
+    <a href="{GITHUB_URL}" target="_blank" rel="noreferrer"><i class="fa-brands fa-github"></i> GitHub</a>
+  </p>
 </footer>
