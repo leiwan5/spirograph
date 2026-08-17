@@ -3,8 +3,9 @@ import type { AppState, Pen } from './types.js';
 /**
  * URL query 参数格式（与 web 应用分享链接、图片端点、CLI 完全一致）：
  *   ring=72&rolling=30&mode=inside
- *   &pen=40,e63946,2.5&pen=75,1d6fa5,2   （每支笔一个 pen 参数，可重复）
- *   &pen=40,e63946,2.5,1d6fa5,f4a261     （3-6 段：附加 1-3 个渐变色，总色数 ≤4）
+ *   &pen=40,2.5,e63946                   单色笔：孔洞,粗细,颜色1
+ *   &pen=40,2.5,10,e63946,1d6fa5        多色笔：孔洞,粗细,间隔,颜色1[,颜色2[,颜色3[,颜色4]]]
+ *   （仅 1 个颜色 = 单色；≥ 2 个颜色 = 渐变。间隔在颜色组前，与 6 位 hex 无歧义）
  *   &bg=ffffff&speed=1&scale=auto&gears=1
  * 颜色一律使用不带 # 的 6 位 hex（避免 # 截断 query）。
  *
@@ -57,11 +58,14 @@ export function serializeState(s: AppState): string {
   parts.push('rolling=' + String(s.rollingTeeth));
   parts.push('mode=' + s.mode);
   for (const pen of s.pens) {
-    const penParts = [pen.hole, pen.color.replace('#', '').toLowerCase(), pen.width];
-    if (pen.gradient.length > 1) {
-      // 渐变：hole,color,width,spacing,c2[,c3[,c4]]
-      penParts.push(String(pen.gradientSpacing));
-      for (const c of pen.gradient.slice(0, 3)) penParts.push(c.replace('#', '').toLowerCase());
+    const penParts: (number | string)[] = [pen.hole, pen.width];
+    if (pen.colors.length > 1) {
+      // 多色（渐变）：hole,width,spacing,c1[,c2[,c3[,c4]]]
+      penParts.push(String(pen.spacing));
+      for (const c of pen.colors) penParts.push(c.replace('#', '').toLowerCase());
+    } else {
+      // 单色：hole,width,c1
+      penParts.push((pen.colors[0] ?? '#000000').replace('#', '').toLowerCase());
     }
     parts.push('pen=' + penParts.join(','));
   }
@@ -116,30 +120,29 @@ export function parseState(search: string): UrlPatch {
 
 function parsePen(raw: string): Omit<Pen, 'id'> | null {
   const parts = raw.split(',');
-  // 3 段单色；4-7 段：hole,color,width,spacing,c2[,c3[,c4]]
+  // 3 段单色：hole,width,c1
+  // 4-7 段多色：hole,width,spacing,c1[,c2[,c3[,c4]]]
   if (parts.length < 3 || parts.length > 7) return null;
   const hole = Number(parts[0]);
-  const colorRaw = parts[1];
-  const width = Number(parts[2]);
+  const width = Number(parts[1]);
   if (!Number.isInteger(hole) || hole < 0 || hole > 100) return null;
-  if (!/^[0-9a-fA-F]{6}$/.test(colorRaw)) return null;
   if (!Number.isFinite(width) || width < 0.5 || width > 8) return null;
 
-  const pen: Omit<Pen, 'id'> = { hole, color: '#' + colorRaw.toLowerCase(), gradient: [], gradientSpacing: 20, width };
+  let spacing = 20;
+  let colorParts = parts.slice(2);
   if (parts.length >= 4) {
-    // 渐变：hole,color,width,spacing,c2[,c3[,c4]]；spacing 非法或渐变色非法 → 整笔忽略
-    if (!/^\d+(\.\d+)?$/.test(parts[3])) return null;
-    const spacing = Number(parts[3]);
-    if (!(spacing >= 1 && spacing <= 100)) return null;
-    const colorParts = parts.slice(4);
-    if (colorParts.length < 1 || colorParts.length > 3) return null;
-    const gradient: string[] = [];
-    for (const c of colorParts) {
-      if (!/^[0-9a-fA-F]{6}$/.test(c)) return null;
-      gradient.push('#' + c.toLowerCase());
-    }
-    pen.gradientSpacing = spacing;
-    pen.gradient = gradient;
+    // 多色：间隔必须是 1-100 的数字（与 6 位 hex 颜色无歧义）
+    if (!/^\d+(\.\d+)?$/.test(parts[2])) return null;
+    const sp = Number(parts[2]);
+    if (!(sp >= 1 && sp <= 100)) return null;
+    spacing = sp;
+    colorParts = parts.slice(3);
   }
-  return pen;
+  if (colorParts.length < 1 || colorParts.length > 4) return null;
+  const colors: string[] = [];
+  for (const c of colorParts) {
+    if (!/^[0-9a-fA-F]{6}$/.test(c)) return null;
+    colors.push('#' + c.toLowerCase());
+  }
+  return { hole, colors, spacing, width };
 }

@@ -14,9 +14,9 @@ export function buildSvg(items: RenderItem[], background: string, sizePx = 2048)
   const padding = sizePx * 0.04;
   const t = computeTransform(bounds, sizePx, sizePx, padding);
 
-  // 单色笔大图抽样（每笔最多 ~12k 点）；渐变笔必须逐段全量（保证渐变连续）
+  // 单色笔大图抽样（每笔最多 ~12k 点）；多色笔必须逐段全量（保证渐变连续）
   const decimate = items.map((item) => {
-    if (item.pen.gradient.length > 1) return 1;
+    if (item.pen.colors.length > 1) return 1;
     const { count } = item.curve;
     return Math.max(1, Math.floor(count / MAX_EXPORT_POINTS_PER_PEN));
   });

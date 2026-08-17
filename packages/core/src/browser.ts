@@ -71,11 +71,11 @@ export function renderFull(ctx: Canvas2D, items: RenderItem[], transform: Transf
   ctx.lineJoin = 'round';
   for (const item of items) {
     const { points, count } = item.curve;
-    if (item.pen.gradient.length > 1) {
+    if (item.pen.colors.length > 1) {
       strokeGradientCurve(ctx, points, count, item.pen, item.pen.width, transform);
       continue;
     }
-    ctx.strokeStyle = item.pen.color;
+    ctx.strokeStyle = item.pen.colors[0];
     ctx.lineWidth = item.pen.width;
     ctx.beginPath();
     for (let i = 0; i < count; i++) {
@@ -103,11 +103,11 @@ export function renderPartial(
   for (const item of items) {
     const { points, count } = item.curve;
     const drawn = Math.max(1, Math.floor(progress * count));
-    if (item.pen.gradient.length > 1) {
+    if (item.pen.colors.length > 1) {
       strokeGradientCurve(ctx, points, drawn, item.pen, item.pen.width, transform, false);
       continue;
     }
-    ctx.strokeStyle = item.pen.color;
+    ctx.strokeStyle = item.pen.colors[0];
     ctx.lineWidth = item.pen.width;
     ctx.beginPath();
     for (let i = 0; i < drawn; i++) {
@@ -317,7 +317,7 @@ export function drawPenHoles(
     const hy = penPoints[i][1] * scale + offsetY;
     ctx.beginPath();
     ctx.arc(hx, hy, isActive ? holeR * 0.72 : holeR * 0.45, 0, PI2);
-    ctx.fillStyle = pens[i].color;
+    ctx.fillStyle = pens[i].colors[0];
     ctx.fill();
   }
   ctx.restore();
@@ -341,11 +341,11 @@ export function renderSteps(
     if (i > penIndex) break;
     const { points, count } = items[i].curve;
     const drawn = i < penIndex ? count : Math.max(1, Math.floor(penProgress * count));
-    if (items[i].pen.gradient.length > 1) {
+    if (items[i].pen.colors.length > 1) {
       strokeGradientCurve(ctx, points, drawn, items[i].pen, items[i].pen.width, transform, drawn >= count);
       continue;
     }
-    ctx.strokeStyle = items[i].pen.color;
+    ctx.strokeStyle = items[i].pen.colors[0];
     ctx.lineWidth = items[i].pen.width;
     ctx.beginPath();
     for (let j = 0; j < drawn; j++) {
@@ -379,11 +379,11 @@ export function renderToCanvasAt(
   for (const item of items) {
     const { points, count } = item.curve;
     const w = item.pen.width * (sizePx / 1000);
-    if (item.pen.gradient.length > 1) {
+    if (item.pen.colors.length > 1) {
       strokeGradientCurve(ctx, points, count, item.pen, w, t);
       continue;
     }
-    ctx.strokeStyle = item.pen.color;
+    ctx.strokeStyle = item.pen.colors[0];
     ctx.lineWidth = w;
     ctx.beginPath();
     for (let i = 0; i < count; i++) {

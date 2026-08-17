@@ -6,8 +6,8 @@ import type { Pen, RenderItem } from './types.js';
 
 function makeItems(): RenderItem[] {
   const pens: Pen[] = [
-    { id: 1, hole: 40, color: '#e63946', gradient: [], gradientSpacing: 20, width: 2.5 },
-    { id: 2, hole: 75, color: '#1d6fa5', gradient: ['#0000ff', '#f4a261'], gradientSpacing: 10, width: 2 },
+    { id: 1, hole: 40, colors: ['#e63946'], spacing: 20, width: 2.5 },
+    { id: 2, hole: 75, colors: ['#1d6fa5', '#0000ff', '#f4a261'], spacing: 10, width: 2 },
   ];
   return pens.map((pen) => ({
     curve: sampleCurve(72, 30, 'inside', pen.hole),
@@ -16,14 +16,14 @@ function makeItems(): RenderItem[] {
 }
 
 describe('buildRenderData（线段级渲染契约）', () => {
-  it('段数与曲线点一致：每笔 count-1 段（渐变笔含收笔线 +1）', () => {
+  it('段数与曲线点一致：每笔 count-1 段（多色笔含收笔线 +1）', () => {
     const items = makeItems();
     const bounds = computeBounds(items.map((i) => i.curve));
     const t = computeTransform(bounds, 800, 800, 32);
     const data = buildRenderData(items, t);
     expect(data.pens).toHaveLength(2);
     expect(data.pens[0].count).toBe(items[0].curve.count - 1); // 单色无收笔线
-    expect(data.pens[1].count).toBe(items[1].curve.count); // 渐变：count-1 + 收笔线
+    expect(data.pens[1].count).toBe(items[1].curve.count); // 多色：count-1 + 收笔线
     expect(data.segments).toHaveLength((items[0].curve.count - 1) + items[1].curve.count);
   });
 
@@ -38,7 +38,7 @@ describe('buildRenderData（线段级渲染契约）', () => {
     expect(s.x1).toBeCloseTo(points[2] * 2 + 100, 6);
   });
 
-  it('单色笔 uniformColor = pen.color，渐变笔为 null', () => {
+  it('单色笔 uniformColor = colors[0]，多色笔为 null', () => {
     const items = makeItems();
     const data = buildRenderData(items, { scale: 1, offsetX: 0, offsetY: 0 });
     expect(data.pens[0].uniformColor).toBe('#e63946');
@@ -56,8 +56,8 @@ describe('buildRenderData（线段级渲染契约）', () => {
     const items = makeItems();
     const data = buildRenderData([items[1]], { scale: 1, offsetX: 0, offsetY: 0 });
     const last = data.segments[data.segments.length - 1];
-    // 渐变 ['#0000ff', '#f4a261'] spacing 10：t=1 → 初始色蓝
-    expect(last.color).toBe('rgb(0,0,255)');
+    // 多色 ['#1d6fa5', '#0000ff', '#f4a261'] spacing 10：t=1 → 初始色
+    expect(last.color).toBe('rgb(29,111,165)');
     // 收笔线端点 = 曲线首点
     expect(last.x1).toBeCloseTo(items[1].curve.points[0], 6);
     expect(last.y1).toBeCloseTo(items[1].curve.points[1], 6);
@@ -75,7 +75,7 @@ describe('buildRenderData（线段级渲染契约）', () => {
     expect(data.pens[0].count).toBe(Math.ceil((items[0].curve.count - 1) / 10));
   });
 
-  it('segmentColor：单色返回 pen.color，渐变取中点色', () => {
+  it('segmentColor：单色返回 colors[0]，多色取中点色', () => {
     const [p1, p2] = makeItems().map((i) => i.pen);
     expect(segmentColor(p1, 5, 100)).toBe('#e63946');
     const c = segmentColor(p2, 0, 1000);

@@ -17,7 +17,7 @@ describe('服务端图片生成（部署端点复用）', () => {
   });
 
   it('generatePng 输出有效 PNG（默认参数）', () => {
-    const png = generatePng('?ring=72&rolling=30&pen=40,e63946,2.5&pen=75,1d6fa5,2');
+    const png = generatePng('?ring=72&rolling=30&pen=40,2.5,e63946&pen=75,2,1d6fa5');
     expect(png[0]).toBe(137);
     const dv = new DataView(png.buffer, 16, 8);
     expect(dv.getUint32(0)).toBe(1000);
@@ -30,7 +30,7 @@ describe('服务端图片生成（部署端点复用）', () => {
   });
 
   it('generateSvg 输出 SVG 文档', () => {
-    const svg = generateSvg('?ring=72&rolling=30&pen=40,e63946,2.5');
+    const svg = generateSvg('?ring=72&rolling=30&pen=40,2.5,e63946');
     expect(svg.startsWith('<?xml')).toBe(true);
     expect(svg).toContain('<svg');
     expect(svg).toContain('stroke="#e63946"');
@@ -42,7 +42,7 @@ describe('服务端图片生成（部署端点复用）', () => {
   });
 
   it('渐变笔 PNG 也输出合法（统一逐段着色）', () => {
-    const png = generatePng('?pen=40,e63946,2.5,10,1d6fa5,f4a261');
+    const png = generatePng('?pen=40,2.5,e63946,10,1d6fa5,f4a261');
     expect(png[0]).toBe(137);
     const dv = new DataView(png.buffer, 16, 4);
     expect(dv.getUint32(0)).toBe(1000);

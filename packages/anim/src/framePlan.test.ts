@@ -6,7 +6,7 @@ import type { RenderItem } from '@spirograph/core';
 function items(count = 3): RenderItem[] {
   return Array.from({ length: count }, (_, i) => ({
     curve: sampleCurve(72, 30, 'inside', 40 + i),
-    pen: { id: i + 1, hole: 40 + i, color: '#e63946', gradient: [], gradientSpacing: 20, width: 2 },
+    pen: { id: i + 1, hole: 40 + i, colors: ['#e63946'], spacing: 20, width: 2 },
   }));
 }
 

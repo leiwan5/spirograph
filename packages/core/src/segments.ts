@@ -3,20 +3,20 @@ import { gradientColorAt } from './gradient.js';
 
 /**
  * 某支笔第 i 条线段（共 totalSegments 条）的颜色。
- * 渐变笔：取该线段中点进度 (i+0.5)/N 处的渐变插值色（与画布/旧导出一致）；
- * 单色笔：pen.color。全平台唯一颜色决策点，SVG/PNG/Canvas/RN 颜色从此函数收敛。
+ * 多色笔（colors.length ≥ 2）：取该线段中点进度 (i+0.5)/N 处的渐变插值色；
+ * 单色笔：colors[0]。全平台唯一颜色决策点，SVG/PNG/Canvas/RN 颜色从此函数收敛。
  */
 export function segmentColor(pen: Pen, segmentIndex: number, totalSegments: number): string {
-  if (pen.gradient.length > 1) {
+  if (pen.colors.length > 1) {
     const t = (segmentIndex + 0.5) / Math.max(1, totalSegments);
-    return gradientColorAt(pen.gradient, t, pen.gradientSpacing);
+    return gradientColorAt(pen.colors, t, pen.spacing);
   }
-  return pen.color;
+  return pen.colors[0];
 }
 
-/** 渐变收笔线颜色：曲线闭合处 t=1 渐变回初始色 */
+/** 渐变收笔线颜色：曲线闭合处 t=1 渐变回初始色（单色笔 = colors[0]） */
 export function closureColor(pen: Pen): string {
-  return pen.gradient.length > 1 ? gradientColorAt(pen.gradient, 1, pen.gradientSpacing) : pen.color;
+  return pen.colors.length > 1 ? gradientColorAt(pen.colors, 1, pen.spacing) : pen.colors[0];
 }
 
 export interface BuildRenderDataOptions {
@@ -47,7 +47,7 @@ export function buildRenderData(items: RenderItem[], transform: Transform, opts:
     const dec = Math.max(1, Math.floor(Array.isArray(opts.decimate) ? opts.decimate[pi] ?? 1 : opts.decimate ?? 1));
     const merged = Math.ceil(totalSegs / dec);
     const limit = Math.min(merged, opts.perPenLimit?.[pi] ?? merged);
-    const isGradient = item.pen.gradient.length > 1;
+    const isGradient = item.pen.colors.length > 1;
     const first = segments.length;
 
     for (let s = 0; s < limit; s++) {
@@ -80,7 +80,7 @@ export function buildRenderData(items: RenderItem[], transform: Transform, opts:
     pens.push({
       first,
       count: segments.length - first,
-      uniformColor: isGradient ? null : item.pen.color,
+      uniformColor: isGradient ? null : item.pen.colors[0],
       width: item.pen.width,
     });
   }

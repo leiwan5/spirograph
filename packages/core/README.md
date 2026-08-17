@@ -20,14 +20,14 @@ npm install @spirograph/core
 import { DEFAULT_STATE, parseState, buildItems, buildSvg, generatePng } from '@spirograph/core';
 
 // 从 URL query 解析（与 web 分享链接 / 图片端点同一格式）
-const patch = parseState('?ring=72&rolling=30&pen=40,e63946,2.5&pen=75,1d6fa5,2');
+const patch = parseState('?ring=72&rolling=30&pen=40,2.5,e63946&pen=75,2,1d6fa5');
 const items = buildItems({ ...DEFAULT_STATE, ...patch, pens: patch.pens ?? DEFAULT_STATE.pens });
 
 // SVG 字符串
 const svg = buildSvg(items, '#ffffff', 2048);
 
 // PNG 字节（Node / Serverless / 浏览器均可，纯 JS）
-const png = generatePng('?ring=72&rolling=30&pen=40,e63946,2.5'); // Uint8Array
+const png = generatePng('?ring=72&rolling=30&pen=40,2.5,e63946'); // Uint8Array
 
 // 线段级渲染数据（RN / React / Svelte 等平台渲染器消费）
 import { computeBounds, computeTransform, buildRenderData } from '@spirograph/core';
@@ -45,6 +45,13 @@ const ctx = clearCanvas(canvas, 800, 800, '#ffffff', window.devicePixelRatio || 
 const t = computeTransform(computeBounds(items.map(i => i.curve)), 800, 800, 32);
 renderFull(ctx, items, t);
 ```
+
+## Pen 语义
+
+`Pen.colors: string[]` —— 笔的颜色列表：
+- **仅 1 个颜色 = 单色笔**（`colors: ['#e63946']`）
+- **≥ 2 个颜色 = 渐变笔**：沿曲线按 `spacing`（% 曲线长度）间隔循环取色
+- `spacing` 在单色笔时忽略；`segmentColor` / `buildRenderData` 统一处理两种语义
 
 ## 曲线采样
 

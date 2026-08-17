@@ -1,13 +1,13 @@
 /** 绘制模式：内切（hypotrochoid）/ 外切（epitrochoid） */
 export type DrawingMode = 'inside' | 'outside';
 
-/** 一支笔：孔洞位置（占滚动齿轮半径百分比）+ 颜色 + 粗细 */
+/** 一支笔：孔洞位置（占滚动齿轮半径百分比）+ 一组颜色 + 粗细 */
 export interface Pen {
   id: number;
   hole: number; // 0-100, 百分比（真实 Spirograph 孔洞都在齿轮盘内，d ≤ r）
-  color: string; // 起始颜色（无渐变时的单色）
-  gradient: string[]; // 渐变色（2-4 个；空 = 单色）
-  gradientSpacing: number; // 渐变间隔（% 曲线长度，0-100）
+  // 颜色列表：仅 1 个 = 单色笔；≥ 2 个 = 渐变笔（沿曲线按 spacing 间隔循环取色）
+  colors: string[];
+  spacing: number; // 渐变间隔（% 曲线长度，0-100）；单色笔时忽略
   width: number; // 屏幕像素
 }
 
