@@ -53,6 +53,9 @@ function imageMiddleware(server: any): Connect.NextHandleFunction {
 
 export default defineConfig({
   plugins: [spirographImagePlugin()],
+  // base 从环境变量推断，便于 GitHub Pages 子路径部署（如 /spirograph/）。
+  // 本地开发/预览默认相对路径 './'；CI 中通过 BASE_URL 传入仓库名子路径。
+  base: process.env.BASE_URL || './',
   server: { port: 5173, open: false },
   build: { target: 'es2022' },
 });

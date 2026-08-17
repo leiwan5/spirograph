@@ -116,6 +116,22 @@ http://localhost:5173/?ring=72&rolling=30&format=svg
 2. `functions/` 目录自动成为 Pages Functions，`/api/image` 端点生效
 3. 图片 URL：`https://你的域名/api/image?...&format=png`
 
+### 部署到 GitHub Pages
+
+GitHub Pages 是纯静态托管，**没有** serverless 函数，因此 `/api/image` 图片端点不可用：
+前端会在运行时探测并自动隐藏「复制图片链接」按钮，其余功能均正常。
+
+已内置 `.github/workflows/deploy.yml`，push 到 `main` 时自动构建并以子路径部署：
+
+1. 仓库 Settings → Pages → Source 选 **GitHub Actions**
+2. push 到 `main` 后，Actions 自动构建 `dist/` 并发布（首次部署需手动跑一次
+   `workflow_dispatch` 触发）
+3. 站点地址：`https://<你的用户名>.github.io/<仓库名>/`
+
+> 子路径资源引用通过构建时环境变量 `BASE_URL` 注入（见 `.github/workflows/deploy.yml`），
+> 仓库改名无需改代码。本地 `npm run dev` / `npm run preview` 默认使用相对路径
+> `./`，不依赖该变量。
+
 ## 目录结构
 
 ```
