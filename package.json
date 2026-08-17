@@ -3,23 +3,25 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npm run build:packages && tsc && vite build",
+    "build:packages": "tsc -b packages/core packages/anim",
+    "build:cli": "tsc -b apps/cli",
     "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "npm run build:packages && vitest run",
+    "test:watch": "vitest",
+    "check:purity": "node scripts/check-core-purity.mjs"
   },
   "devDependencies": {
-    "@types/pako": "^2.0.4",
-    "@types/pngjs": "^6.0.5",
+    "@types/node": "^24.0.0",
     "playwright-core": "^1.62.1",
     "typescript": "^5.6.3",
     "vite": "^6.0.5",
     "vitest": "^2.1.8"
-  },
-  "dependencies": {
-    "pako": "^3.0.1",
-    "pngjs": "^7.0.0"
   }
 }

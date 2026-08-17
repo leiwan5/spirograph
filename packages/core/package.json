@@ -1,0 +1,37 @@
+{
+  "name": "@spirograph/core",
+  "version": "0.1.0",
+  "description": "跨平台万花尺（Spirograph）图案生成核心：纯数学曲线采样、几何变换、线段级渲染数据、SVG/PNG 序列化，零 DOM/Node 依赖",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "default": "./dist/browser.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "pako": "^3.0.1"
+  },
+  "keywords": [
+    "spirograph",
+    "hypotrochoid",
+    "epitrochoid",
+    "generative-art",
+    "canvas",
+    "svg",
+    "png"
+  ]
+}
