@@ -564,3 +564,22 @@ input[type='color'] {
   .anim-float-play { width: 52px; height: 52px; font-size: 22px; }
   .anim-float-btn { width: 48px; height: 48px; }
 }
+
+/* Font Awesome 图标在按钮内的统一表现 */
+button i.fa-solid {
+  display: inline-block;
+  line-height: 1;
+  vertical-align: -2px;
+  font-size: inherit;
+  pointer-events: none;
+}
+.toolbar-btn i.fa-solid,
+.anim-float-btn i.fa-solid,
+.anim-float-play i.fa-solid,
+.settings-modal-close i.fa-solid,
+.pen-tab-add i.fa-solid,
+.pen-grad-add i.fa-solid,
+.pen-grad-del i.fa-solid,
+.pen-del i.fa-solid {
+  vertical-align: middle;
+}

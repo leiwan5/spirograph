@@ -1,3 +1,5 @@
+import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
+import '@fortawesome/fontawesome-free/css/solid.min.css';
 import './ui/styles.css';
 import { buildPanel } from './ui/controls';
 import { getState, subscribe } from './state/store';

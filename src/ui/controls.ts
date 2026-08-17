@@ -42,15 +42,15 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     </div>
 
     <div class="toolbar-group">
-      <button class="btn btn-ghost toolbar-btn toolbar-play" id="anim-mode" data-i18n="animMode" data-i18n-title="animModeTitle">🎬</button>
-      <button class="btn btn-ghost toolbar-btn" id="settings-btn" data-i18n="settings" data-i18n-title="settingsTitle">⚙</button>
+      <button class="btn btn-ghost toolbar-btn toolbar-play" id="anim-mode" data-i18n-title="animModeTitle"><i class="fa-solid fa-film"></i></button>
+      <button class="btn btn-ghost toolbar-btn" id="settings-btn" data-i18n-title="settingsTitle"><i class="fa-solid fa-gear"></i></button>
     </div>
 
     <div class="toolbar-group">
       <button class="btn btn-ghost toolbar-btn" id="export-png" data-i18n-title="exportPngTitle">PNG</button>
       <button class="btn btn-ghost toolbar-btn" id="export-svg" data-i18n-title="exportSvgTitle">SVG</button>
-      <button class="btn btn-ghost toolbar-btn" id="copy-image-link" data-i18n="copyImageLink" data-i18n-title="copyImageLinkTitle">🔗</button>
-      <button class="btn btn-ghost toolbar-btn" id="random" data-i18n="random" data-i18n-title="randomTitle">🎲</button>
+      <button class="btn btn-ghost toolbar-btn" id="copy-image-link" data-i18n-title="copyImageLinkTitle"><i class="fa-solid fa-link"></i></button>
+      <button class="btn btn-ghost toolbar-btn" id="random" data-i18n-title="randomTitle"><i class="fa-solid fa-shuffle"></i></button>
     </div>
 
     <div class="toolbar-group toolbar-group-lang">
@@ -111,11 +111,11 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   animFloat.className = 'anim-float';
   animFloat.hidden = true;
   animFloat.innerHTML = `
-    <button class="anim-float-play" id="float-play" data-i18n="play" data-i18n-title="playTitle">▶</button>
-    <button class="anim-float-btn" id="speed-down" data-i18n="speedDown" data-i18n-title="speedDownTitle">−</button>
+    <button class="anim-float-play" id="float-play" data-i18n-title="playTitle"><i class="fa-solid fa-play"></i></button>
+    <button class="anim-float-btn" id="speed-down" data-i18n-title="speedDownTitle"><i class="fa-solid fa-minus"></i></button>
     <span class="anim-float-speed" id="float-speed">1×</span>
-    <button class="anim-float-btn" id="speed-up" data-i18n="speedUp" data-i18n-title="speedUpTitle">+</button>
-    <button class="anim-float-btn anim-float-exit" id="anim-exit" data-i18n="animModeExit" data-i18n-title="animModeExitTitle">✕</button>
+    <button class="anim-float-btn" id="speed-up" data-i18n-title="speedUpTitle"><i class="fa-solid fa-plus"></i></button>
+    <button class="anim-float-btn anim-float-exit" id="anim-exit" data-i18n-title="animModeExitTitle"><i class="fa-solid fa-xmark"></i></button>
   `;
   stage.appendChild(animFloat);
 
@@ -135,7 +135,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     <div class="settings-modal-card">
       <div class="settings-modal-head">
         <span data-i18n="settingsTitle">Settings</span>
-        <button class="settings-modal-close" id="settings-close" data-i18n="settingsCloseTitle">✕</button>
+        <button class="settings-modal-close" id="settings-close" data-i18n-title="settingsCloseTitle"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="settings-modal-body">
         <div class="settings-row">
@@ -341,7 +341,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     // 添加笔标签
     const addTab = document.createElement('button');
     addTab.className = 'pen-tab pen-tab-add';
-    addTab.textContent = '+';
+    addTab.innerHTML = '<i class="fa-solid fa-plus"></i>';
     addTab.title = t('addPenTitle');
     addTab.addEventListener('click', () => {
       activePenIndex = getState().pens.length; // 新笔追加在末尾
@@ -361,14 +361,14 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       <div class="pen-head">
         <span class="pen-dot" style="background:${pen.colors[0] ?? '#888'}"></span>
         <span class="grow">${t('penLabel', { n: index })}</span>
-        <button class="pen-del" title="${t('penDelete')}">✕</button>
+        <button class="pen-del" title="${t('penDelete')}"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="row-label"><span>${t('penHole')}</span><span class="val">${pen.hole}%</span></div>
       <input type="range" class="pen-hole" min="0" max="100" step="1" value="${pen.hole}">
       <div class="pen-row">
         <span class="row-label" style="flex:1"><span>${t('penColors')}</span></span>
         <div class="pen-grad-colors"></div>
-        <button class="pen-grad-add" title="${t('addColor')}" disabled="true">＋</button>
+        <button class="pen-grad-add" title="${t('addColor')}" disabled="true"><i class="fa-solid fa-plus"></i></button>
       </div>
       <div class="pen-grad-opts">
         <div class="row-label"><span>${t('penGradSpacing')}</span><span class="val">${pen.spacing}%</span></div>
@@ -408,7 +408,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       const cs = currentColors();
       gradOpts.classList.toggle('show', cs.length > 1);
       gradAdd.disabled = cs.length >= 4;
-      gradAdd.textContent = cs.length >= 4 ? '4' : '＋';
+      gradAdd.innerHTML = cs.length >= 4 ? '4' : '<i class="fa-solid fa-plus"></i>';
       gradColorsEl.innerHTML = '';
       cs.forEach((c, idx) => {
         const slot = document.createElement('div');
@@ -424,7 +424,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
         });
         const del = document.createElement('button');
         del.className = 'pen-grad-del';
-        del.textContent = '✕';
+        del.innerHTML = '<i class="fa-solid fa-xmark"></i>';
         del.style.display = cs.length <= 1 ? 'none' : 'inline-block';
         del.addEventListener('click', () => {
           // 删除后至少保留 1 个颜色（少于 2 个即回到单色）
@@ -529,9 +529,9 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       document.execCommand('copy');
       ta.remove();
     }
-    copyLinkBtn.textContent = t('copyImageLinkDone');
+    copyLinkBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
     setTimeout(() => {
-      copyLinkBtn.textContent = t('copyImageLink');
+      copyLinkBtn.innerHTML = '<i class="fa-solid fa-link"></i>';
     }, 1600);
   });
 
@@ -611,8 +611,8 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     setPlayingUI(playState.playing, playState.paused);
     // 动画模式按钮 title 按当前状态
     playBtn.title = t(animModeActive ? 'animModeExitTitle' : 'animModeTitle');
-    // 复制链接按钮复位
-    copyLinkBtn.textContent = t('copyImageLink');
+    // 复制链接按钮图标复位（FA）
+    copyLinkBtn.innerHTML = '<i class="fa-solid fa-link"></i>';
     // 信息区
     renderInfoSamples();
     // 文档标题
@@ -620,8 +620,10 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   }
   function setPlayingUI(playing: boolean, paused = false): void {
     playState = { playing, paused };
-    // 浮动工具栏播放按钮
-    floatPlayBtn.textContent = !playing ? t('play') : paused ? t('resume') : t('pause');
+    // 浮动工具栏播放按钮（Font Awesome 图标）
+    floatPlayBtn.innerHTML = !playing || paused
+      ? '<i class="fa-solid fa-play"></i>'
+      : '<i class="fa-solid fa-pause"></i>';
     floatPlayBtn.title = !playing ? t('playTitle') : paused ? t('resumeTitle') : t('pauseTitle');
     floatPlayBtn.classList.toggle('playing', playing);
   }
