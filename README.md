@@ -1,6 +1,13 @@
-# Spirograph 生成器
+# Spirograph 生成器 · Monorepo
 
-浏览器即开即用的 Spirograph 图案生成器（中文界面）。选择环形齿轮 / 滚动齿轮规格、孔洞位置、笔头颜色与粗细，多笔叠加生成复合图案，支持模拟绘制动画与 PNG/SVG 导出。
+浏览器即开即用的 Spirograph 图案生成器（中文界面）+ **跨平台万花尺图形生成库**（npm workspaces 单仓库）。
+
+```
+packages/core/    @spirograph/core   纯核心库：数学/几何/渐变/线段渲染契约/SVG/PNG，零 DOM/Node 依赖
+packages/anim/    @spirograph/anim   可选动画驱动库（可注入帧调度器），配合 core 使用
+apps/cli/         @spirograph/cli    CLI：query/JSON → PNG/SVG 文件（bin: spirograph）
+src/  api/  functions/               web 应用（根目录，Vercel/CF 部署配置保留）
+```
 
 ## 功能
 
@@ -18,10 +25,47 @@
 
 ```bash
 npm install
-npm run dev        # 开发服务器 http://localhost:5173
-npm test           # Vitest 单元测试
-npm run build      # 类型检查 + 生产构建 → dist/
+npm run dev          # 开发服务器 http://localhost:5173
+npm test             # 构建 packages + Vitest 单元测试（60+）
+npm run build        # 构建 packages + 类型检查 + 生产构建 → dist/
+npm run check:purity # 纯度守卫：核心库零平台依赖检查
+npm run build:cli    # 构建 CLI
 ```
+
+## 库的使用（@spirograph/core）
+
+```ts
+import { parseState, buildItems, buildSvg, generatePng } from '@spirograph/core';
+
+const state = parseState('?ring=72&rolling=30&pen=40,e63946,2.5');
+const items = buildItems({ ...defaults, ...state });   // 见 DEFAULT_STATE
+const svg   = buildSvg(items, '#ffffff', 1024);        // SVG 字符串
+const png   = generatePng('?ring=72&rolling=30&pen=40,e63946,2.5'); // PNG 字节
+
+// 浏览器 Canvas 渲染（./browser 子路径）
+import { renderFull, clearCanvas } from '@spirograph/core/browser';
+const ctx = clearCanvas(canvas, 800, 800, '#ffffff', window.devicePixelRatio || 1);
+renderFull(ctx, items, computeTransform(computeBounds(items.map(i => i.curve)), 800, 800, 32));
+```
+
+说明：
+- `.` 入口 = 纯逻辑（可作为 npm 包发布，浏览器/Node/RN(Hermes)/Serverless 通用）
+- `./browser` 入口 = Canvas 2D 渲染（最小结构化接口，不依赖 DOM lib）
+- 渐变颜色在核心统一解析（`buildRenderData` 逐段取色）→ Canvas / SVG / PNG 三端颜色决策一致
+- URL 编解码为内置纯字符串 codec（不依赖 URLSearchParams / TextEncoder）
+
+## CLI
+
+```bash
+npx @spirograph/cli generate --params "ring=72&rolling=30&pen=40,e63946,2.5" --format png --size 2048 --out out.png
+npx @spirograph/cli generate --params "…" --format svg --out out.svg
+npx @spirograph/cli generate --json '{"ringTeeth":72,"rollingTeeth":30,"pens":[{"hole":40,"color":"#e63946","width":2.5}]}'
+```
+
+## 未来扩展位（未实现）
+
+- `@spirograph/react-native`（react-native-svg 适配）、`@spirograph/react`、`@spirograph/svelte`：依赖 core 的薄封装
+- 消费契约：`RenderData`（线段级数据）、`createFramePlan`（帧计划）、`generatePng/generateSvg`（序列化）
 
 ## URL 参数
 
@@ -32,7 +76,7 @@ npm run build      # 类型检查 + 生产构建 → dist/
 | `ring` | 环形齿轮齿数 | 40–240 |
 | `rolling` | 滚动齿轮齿数 | 8–96 |
 | `mode` | 绘制模式 | `inside` / `outside` |
-| `pen` | 一支笔：孔洞,颜色,粗细（可重复）；渐变笔附定位断点：第 4 段用 `位置:颜色:过渡` 以 `~` 分隔（如 `15:e63946:5~30:1d6fa5`），可选第 5 段 `1`=循环 | 位置/过渡 0–100 |
+| `pen` | 一支笔：孔洞,颜色,粗细（可重复）；渐变笔：`孔洞,起始色,粗细,间距,附加色1[,附加色2[,附加色3]]`（总色数 2–4，间距为渐变间隔 %） | 孔洞 0–100 / 粗细 0.5–8 / 间距 1–100 |
 | `bg` | 背景色 | 6 位 hex（无 #） |
 | `speed` | 动画速度 | 0.1–10 |
 | `scale` | 缩放模式 | `auto` / `fixed` |
@@ -51,13 +95,14 @@ npm run build      # 类型检查 + 生产构建 → dist/
 URL 带 `format=png` 或 `format=svg` 时直接返回图片（可被 `<img>` 引用、右键保存）：
 
 ```
-http://localhost:5273/api/image?ring=72&rolling=30&pen=40,e63946,2.5&format=png&size=2048
-http://localhost:5273/?ring=72&rolling=30&format=svg
+http://localhost:5173/api/image?ring=72&rolling=30&pen=40,e63946,2.5&format=png&size=2048
+http://localhost:5173/?ring=72&rolling=30&format=svg
 ```
 
 - 参数与主应用 URL 一致（ring/rolling/mode/pen/bg/scale/speed 等），额外支持 `size`（64–4096，默认 1000）
 - 开发环境：Vite 中间件（`/?format=` 与 `/api/image` 均可）
 - 生产部署：Serverless 函数（Vercel `api/image.ts` / Cloudflare Pages `functions/api/image.ts`），PNG 编码为纯 JS（pako），无原生依赖
+- 实现全部来自 `@spirograph/core` 的 `generateSvg/generatePng`（query → 图片，与 CLI 同源）
 
 ### 部署到 Vercel
 
@@ -74,11 +119,20 @@ http://localhost:5273/?ring=72&rolling=30&format=svg
 ## 目录结构
 
 ```
-src/
-  math/      齿轮化简、曲线采样（含单测）
-  render/    Canvas 渲染、SVG/PNG 导出
-  state/     订阅式状态管理、URL 参数
-  anim/      模拟绘制动画
-  ui/        控件面板、预设、样式
-scripts/      无头浏览器验证脚本（playwright-core）
+packages/core/src/   核心库（纯）：
+  math/               齿轮化简、曲线采样
+  geometry.ts         包围盒 / 变换
+  gradient.ts         渐变取色（三端统一）
+  pattern.ts          盘面孔阵
+  pose.ts             齿轮位姿、分步进度
+  segments.ts         线段级渲染契约 buildRenderData（统一颜色决策）
+  svg.ts              SVG 字符串
+  png.ts              光栅 + PNG 编码
+  query.ts            URL codec
+  image.ts            query → PNG/SVG（图片端点 / CLI 同源）
+  browser.ts          Canvas 2D 渲染（./browser 子路径入口）
+packages/anim/src/    动画驱动：FrameScheduler / DrawAnimation / createFramePlan
+apps/cli/src/         CLI：generate 命令
+src/                  web 应用：main / state / ui / render(导出胶水)
+scripts/              无头浏览器验证脚本（playwright-core）+ 纯度守卫
 ```
