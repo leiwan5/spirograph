@@ -1,107 +1,15 @@
-import type { AppState, Pen } from '../types';
+import { parseState, serializeState } from '@spirograph/core';
 import { getState, setPens, setState } from './store';
 
 /**
- * URL query 参数格式：
+ * URL query 参数格式（核心 query codec 支持，见 @spirograph/core）：
  *   ring=72&rolling=30&mode=inside
  *   &pen=40,e63946,2.5&pen=75,1d6fa5,2   （每支笔一个 pen 参数，可重复）
  *   &pen=40,e63946,2.5,1d6fa5,f4a261     （3-6 段：附加 1-3 个渐变色，总色数 ≤4）
  *   &bg=ffffff&speed=1&scale=auto&gears=1
  * 颜色一律使用不带 # 的 6 位 hex（避免 # 截断 query）。
+ * parseState/serializeState 本体在核心库（纯），此处只保留 DOM 相关：应用/同步/分享链接。
  */
-
-/** 序列化状态 → query string（不含 ?） */
-export function serializeState(s: AppState): string {
-  const p = new URLSearchParams();
-  p.set('ring', String(s.ringTeeth));
-  p.set('rolling', String(s.rollingTeeth));
-  p.set('mode', s.mode);
-  for (const pen of s.pens) {
-    const parts = [pen.hole, pen.color.replace('#', '').toLowerCase(), pen.width];
-    if (pen.gradient.length > 1) {
-      // 渐变：hole,color,width,spacing,c2[,c3[,c4]]
-      parts.push(String(pen.gradientSpacing));
-      for (const c of pen.gradient.slice(0, 3)) parts.push(c.replace('#', '').toLowerCase());
-    }
-    p.append('pen', parts.join(','));
-  }
-  p.set('bg', s.background.replace('#', '').toLowerCase());
-  p.set('speed', String(s.speed));
-  p.set('scale', s.scaleMode);
-  p.set('gears', s.showGears ? '1' : '0');
-  return p.toString();
-}
-
-/** URL 解析出的状态补丁（笔不含 id，由 store 分配） */
-export type UrlPatch = Partial<Omit<AppState, 'pens'>> & { pens?: Array<Omit<Pen, 'id'>> };
-
-/** 解析 query string → 状态补丁（非法值一律忽略，不抛错） */
-export function parseState(search: string): UrlPatch {
-  const p = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
-  const patch: UrlPatch = {};
-
-  const ring = Number(p.get('ring'));
-  if (Number.isInteger(ring) && ring >= 40 && ring <= 240) patch.ringTeeth = ring;
-
-  const rolling = Number(p.get('rolling'));
-  if (Number.isInteger(rolling) && rolling >= 8 && rolling <= 96) patch.rollingTeeth = rolling;
-
-  const mode = p.get('mode');
-  if (mode === 'inside' || mode === 'outside') patch.mode = mode;
-
-  const pens = p
-    .getAll('pen')
-    .map(parsePen)
-    .filter((x): x is Omit<Pen, 'id'> => x !== null);
-  if (pens.length > 0) patch.pens = pens;
-
-  const bg = p.get('bg');
-  if (bg && /^[0-9a-fA-F]{6}$/.test(bg)) patch.background = '#' + bg.toLowerCase();
-
-  const speed = Number(p.get('speed'));
-  if (Number.isFinite(speed) && speed >= 0.1 && speed <= 10) {
-    patch.speed = Math.round(speed * 10) / 10;
-  }
-
-  const scale = p.get('scale');
-  if (scale === 'auto' || scale === 'fixed') patch.scaleMode = scale;
-
-  const gears = p.get('gears');
-  if (gears === '1' || gears === 'true') patch.showGears = true;
-  else if (gears === '0' || gears === 'false') patch.showGears = false;
-
-  return patch;
-}
-
-function parsePen(raw: string): Omit<Pen, 'id'> | null {
-  const parts = raw.split(',');
-  // 3 段单色；4-7 段：hole,color,width,spacing,c2[,c3[,c4]]
-  if (parts.length < 3 || parts.length > 7) return null;
-  const hole = Number(parts[0]);
-  const colorRaw = parts[1];
-  const width = Number(parts[2]);
-  if (!Number.isInteger(hole) || hole < 0 || hole > 100) return null;
-  if (!/^[0-9a-fA-F]{6}$/.test(colorRaw)) return null;
-  if (!Number.isFinite(width) || width < 0.5 || width > 8) return null;
-
-  const pen: Omit<Pen, 'id'> = { hole, color: '#' + colorRaw.toLowerCase(), gradient: [], gradientSpacing: 20, width };
-  if (parts.length >= 4) {
-    // 渐变：hole,color,width,spacing,c2[,c3[,c4]]；spacing 非法或渐变色非法 → 整笔忽略
-    if (!/^\d+(\.\d+)?$/.test(parts[3])) return null;
-    const spacing = Number(parts[3]);
-    if (!(spacing >= 1 && spacing <= 100)) return null;
-    const colorParts = parts.slice(4);
-    if (colorParts.length < 1 || colorParts.length > 3) return null;
-    const gradient: string[] = [];
-    for (const c of colorParts) {
-      if (!/^[0-9a-fA-F]{6}$/.test(c)) return null;
-      gradient.push('#' + c.toLowerCase());
-    }
-    pen.gradientSpacing = spacing;
-    pen.gradient = gradient;
-  }
-  return pen;
-}
 
 /** 页面加载时应用 URL 参数（须在 buildPanel 之前调用） */
 export function applyUrlParams(): void {

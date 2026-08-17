@@ -1,4 +1,4 @@
-import type { Pen } from '../types';
+import type { Pen } from '@spirograph/core';
 import { setPens, setState } from '../state/store';
 
 export const RING_PRESETS = [72, 96, 144, 192];
@@ -11,6 +11,8 @@ export const PALETTE = [
 
 export interface ComboPreset {
   name: string;
+  /** 英文名（默认语言为英文） */
+  nameEn: string;
   mode: 'inside' | 'outside';
   ring: number;
   rolling: number;
@@ -20,7 +22,7 @@ export interface ComboPreset {
 /** 经典齿轮组合预设（含多笔配色） */
 export const COMBO_PRESETS: ComboPreset[] = [
   {
-    name: '经典星花 72×30',
+    name: '经典星花 72×30', nameEn: 'Classic Star 72×30',
     mode: 'inside', ring: 72, rolling: 30,
     pens: [
       { hole: 45, color: '#e63946', width: 2.5 },
@@ -28,7 +30,7 @@ export const COMBO_PRESETS: ComboPreset[] = [
     ],
   },
   {
-    name: '三叶草 72×24',
+    name: '三叶草 72×24', nameEn: 'Clover 72×24',
     mode: 'inside', ring: 72, rolling: 24,
     pens: [
       { hole: 55, color: '#2a9d8f', width: 2.5 },
@@ -36,7 +38,7 @@ export const COMBO_PRESETS: ComboPreset[] = [
     ],
   },
   {
-    name: '繁花 96×63',
+    name: '繁花 96×63', nameEn: 'Blossom 96×63',
     mode: 'inside', ring: 96, rolling: 63,
     pens: [
       { hole: 35, color: '#f15bb5', width: 2.5 },
@@ -44,7 +46,7 @@ export const COMBO_PRESETS: ComboPreset[] = [
     ],
   },
   {
-    name: '蛛网 144×60',
+    name: '蛛网 144×60', nameEn: 'Spiderweb 144×60',
     mode: 'inside', ring: 144, rolling: 60,
     pens: [
       { hole: 40, color: '#3a86ff', width: 1.8 },
@@ -53,7 +55,7 @@ export const COMBO_PRESETS: ComboPreset[] = [
     ],
   },
   {
-    name: '外切花环 48×24',
+    name: '外切花环 48×24', nameEn: 'Garland 48×24',
     mode: 'outside', ring: 48, rolling: 24,
     pens: [
       { hole: 60, color: '#ff7b00', width: 2.5 },
@@ -61,7 +63,7 @@ export const COMBO_PRESETS: ComboPreset[] = [
     ],
   },
   {
-    name: '星芒 96×32',
+    name: '星芒 96×32', nameEn: 'Starburst 96×32',
     mode: 'inside', ring: 96, rolling: 32,
     pens: [
       { hole: 100, color: '#d9a404', width: 2.5 },
@@ -69,7 +71,7 @@ export const COMBO_PRESETS: ComboPreset[] = [
     ],
   },
   {
-    name: '涟漪 192×72',
+    name: '涟漪 192×72', nameEn: 'Ripples 192×72',
     mode: 'inside', ring: 192, rolling: 72,
     pens: [
       { hole: 50, color: '#2a9d8f', width: 2 },

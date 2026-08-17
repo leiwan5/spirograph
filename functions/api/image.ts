@@ -1,4 +1,4 @@
-import { generatePng, generateSvg } from '../../src/server/image';
+import { generatePng, generateSvg } from '@spirograph/core';
 
 interface CfContext {
   request: Request;

@@ -1,8 +1,9 @@
-import type { Pen } from '../types';
+import type { Pen } from '@spirograph/core';
+import { curveInfo } from '@spirograph/core';
+import { serializeState } from '@spirograph/core';
 import { addPen, getState, removePen, setPen, setPens, setState, subscribe } from '../state/store';
-import { curveInfo } from '../math/curve';
-import { serializeState } from '../state/url';
 import { COMBO_PRESETS, RING_PRESETS, ROLLING_PRESETS } from './presets';
+import { getLang, setLang, t, subscribeLang, type Lang, type I18nKey } from './i18n';
 
 /** 渐变附加色的默认取色（取色相轮上与当前色差异大的颜色） */
 function nextGradientColor(base: string): string {
@@ -33,59 +34,65 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   const panelEl = document.createElement('aside');
   panelEl.className = 'panel';
   panelEl.innerHTML = `
-    <h1>🌀 Spirograph <span class="sub">生成器</span></h1>
+    <div class="panel-head">
+      <h1>🌀 Spirograph <span class="sub" data-i18n="appTitleSub">Generator</span></h1>
+      <div class="lang-seg" id="lang-seg">
+        <button data-lang="en" class="active">EN</button>
+        <button data-lang="zh">中文</button>
+      </div>
+    </div>
 
     <section>
-      <div class="section-title">绘制模式</div>
+      <div class="section-title" data-i18n="sectionMode">Drawing Mode</div>
       <div class="seg" id="mode-seg">
-        <button data-mode="inside" class="active">内切（齿轮环内）</button>
-        <button data-mode="outside">外切（齿轮环外）</button>
+        <button data-mode="inside" class="active" data-i18n="modeInside">Inside (in ring)</button>
+        <button data-mode="outside" data-i18n="modeOutside">Outside (around ring)</button>
       </div>
     </section>
 
     <section>
-      <div class="section-title">环形齿轮 Ring Gear <span class="val" id="ring-val">72</span></div>
+      <div class="section-title"><span data-i18n="sectionRing">Ring Gear</span> <span class="val" id="ring-val">72</span></div>
       <input type="range" id="ring" min="${RING_MIN}" max="${RING_MAX}" step="1">
       <div class="chips" id="ring-chips"></div>
     </section>
 
     <section>
-      <div class="section-title">滚动齿轮 Rolling Gear <span class="val" id="rolling-val">30</span></div>
+      <div class="section-title"><span data-i18n="sectionRolling">Rolling Gear</span> <span class="val" id="rolling-val">30</span></div>
       <input type="range" id="rolling" min="${ROLLING_MIN}" max="${ROLLING_MAX}" step="1">
       <div class="chips" id="rolling-chips"></div>
     </section>
 
     <section>
-      <div class="section-title">笔（多支笔叠加绘制）</div>
+      <div class="section-title" data-i18n="sectionPens">Pens (stacked)</div>
       <div class="pens" id="pens"></div>
-      <button class="add-pen" id="add-pen">＋ 添加笔</button>
+      <button class="add-pen" id="add-pen" data-i18n="addPen">＋ Add Pen</button>
     </section>
 
     <section>
-      <div class="section-title">预设组合</div>
+      <div class="section-title" data-i18n="sectionPresets">Presets</div>
       <div class="chips" id="preset-chips"></div>
     </section>
 
     <section>
-      <div class="section-title">画布缩放</div>
+      <div class="section-title" data-i18n="sectionScale">Canvas Scale</div>
       <div class="seg" id="scale-seg">
-        <button data-scale="auto" class="active" title="图像尺寸固定：图案始终充满画布；调孔洞/齿轮时整图会缩放适配">固定图像大小</button>
-        <button data-scale="fixed" title="环尺寸固定：齿轮环在画布上大小恒定，图案按真实比例画在环内；调孔洞不影响任何笔">环固定大小</button>
+        <button data-scale="auto" class="active" data-i18n="scaleAuto" data-i18n-title="scaleAutoTitle">Fixed image</button>
+        <button data-scale="fixed" data-i18n="scaleFixed" data-i18n-title="scaleFixedTitle">Fixed ring</button>
       </div>
     </section>
 
     <section>
-      <div class="row-label"><span>画布背景</span><input type="color" id="bg"></div>
+      <div class="row-label"><span data-i18n="canvasBackground">Canvas background</span><input type="color" id="bg"></div>
     </section>
 
     <section>
-      <div class="row-label"><span>动画速度</span><span class="val" id="speed-val">1×</span></div>
+      <div class="row-label"><span data-i18n="animSpeed">Animation speed</span><span class="val" id="speed-val">1×</span></div>
       <input type="range" id="speed" min="0.1" max="10" step="0.1">
-      <label class="check-row"><input type="checkbox" id="show-gears"><span>显示齿轮（多笔分步绘制）</span></label>
+      <label class="check-row"><input type="checkbox" id="show-gears"><span data-i18n="showGears">Show gears (pens drawn in sequence)</span></label>
     </section>
 
     <section>
-      <div class="row-label"><span>图片尺寸</span>
+      <div class="row-label"><span data-i18n="imgSize">Image size</span>
         <select id="img-size" class="size-select">
           <option value="512">512×512</option>
           <option value="1000">1000×1000</option>
@@ -96,16 +103,16 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     </section>
 
     <section class="actions">
-      <button class="btn btn-primary" id="play">▶ 播放绘制</button>
-      <button class="btn btn-ghost" id="random">🎲 随机灵感</button>
-      <button class="btn btn-ghost" id="export-png">⬇ 导出 PNG</button>
-      <button class="btn btn-ghost" id="export-svg">⬇ 导出 SVG</button>
-      <button class="btn btn-ghost full" id="copy-image-link">🔗 复制图片链接</button>
+      <button class="btn btn-primary" id="play" data-i18n="play">▶ Play drawing</button>
+      <button class="btn btn-ghost" id="random" data-i18n="random">🎲 Random</button>
+      <button class="btn btn-ghost" id="export-png" data-i18n="exportPng">⬇ Export PNG</button>
+      <button class="btn btn-ghost" id="export-svg" data-i18n="exportSvg">⬇ Export SVG</button>
+      <button class="btn btn-ghost full" id="copy-image-link" data-i18n="copyImageLink">🔗 Copy image link</button>
     </section>
 
     <section class="info">
-      <div>化简比 <b id="info-ratio">–</b> · 花瓣数 <b id="info-petals">–</b> · 闭合转数 <b id="info-turns">–</b></div>
-      <div>单笔采样 <b id="info-samples">–</b> 点</div>
+      <div><span data-i18n="infoRatio">Ratio</span> <b id="info-ratio">–</b> · <span data-i18n="infoPetals">Petals</span> <b id="info-petals">–</b> · <span data-i18n="infoTurns">Turns</span> <b id="info-turns">–</b></div>
+      <div id="info-samples-row">–</div>
     </section>
   `;
 
@@ -137,7 +144,8 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   const infoRatio = $('info-ratio');
   const infoPetals = $('info-petals');
   const infoTurns = $('info-turns');
-  const infoSamples = $('info-samples');
+  const infoSamplesRow = $('info-samples-row');
+  const langSeg = $<HTMLElement>('lang-seg');
 
   // ---- 回调（由 main 注入）----
   let onPlay: () => void = () => {};
@@ -166,16 +174,29 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   }
 
   // 预设组合
-  for (const p of COMBO_PRESETS) {
-    const b = document.createElement('button');
-    b.className = 'chip';
-    b.textContent = p.name;
-    b.title = `${p.ring}齿环 × ${p.rolling}齿轮，${p.mode === 'inside' ? '内切' : '外切'}`;
-    b.addEventListener('click', () => {
-      setPens(p.pens.map((pp) => ({ hole: pp.hole, color: pp.color, gradient: pp.gradient ?? [], gradientSpacing: pp.gradientSpacing ?? 20, width: pp.width })));
-      setState({ mode: p.mode, ringTeeth: p.ring, rollingTeeth: p.rolling });
+  const presetChips: HTMLButtonElement[] = [];
+  function renderPresetChips(): void {
+    presetChipsEl.innerHTML = '';
+    presetChips.length = 0;
+    for (const p of COMBO_PRESETS) {
+      const b = document.createElement('button');
+      b.className = 'chip';
+      b.addEventListener('click', () => {
+        setPens(p.pens.map((pp) => ({ hole: pp.hole, color: pp.color, gradient: pp.gradient ?? [], gradientSpacing: pp.gradientSpacing ?? 20, width: pp.width })));
+        setState({ mode: p.mode, ringTeeth: p.ring, rollingTeeth: p.rolling });
+      });
+      presetChipsEl.appendChild(b);
+      presetChips.push(b);
+    }
+    localizePresetChips();
+  }
+  function localizePresetChips(): void {
+    presetChips.forEach((b, i) => {
+      const p = COMBO_PRESETS[i];
+      const modeTag = p.mode === 'inside' ? t('modeInsideTag') : t('modeOutsideTag');
+      b.textContent = getLang() === 'en' ? p.nameEn : p.name;
+      b.title = t('presetTitle', { ring: p.ring, rolling: p.rolling, mode: modeTag });
     });
-    presetChipsEl.appendChild(b);
   }
 
   // ---- 齿轮变更处理 ----
@@ -221,6 +242,11 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     });
   });
 
+  // ---- 语言切换 ----
+  langSeg.querySelectorAll<HTMLButtonElement>('button').forEach((b) => {
+    b.addEventListener('click', () => setLang(b.dataset.lang as Lang));
+  });
+
   // ---- 背景色 / 速度 / 显示齿轮 ----
   bgColor.addEventListener('input', () => setState({ background: bgColor.value }));
   speedSlider.addEventListener('input', () => setState({ speed: Math.round(+speedSlider.value * 10) / 10 }));
@@ -244,23 +270,23 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     card.innerHTML = `
       <div class="pen-head">
         <span class="pen-dot" style="background:${pen.color}"></span>
-        <span class="grow">笔 ${index}</span>
-        <button class="pen-del" title="删除此笔">✕</button>
+        <span class="grow">${t('penLabel', { n: index })}</span>
+        <button class="pen-del" title="${t('penDelete')}">✕</button>
       </div>
-      <div class="row-label"><span>孔洞位置（%滚动半径）</span><span class="val">${pen.hole}%</span></div>
+      <div class="row-label"><span>${t('penHole')}</span><span class="val">${pen.hole}%</span></div>
       <input type="range" class="pen-hole" min="0" max="100" step="1" value="${pen.hole}">
       <div class="pen-row">
-        <span class="row-label" style="flex:1"><span>颜色</span></span>
+        <span class="row-label" style="flex:1"><span>${t('penColor')}</span></span>
         <input type="color" class="pen-color" value="${pen.color}">
       </div>
-      <div class="row-label"><span>粗细（px）</span><span class="val">${pen.width}</span></div>
+      <div class="row-label"><span>${t('penWidth')}</span><span class="val">${pen.width}</span></div>
       <input type="range" class="pen-width" min="0.5" max="8" step="0.5" value="${pen.width}">
       <div class="pen-row">
-        <label class="check-row"><input type="checkbox" class="pen-grad"${pen.gradient.length > 1 ? ' checked' : ''}><span>渐变</span></label>
-        <button class="pen-grad-add" title="添加渐变色">＋</button>
+        <label class="check-row"><input type="checkbox" class="pen-grad"${pen.gradient.length > 1 ? ' checked' : ''}><span>${t('penGradient')}</span></label>
+        <button class="pen-grad-add" title="${t('penGradAdd')}">＋</button>
       </div>
       <div class="pen-grad-opts">
-        <div class="row-label"><span>间隔（每多少 % 切换一次颜色）</span><span class="val">${pen.gradientSpacing}%</span></div>
+        <div class="row-label"><span>${t('penGradSpacing')}</span><span class="val">${pen.gradientSpacing}%</span></div>
         <input type="range" class="pen-grad-spacing" min="1" max="100" step="1" value="${pen.gradientSpacing}">
         <div class="pen-grad-colors"></div>
       </div>
@@ -310,7 +336,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
         const swatch = document.createElement('input');
         swatch.type = 'color';
         swatch.value = c;
-        swatch.title = '0/间隔x' + (idx + 1) + ' 位置颜色';
+        swatch.title = t('gradSlotTitle', { n: idx + 1 });
         swatch.addEventListener('input', () => {
           setPen(pen.id, { gradient: currentGradient().map((x, i) => (i === idx ? swatch.value : x)) });
         });
@@ -391,11 +417,21 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       document.execCommand('copy');
       ta.remove();
     }
-    copyLinkBtn.textContent = '✅ 已复制链接';
+    copyLinkBtn.textContent = t('copyImageLinkDone');
     setTimeout(() => {
-      copyLinkBtn.textContent = '🔗 复制图片链接';
+      copyLinkBtn.textContent = t('copyImageLink');
     }, 1600);
   });
+
+  // ---- 信息区（可变部分）----
+  let lastInfo: { n: number; reduced: boolean } | null = null;
+  function renderInfoSamples(): void {
+    infoSamplesRow.innerHTML = lastInfo
+      ? t('infoSamplesRow', {
+          n: lastInfo.n.toLocaleString() + (lastInfo.reduced ? t('downsampled') : ''),
+        })
+      : '–';
+  }
 
   // ---- 同步控件到状态（状态变化时调用）----
   function syncControls(): void {
@@ -427,28 +463,65 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       infoRatio.textContent = `${info.ratio.p}:${info.ratio.q}`;
       infoPetals.textContent = String(info.ratio.petals);
       infoTurns.textContent = String(info.periodTurns);
-      infoSamples.textContent = info.totalSamples.toLocaleString() + (info.reduced ? '（已降采样）' : '');
+      lastInfo = { n: info.totalSamples, reduced: info.reduced };
     } catch {
       infoRatio.textContent = '–';
       infoPetals.textContent = '–';
       infoTurns.textContent = '–';
-      infoSamples.textContent = '–';
+      lastInfo = null;
+    }
+    renderInfoSamples();
+  }
+
+  // ---- 语言本地化（不重建面板；笔卡片重建以保证新文案） ----
+  let playState: { playing: boolean; paused: boolean } = { playing: false, paused: false };
+  function localize(): void {
+    // 静态文案
+    panelEl.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
+      const key = el.dataset.i18n as I18nKey | undefined;
+      if (key) el.textContent = t(key);
+    });
+    panelEl.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach((el) => {
+      const key = el.dataset.i18nTitle as I18nKey | undefined;
+      if (key) el.title = t(key);
+    });
+    // 语言按钮高亮
+    langSeg.querySelectorAll<HTMLButtonElement>('button').forEach((b) => {
+      b.classList.toggle('active', b.dataset.lang === getLang());
+    });
+    // 预设 chips（文案 + title）
+    localizePresetChips();
+    // 笔卡片（含文案）重建
+    const s = getState();
+    if (s.pens.length > 0) renderPens();
+    // 播放按钮状态保持
+    setPlayingUI(playState.playing, playState.paused);
+    // 复制链接按钮复位
+    copyLinkBtn.textContent = t('copyImageLink');
+    // 信息区
+    renderInfoSamples();
+    // 文档标题
+    document.title = 'Spirograph ' + t('appTitleSub');
+  }
+  function setPlayingUI(playing: boolean, paused = false): void {
+    playState = { playing, paused };
+    if (!playing) {
+      playBtn.textContent = t('play');
+      playBtn.classList.remove('playing');
+    } else {
+      playBtn.textContent = paused ? t('resume') : t('pause');
+      playBtn.classList.add('playing');
     }
   }
 
   subscribe(syncControls);
+  subscribeLang(localize);
+  renderPresetChips();
   syncControls(); // 首次同步会重建笔卡片（lastPenIds 为空）
+  localize(); // 应用当前语言（默认英文）
 
   return {
-    setPlayingUI(playing: boolean, paused = false) {
-      if (!playing) {
-        playBtn.textContent = '▶ 播放绘制';
-        playBtn.classList.remove('playing');
-      } else {
-        playBtn.textContent = paused ? '▶ 继续' : '⏸ 暂停';
-        playBtn.classList.add('playing');
-      }
-    },
+    setPlayingUI,
     onPlayRequest(cb: () => void) { onPlay = cb; },
     onRandomRequest(cb: () => void) { onRandom = cb; },
     onExportPng(cb: (size: number) => void) { onPng = cb; },

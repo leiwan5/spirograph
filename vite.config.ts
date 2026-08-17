@@ -31,8 +31,8 @@ function imageMiddleware(server: any): Connect.NextHandleFunction {
       return;
     }
     server
-      .ssrLoadModule('/src/server/image.ts')
-      .then((mod: { generatePng?: (s: string) => Buffer; generateSvg?: (s: string) => string }) => {
+      .ssrLoadModule('@spirograph/core')
+      .then((mod: { generatePng?: (s: string) => Uint8Array; generateSvg?: (s: string) => string }) => {
         res.setHeader('Cache-Control', 'public, max-age=3600');
         res.setHeader('Access-Control-Allow-Origin', '*');
         if (format === 'svg') {

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { generatePng, generateSvg } from '../src/server/image';
+import { generatePng, generateSvg } from '@spirograph/core';
 
 /** GET /api/image?format=png|svg&ring=...&rolling=...&pen=...&size=... */
 export default function handler(req: VercelRequest, res: VercelResponse): void {

@@ -1,22 +1,12 @@
 import './ui/styles.css';
 import { buildPanel } from './ui/controls';
-import { DEFAULT_STATE, getState, subscribe } from './state/store';
-import { sampleCurve } from './math/curve';
-import {
-  clearCanvas,
-  computeBounds,
-  computeFixedBounds,
-  computeSteps,
-  computeTransform,
-  drawGears,
-  drawPenHoles,
-  renderFull,
-  renderPartial,
-  renderSteps,
-} from './render/renderer';
-import type { RenderItem } from './render/renderer';
+import { getState, subscribe } from './state/store';
+import { DEFAULT_STATE, computeBounds, computeFixedBounds, computeTransform } from '@spirograph/core';
+import { sampleCurve } from '@spirograph/core';
+import type { RenderItem } from '@spirograph/core';
+import { clearCanvas, drawGears, drawPenHoles, renderFull, renderPartial, renderSteps } from '@spirograph/core/browser';
 import { exportPng, exportSvg } from './render/export';
-import { DrawAnimation } from './anim/drawAnimation';
+import { DrawAnimation, createFramePlan } from '@spirograph/anim';
 import { randomSettings } from './ui/presets';
 import { applyUrlParams, syncUrl } from './state/url';
 
@@ -79,7 +69,7 @@ function computeTransformFor(w: number, h: number) {
 function renderStatic(): void {
   const s = getState();
   const { width, height } = canvasSize();
-  const ctx = clearCanvas(canvas, width, height, s.background);
+  const ctx = clearCanvas(canvas, width, height, s.background, window.devicePixelRatio || 1);
   const { items, t } = computeTransformFor(width, height);
   (window as unknown as { __dshRender?: unknown }).__dshRender = {
     scaleMode: s.scaleMode,
@@ -100,42 +90,37 @@ function renderStatic(): void {
   }
 }
 
-/** 计算当前进度下动画的 t 参数（用于齿轮位姿） */
-function progressToT(progress: number, periodTurns: number): number {
-  return progress * 2 * Math.PI * periodTurns;
-}
-
+/** 渲染当前进度（动画帧）：用 @spirograph/anim 的帧计划决定每笔画多少 */
 function renderProgress(progress: number): void {
   const s = getState();
   const { width, height } = canvasSize();
-  const ctx = clearCanvas(canvas, width, height, s.background);
+  const ctx = clearCanvas(canvas, width, height, s.background, window.devicePixelRatio || 1);
   const { items, t } = computeTransformFor(width, height);
   if (items.length === 0) {
     // 防御：无笔可画时直接渲染静态图，避免空数组越界
     renderStatic();
     return;
   }
+  const plan = createFramePlan(items, progress, { step: s.showGears });
   if (s.showGears) {
     // 多笔分步：先画齿轮（当前笔的位姿），再画曲线
-    const { penIndex, penProgress } = computeSteps(items.length, progress);
-    const curve = items[penIndex]?.curve;
+    const curve = items[plan.penIndex]?.curve;
     if (!curve) {
       renderStatic();
       return;
     }
-    const tParam = progressToT(penProgress, curve.periodTurns);
-    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, tParam, s.pens, penIndex);
+    drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, plan.gearT, s.pens, plan.penIndex);
     renderSteps(ctx, items, t, progress);
     // 笔孔与笔尖画在曲线之上：当前笔 = 曲线当前端点（笔头随画随动）；其他笔 = 各自曲线起点
-    const drawnCount = Math.max(1, Math.floor(penProgress * curve.count));
+    const drawnCount = plan.perPenPoints[plan.penIndex];
     const penPoints = items.map((item, i) => {
-      if (i === penIndex) {
-        const idx = drawnCount - 1;
+      if (i === plan.penIndex) {
+        const idx = Math.max(0, drawnCount - 1);
         return [item.curve.points[2 * idx], item.curve.points[2 * idx + 1]] as [number, number];
       }
       return [item.curve.points[0], item.curve.points[1]] as [number, number];
     });
-    drawPenHoles(ctx, t, s.pens, penIndex, s.rollingTeeth, penPoints);
+    drawPenHoles(ctx, t, s.pens, plan.penIndex, s.rollingTeeth, penPoints);
   } else {
     renderPartial(ctx, items, t, progress);
   }
