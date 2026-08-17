@@ -17,10 +17,10 @@ const [svgDl] = await Promise.all([
 ]);
 const fs = await import('node:fs');
 const svgText = fs.readFileSync(await svgDl.path(), 'utf8');
-// 提取所有 stroke 值
+// extract all stroke values
 const strokes = [...svgText.matchAll(/stroke="([^"]*)"/g)].map((m) => m[1]);
 const unique = [...new Set(strokes)];
-console.log('path 总数:', (svgText.match(/<path /g) || []).length, '| stroke 值总数:', strokes.length, '| 去重后:', unique.length);
-console.log('颜色样例(前 12 个):', strokes.slice(0, 12));
-console.log('去重颜色(前 8 个):', unique.slice(0, 8));
+console.log('path count:', (svgText.match(/<path /g) || []).length, '| stroke value count:', strokes.length, '| unique:', unique.length);
+console.log('color samples (first 12):', strokes.slice(0, 12));
+console.log('unique colors (first 8):', unique.slice(0, 8));
 await browser.close();

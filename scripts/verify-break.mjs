@@ -1,4 +1,4 @@
-// 定位"断开"：沿笔一曲线从远处走向孔中心，检测红色像素连续性
+// Locate the "break": walk along the pen one curve from far away toward the hole center, checking red pixel continuity
 import { chromium } from 'playwright-core';
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
 const browser = await chromium.launch({
@@ -23,7 +23,7 @@ const r = await page.evaluate(async () => {
   };
   const curve = await import('/src/math/curve.ts');
   const data = curve.sampleCurve(72, 30, 'inside', 40);
-  // 从曲线第 500 点（远离起点）沿曲线往回走到起点（孔中心），检查每个点的像素
+  // Walk back along the curve from point 500 (far from the start) to the start (hole center), checking each point's pixel
   const step = 10;
   const trace = [];
   for (let idx = 500; idx >= 0; idx -= step) {
@@ -35,7 +35,7 @@ const r = await page.evaluate(async () => {
   }
   return trace;
 });
-// 找"断点"：红色像素（曲线）消失的最远距离
+// Find the "break point": the farthest distance where red (curve) pixels disappear
 const isRed = (p) => {
   const [r, g, b] = p.split(',').map(Number);
   return r > 150 && g < 130 && b < 130;
@@ -45,12 +45,12 @@ for (const t of r) {
   if (isRed(t.color)) lastRed = t;
   else if (lastRed && !gap) gap = t;
 }
-console.log('沿曲线走向孔中心（从 500 点开始）:');
-for (const t of r.slice(0, 6)) console.log('  距起点', t.dist, 'px |', t.color);
+console.log('walking along the curve toward the hole center (starting at point 500):');
+for (const t of r.slice(0, 6)) console.log('  distance from start', t.dist, 'px |', t.color);
 console.log('...');
-for (const t of r.slice(-6)) console.log('  距起点', t.dist, 'px |', t.color);
-console.log('最后红色点距起点:', lastRed ? lastRed.dist + 'px' : '无', '| 第一个非红点:', gap ? gap.dist + 'px (' + gap.color + ')' : '无');
-console.log('结论:', gap && parseFloat(gap.dist) > 2
-  ? '曲线在距起点 ' + gap.dist + 'px 处消失（被覆盖区域半径）'
-  : '曲线连续到孔中心');
+for (const t of r.slice(-6)) console.log('  distance from start', t.dist, 'px |', t.color);
+console.log('last red point distance from start:', lastRed ? lastRed.dist + 'px' : 'none', '| first non-red point:', gap ? gap.dist + 'px (' + gap.color + ')' : 'none');
+console.log('conclusion:', gap && parseFloat(gap.dist) > 2
+  ? 'curve disappears at ' + gap.dist + 'px from start (radius of the covered region)'
+  : 'curve is continuous to the hole center');
 await browser.close();

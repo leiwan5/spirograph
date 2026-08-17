@@ -1,4 +1,4 @@
-// 修正验证1：勾选前后画布差异（齿轮像素）
+// Fixed validation 1: canvas difference before/after checking (gear pixels)
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -34,13 +34,13 @@ for (let i = 0; i < before.length; i += 4) {
     diffColors.set(key, (diffColors.get(key) || 0) + 1);
   }
 }
-console.log('勾选后新增像素:', diff);
-console.log('新增像素主要颜色（应为半透明灰系）:', [...diffColors.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4));
+console.log('new pixels after checking:', diff);
+console.log('main colors of new pixels (should be translucent grays):', [...diffColors.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4));
 
-// 检查 state 与 checkbox 同步
+// inspect state and checkbox sync
 const st = await page.evaluate(() => ({
   state: window.__dshStore.getState().showGears,
   checked: document.getElementById('show-gears').checked,
 }));
-console.log('状态同步:', JSON.stringify(st), st.state === true && st.checked === true ? '✅' : '⚠');
+console.log('state sync:', JSON.stringify(st), st.state === true && st.checked === true ? 'OK' : 'WARN');
 await browser.close();

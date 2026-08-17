@@ -15,19 +15,19 @@ function makeItems(): RenderItem[] {
   }));
 }
 
-describe('buildRenderData（线段级渲染契约）', () => {
-  it('段数与曲线点一致：每笔 count-1 段（多色笔含收笔线 +1）', () => {
+describe('buildRenderData (segment-level render contract)', () => {
+  it('segment count matches curve points: each pen has count-1 segments (multi-color adds a closure segment +1)', () => {
     const items = makeItems();
     const bounds = computeBounds(items.map((i) => i.curve));
     const t = computeTransform(bounds, 800, 800, 32);
     const data = buildRenderData(items, t);
     expect(data.pens).toHaveLength(2);
-    expect(data.pens[0].count).toBe(items[0].curve.count - 1); // 单色无收笔线
-    expect(data.pens[1].count).toBe(items[1].curve.count); // 多色：count-1 + 收笔线
+    expect(data.pens[0].count).toBe(items[0].curve.count - 1); // solid: no closure segment
+    expect(data.pens[1].count).toBe(items[1].curve.count); // multi-color: count-1 + closure segment
     expect(data.segments).toHaveLength((items[0].curve.count - 1) + items[1].curve.count);
   });
 
-  it('坐标已应用变换', () => {
+  it('coordinates are already transformed', () => {
     const items = makeItems();
     const t = { scale: 2, offsetX: 100, offsetY: 50 };
     const data = buildRenderData([items[0]], t);
@@ -38,44 +38,44 @@ describe('buildRenderData（线段级渲染契约）', () => {
     expect(s.x1).toBeCloseTo(points[2] * 2 + 100, 6);
   });
 
-  it('单色笔 uniformColor = colors[0]，多色笔为 null', () => {
+  it('solid pen uniformColor = colors[0], multi-color pen = null', () => {
     const items = makeItems();
     const data = buildRenderData(items, { scale: 1, offsetX: 0, offsetY: 0 });
     expect(data.pens[0].uniformColor).toBe('#e63946');
     expect(data.pens[1].uniformColor).toBeNull();
   });
 
-  it('perPenLimit 截断前缀（动画部分绘制）', () => {
+  it('perPenLimit truncates the prefix (partial animation drawing)', () => {
     const items = makeItems();
     const data = buildRenderData(items, { scale: 1, offsetX: 0, offsetY: 0 }, { perPenLimit: [10, 20] });
     expect(data.pens[0].count).toBe(10);
-    expect(data.pens[1].count).toBe(20); // 未满 → 无收笔线
+    expect(data.pens[1].count).toBe(20); // not full → no closure segment
   });
 
-  it('渐变收笔线颜色 = 闭合色（t=1 回初始色）', () => {
+  it('gradient closure segment color = closure color (t=1 back to the initial color)', () => {
     const items = makeItems();
     const data = buildRenderData([items[1]], { scale: 1, offsetX: 0, offsetY: 0 });
     const last = data.segments[data.segments.length - 1];
-    // 多色 ['#1d6fa5', '#0000ff', '#f4a261'] spacing 10：t=1 → 初始色
+    // multi-color ['#1d6fa5', '#0000ff', '#f4a261'] spacing 10: t=1 → initial color
     expect(last.color).toBe('rgb(29,111,165)');
-    // 收笔线端点 = 曲线首点
+    // closure segment endpoints = curve first point
     expect(last.x1).toBeCloseTo(items[1].curve.points[0], 6);
     expect(last.y1).toBeCloseTo(items[1].curve.points[1], 6);
   });
 
-  it('closed=false 时不追加收笔线', () => {
+  it('does not append a closure segment when closed=false', () => {
     const items = makeItems();
     const data = buildRenderData([items[1]], { scale: 1, offsetX: 0, offsetY: 0 }, { closed: false });
     expect(data.pens[0].count).toBe(items[1].curve.count - 1);
   });
 
-  it('decimate 合并段数（每 d 段合并 1 段）', () => {
+  it('decimate merges segments (every d segments become 1)', () => {
     const items = makeItems();
     const data = buildRenderData([items[0]], { scale: 1, offsetX: 0, offsetY: 0 }, { decimate: 10 });
     expect(data.pens[0].count).toBe(Math.ceil((items[0].curve.count - 1) / 10));
   });
 
-  it('segmentColor：单色返回 colors[0]，多色取中点色', () => {
+  it('segmentColor: solid returns colors[0], multi-color returns the midpoint color', () => {
     const [p1, p2] = makeItems().map((i) => i.pen);
     expect(segmentColor(p1, 5, 100)).toBe('#e63946');
     const c = segmentColor(p2, 0, 1000);

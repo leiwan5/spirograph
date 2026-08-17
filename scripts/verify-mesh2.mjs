@@ -1,4 +1,4 @@
-// 沿滚动齿尖方向（5°，含啮合相位 -1° + 局部 6°）扫描
+// scan along the rolling tooth-tip direction (5°, includes meshing phase -1° + local 6°)
 import { chromium } from 'playwright-core';
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
 const browser = await chromium.launch({
@@ -20,7 +20,7 @@ const r = await page.evaluate(() => {
     const i = (Math.round(y) * W + Math.round(x)) * 4;
     return [img[i], img[i + 1], img[i + 2]];
   };
-  // 齿尖方向 5°（= meshPhase -1° + 0.5·stepRoll 6°），齿谷方向 11°
+  // tooth-tip direction 5° (= meshPhase -1° + 0.5·stepRoll 6°), tooth-valley direction 11°
   const rows = [];
   for (const deg of [5, 11]) {
     const a = (deg * Math.PI) / 180;
@@ -31,7 +31,7 @@ const r = await page.evaluate(() => {
     }
     rows.push({ deg, row });
   }
-  // 深色像素最大半径（齿形描边，排除环外缘 404.9±2）
+  // max radius of dark pixels (tooth stroke, excluding ring outer edge 404.9±2)
   let deepest = 0;
   const a5 = (5 * Math.PI) / 180;
   for (let rad = 388; rad <= 403; rad += 1) {
@@ -43,6 +43,6 @@ const r = await page.evaluate(() => {
 for (const row of r.rows) {
   console.log(row.deg + '°: ' + row.row.join(' | '));
 }
-console.log('5°方向 388-403px 最远齿形深色:', r.deepest, 'px（理论滚动齿尖≈398.5，环谷底≈399.8）');
-console.log('判定:', r.deepest <= 399 ? '✅ 滚动齿尖在环谷底内（不超出）' : '⚠ 仍有超出');
+console.log('5° direction 388-403px farthest dark tooth:', r.deepest, 'px (theoretical rolling tooth tip ≈398.5, ring valley bottom ≈399.8)');
+console.log('result:', r.deepest <= 399 ? '✅ rolling tooth tip is inside the ring valley bottom (does not exceed)' : '⚠ still exceeds');
 await browser.close();

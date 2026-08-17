@@ -1,4 +1,4 @@
-// 全面复现用户路径
+// Comprehensive reproduction of the user path
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -34,75 +34,75 @@ async function nonBg(p) {
   });
 }
 const check = (label, n, errs) => {
-  console.log(label, '→ 非背景像素:', n, n > 2000 ? '✅' : '❌ 空白!', errs.length ? '| 错误: ' + errs.join('; ') : '');
+  console.log(label, '-> non-background pixels:', n, n > 2000 ? 'OK' : 'FAIL blank!', errs.length ? '| errors: ' + errs.join('; ') : '');
 };
 
-// 路径1：默认 + 勾选齿轮 + 播放
+// path 1: default + Show Gears + play
 {
   const { p, errs } = await newPage('http://localhost:5273/');
   await p.evaluate(() => document.getElementById('show-gears').click());
   await p.waitForTimeout(300);
   await p.click('#play');
   await p.waitForTimeout(1200);
-  check('路径1 默认+齿轮+播放', await nonBg(p), errs);
+  check('path1 default+gears+play', await nonBg(p), errs);
   await p.close();
 }
 
-// 路径2：预设蛛网 + 勾选齿轮 + 播放
+// path 2: Spiderweb preset + Show Gears + play
 {
   const { p, errs } = await newPage('http://localhost:5273/');
-  await p.evaluate(() => [...document.querySelectorAll('#preset-chips .chip')].find((c) => c.textContent.includes('蛛网')).click());
+  await p.evaluate(() => [...document.querySelectorAll('#preset-chips .chip')].find((c) => c.textContent.includes('Spiderweb')).click());
   await p.waitForTimeout(400);
   await p.evaluate(() => document.getElementById('show-gears').click());
   await p.waitForTimeout(300);
   await p.click('#play');
   await p.waitForTimeout(1200);
-  check('路径2 预设蛛网+齿轮+播放', await nonBg(p), errs);
+  check('path2 Spiderweb preset+gears+play', await nonBg(p), errs);
   await p.close();
 }
 
-// 路径3：外切模式 + 勾选齿轮 + 播放
+// path 3: outside mode + Show Gears + play
 {
   const { p, errs } = await newPage('http://localhost:5273/?mode=outside');
   await p.evaluate(() => document.getElementById('show-gears').click());
   await p.waitForTimeout(300);
   await p.click('#play');
   await p.waitForTimeout(1200);
-  check('路径3 外切+齿轮+播放', await nonBg(p), errs);
+  check('path3 outside+gears+play', await nonBg(p), errs);
   await p.close();
 }
 
-// 路径4：fixed 模式 + 勾选齿轮 + 播放
+// path 4: fixed mode + Show Gears + play
 {
   const { p, errs } = await newPage('http://localhost:5273/?scale=fixed&gears=1');
   await p.click('#play');
   await p.waitForTimeout(1200);
-  check('路径4 fixed+齿轮(URL)+播放', await nonBg(p), errs);
+  check('path4 fixed+gears(URL)+play', await nonBg(p), errs);
   await p.close();
 }
 
-// 路径5：播放中勾选齿轮
+// path 5: toggle Show Gears while playing
 {
   const { p, errs } = await newPage('http://localhost:5273/');
   await p.click('#play');
   await p.waitForTimeout(400);
-  await p.evaluate(() => document.getElementById('show-gears').click()); // 播放中勾选 → 应停止动画
+  await p.evaluate(() => document.getElementById('show-gears').click()); // toggle while playing -> animation should stop
   await p.waitForTimeout(300);
   const btn1 = await p.textContent('#play');
-  await p.click('#play'); // 重新播放
+  await p.click('#play'); // replay
   await p.waitForTimeout(1000);
-  check('路径5 播放中勾选后重播 (' + btn1 + ' →)', await nonBg(p), errs);
+  check('path5 toggle-while-playing then replay (' + btn1 + ' ->)', await nonBg(p), errs);
   await p.close();
 }
 
-// 路径6：大齿数 auto + 齿轮
+// path 6: large tooth count auto + gears
 {
   const { p, errs } = await newPage('http://localhost:5273/?ring=240&rolling=239&gears=1');
   await p.click('#play');
   await p.waitForTimeout(1200);
-  check('路径6 大齿数240×239+齿轮+播放', await nonBg(p), errs);
+  check('path6 large teeth 240×239+gears+play', await nonBg(p), errs);
   await p.close();
 }
 
-console.log('全部路径完成');
+console.log('all paths done');
 await browser.close();

@@ -6,7 +6,7 @@ const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 await page.goto('http://localhost:5273/?ring=72&rolling=30&pen=40,e63946,2.5,15:1d6fa5:5~30:f4a261:0&scale=fixed&gears=1', { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
-// 播放后抓多帧
+// Grab several frames after playback
 await page.click('#play');
 let samples = [];
 for (let i = 0; i < 5; i++) {
@@ -20,7 +20,7 @@ for (let i = 0; i < 5; i++) {
   }));
 }
 await page.click('#play');
-console.log('动画各帧非背景像素:', samples.join(' | '));
-console.log('最终帧:', samples[samples.length - 1], samples[samples.length - 1] > 5000 ? '✅ 动画正常绘制' : '⚠');
-console.log('JS错误:', errors.length ? errors : '无');
+console.log('non-background pixels across animation frames:', samples.join(' | '));
+console.log('final frame:', samples[samples.length - 1], samples[samples.length - 1] > 5000 ? '✅ animation draws correctly' : '⚠');
+console.log('JS errors:', errors.length ? errors : 'none');
 await browser.close();

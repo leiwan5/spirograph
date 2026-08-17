@@ -1,6 +1,6 @@
 /**
- * 语言切换（web demo UI 层）：默认英文，localStorage 持久化。
- * 库核心（@spirograph/core）不含任何文案，语言纯属 demo 展示层。
+ * Language switching (web demo UI layer): default English, persisted in localStorage.
+ * The core library (@spirograph/core) contains no copy; language is purely a demo display-layer concern.
  */
 
 export type Lang = 'en' | 'zh';
@@ -9,7 +9,7 @@ const STORAGE_KEY = 'spirograph-lang';
 
 type Vars = Record<string, string | number>;
 
-/** 用 {name} 占位符替换变量 */
+/** Replace variables using {name} placeholders */
 function interpolate(s: string, vars?: Vars): string {
   if (!vars) return s;
   return s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
@@ -17,19 +17,19 @@ function interpolate(s: string, vars?: Vars): string {
 
 const en = {
   appTitleSub: 'Generator',
-  // 头部语言切换
+  // header language switcher
   langEn: 'EN',
   langZh: '中文',
-  // 绘制模式
+  // drawing mode
   sectionMode: 'Drawing Mode',
   modeInside: 'Inside (in ring)',
   modeOutside: 'Outside (around ring)',
   modeInsideTag: 'inside',
   modeOutsideTag: 'outside',
-  // 齿轮
+  // gears
   sectionRing: 'Ring Gear',
   sectionRolling: 'Rolling Gear',
-  // 笔
+  // pens
   sectionPens: 'Pens (stacked)',
   addPenTitle: 'Add pen',
   penLabel: 'Pen {n}',
@@ -41,20 +41,20 @@ const en = {
   penGradSpacing: 'Spacing (switch every N%)',
   gradSlotTitle: 'color at position {n}×spacing',
   addColor: 'Add color',
-  // 预设
+  // presets
   sectionPresets: 'Presets',
   presetTitle: '{ring}-tooth ring × {rolling} gear, {mode}',
-  // 缩放
+  // scale
   sectionScale: 'Canvas Scale',
   scaleAuto: 'Fixed image',
   scaleFixed: 'Fixed ring',
   scaleAutoTitle: 'Image size fixed: pattern always fills the canvas; resizes with gear/hole changes',
   scaleFixedTitle: 'Ring size fixed: ring stays constant size on canvas, pattern drawn at true scale inside; hole changes do not affect other pens',
-  // 背景/齿轮/尺寸（设置 modal）
+  // background/gears/size (settings modal)
   canvasBackground: 'Canvas background',
   showGears: 'Show gears (pens drawn in sequence)',
   imgSize: 'Image size',
-  // 操作（图标用 Font Awesome，文案放 title）
+  // actions (icons use Font Awesome, text in title)
   playTitle: 'Play drawing',
   pauseTitle: 'Pause',
   resumeTitle: 'Resume',
@@ -66,14 +66,14 @@ const en = {
   exportSvg: 'SVG',
   exportSvgTitle: 'Export SVG',
   copyImageLinkTitle: 'Copy image link',
-  // 浮动工具栏（常驻）
+  // floating toolbar (always visible)
   stopTitle: 'Stop',
   speedDownTitle: 'Slower',
   speedUpTitle: 'Faster',
-  // 设置 modal
+  // settings modal
   settingsTitle: 'Settings',
   settingsCloseTitle: 'Close settings',
-  // 信息区
+  // info area
   infoRatio: 'Ratio',
   infoPetals: 'Petals',
   infoTurns: 'Turns',
@@ -124,11 +124,11 @@ const zh: Record<keyof typeof en, string> = {
   exportSvg: 'SVG',
   exportSvgTitle: '导出 SVG',
   copyImageLinkTitle: '复制图片链接',
-  // 浮动工具栏（常驻）
+  // floating toolbar (always visible)
   stopTitle: '停止',
   speedDownTitle: '减速',
   speedUpTitle: '加速',
-  // 设置 modal
+  // settings modal
   settingsTitle: '设置',
   settingsCloseTitle: '关闭设置',
   infoRatio: '化简比',
@@ -140,7 +140,7 @@ const zh: Record<keyof typeof en, string> = {
 
 type Dict = typeof en;
 
-/** 文案 key（en 字典的键全集；zh 与之严格一致） */
+/** Copy keys (the full key set of the en dict; zh mirrors it exactly) */
 export type I18nKey = keyof Dict;
 
 let currentLang: Lang = readStoredLang();
@@ -148,7 +148,7 @@ let currentLang: Lang = readStoredLang();
 function readStoredLang(): Lang {
   try {
     const v = localStorage.getItem(STORAGE_KEY);
-    return v === 'zh' ? 'zh' : 'en'; // 默认英文
+    return v === 'zh' ? 'zh' : 'en'; // default English
   } catch {
     return 'en';
   }
@@ -166,7 +166,7 @@ export function setLang(lang: Lang): void {
   try {
     localStorage.setItem(STORAGE_KEY, lang);
   } catch {
-    /* 隐私模式等场景忽略 */
+    /* e.g. ignored in private mode */
   }
   for (const fn of listeners) fn();
 }
@@ -176,7 +176,7 @@ export function subscribeLang(fn: () => void): () => void {
   return () => listeners.delete(fn);
 }
 
-/** 取当前语言文案（{n} 变量插值） */
+/** Take the current language copy ({n} variable interpolation) */
 export function t(key: I18nKey, vars?: Vars): string {
   const dict: Dict = currentLang === 'en' ? en : (zh as Dict);
   return interpolate(dict[key], vars);

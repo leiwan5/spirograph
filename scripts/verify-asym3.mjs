@@ -1,4 +1,4 @@
-// 深挖 C 场景：fixed 模式变动笔二，笔一"实线中心"像素是否真的移动
+// Deep dive into case C: with fixed mode, when pen two changes, do pen one's "solid-line center" pixels really move?
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -33,7 +33,7 @@ const after = await page.evaluate(() => {
   return Array.from(c.getContext('2d').getImageData(0, 0, c.width, c.height).data);
 });
 
-// 统计 before 中"笔一实线中心像素"(纯红) 的变动情况
+// Count how many "pen one solid-line center" pixels (pure red) changed in before
 const pureRed = (r, g, b) => r > 200 && g < 100 && b < 100;
 const pureBlue = (r, g, b) => b > 130 && g > 90 && g < 135 && r < 60;
 let redCore = 0, redCoreMoved = 0, blueCore = 0, blueCoreMoved = 0;
@@ -54,7 +54,7 @@ for (let i = 0; i < before.length; i += 4) {
     if (r2 !== r1 || g2 !== g1 || b2 !== b1) blueCoreMoved++;
   }
 }
-console.log('笔一实线中心像素:', redCore, '| 变动:', redCoreMoved);
-console.log('笔二实线中心像素:', blueCore, '| 变动:', blueCoreMoved);
-console.log('笔一变动像素的 after 颜色 Top5:', [...movedAfterColors.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5));
+console.log('pen one solid-line center pixels:', redCore, '| moved:', redCoreMoved);
+console.log('pen two solid-line center pixels:', blueCore, '| moved:', blueCoreMoved);
+console.log('pen one moved pixels after-color Top5:', [...movedAfterColors.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5));
 await browser.close();

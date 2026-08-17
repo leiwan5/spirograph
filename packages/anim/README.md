@@ -1,19 +1,19 @@
 # @spirograph/anim
 
-万花尺可选**动画驱动库**：负责"某个进度画多少"的帧计划计算与绘制动画的调度节奏。配合 [`@spirograph/core`](https://www.npmjs.com/package/@spirograph/core) 使用。
+Optional **animation driver** library for the spirograph: handles the "how much to draw at a given progress" frame-plan computation and the scheduling rhythm of the drawing animation. Used together with [`@spirograph/core`](https://www.npmjs.com/package/@spirograph/core).
 
-特点：
-- **核心不污染**：动画所需的全部支持都在 core 的纯数据操作里（`buildRenderData` 的 `perPenLimit` 前缀截断、`computeSteps`、`computeGearPose`），本库只负责调度与帧计划，不往核心塞定时器/DOM。
-- **可注入调度器**：浏览器 / RN 用 rAF，Node 用 setTimeout 降级；`FrameScheduler` 接口即插即用。
-- **跨平台一致**：`createFramePlan` 是纯函数，浏览器 canvas 与未来 react-native-svg 消费同一份帧计划。
+Features:
+- **No pollution of core**: all animation support lives in core's pure data operations (`buildRenderData`'s `perPenLimit` prefix truncation, `computeSteps`, `computeGearPose`); this library only handles scheduling and frame plans — it never stuffs timers/DOM into core.
+- **Injectable scheduler**: browsers / RN use rAF, Node falls back to setTimeout; the `FrameScheduler` interface is plug-and-play.
+- **Cross-platform consistency**: `createFramePlan` is a pure function; the browser canvas and a future react-native-svg consume the same frame plan.
 
-## 安装
+## Install
 
 ```bash
 npm install @spirograph/anim @spirograph/core
 ```
 
-## 使用
+## Usage
 
 ```ts
 import { createFramePlan, DrawAnimation, autoScheduler } from '@spirograph/anim';
@@ -22,31 +22,31 @@ import { buildItems, computeBounds, computeTransform, buildRenderData } from '@s
 const items = buildItems(state);
 const t = computeTransform(computeBounds(items.map(i => i.curve)), 800, 800, 32);
 
-// 逐帧：某进度下每笔画多少（纯函数）
+// Per frame: how much each pen draws at a given progress (pure function)
 const plan = createFramePlan(items, 0.42, { step: true });
 const data = buildRenderData(items, t, { perPenLimit: plan.perPenPoints.map(n => Math.max(0, n - 1)) });
 
-// 驱动动画（调度器可注入）
+// Drive the animation (scheduler injectable)
 const anim = new DrawAnimation(
   (progress) => renderFrame(createFramePlan(items, progress, { step: true })),
   () => renderFinal(),
-  15_000,          // 基准时长 ms
-  autoScheduler(), // 浏览器/RN rAF；Node 自动降级 timer
+  15_000,          // base duration ms
+  autoScheduler(), // browser/RN rAF; Node auto-falls back to timer
 );
 anim.setSpeed(2);
 anim.start();
 anim.pause(); anim.resume(); anim.stop();
 ```
 
-### 调度器
+### Schedulers
 
-| 调度器 | 平台 | 说明 |
+| Scheduler | Platform | Description |
 |---|---|---|
-| `rafScheduler()` | 浏览器 / RN | 全局 `requestAnimationFrame` + `performance.now`，无 rAF 时降级 ~16ms timer |
-| `timerScheduler()` | Node | setTimeout 降级（约 16ms） |
-| `autoScheduler()` | 任意 | 有 rAF 用 rAF，否则 timer（默认） |
+| `rafScheduler()` | browser / RN | global `requestAnimationFrame` + `performance.now`, falls back to ~16ms timer without rAF |
+| `timerScheduler()` | Node | setTimeout fallback (~16ms) |
+| `autoScheduler()` | any | uses rAF when available, otherwise timer (default) |
 
-## 打包/发布
+## Build / publish
 
 ```bash
 npm run build   # tsc -b → dist/

@@ -1,27 +1,27 @@
 import { computeSteps } from '@spirograph/core';
 import type { RenderItem } from '@spirograph/core';
 
-/** 一帧要画什么（纯数据，渲染端消费） */
+/** What to draw in a frame (pure data, consumed by the renderer) */
 export interface FramePlan {
-  /** 分步模式下当前激活的笔索引（并行模式下为 -1） */
+  /** the currently active pen index in step mode (-1 in parallel mode) */
   penIndex: number;
-  /** 当前笔内进度 [0,1]（并行模式下为总进度） */
+  /** progress within the current pen [0,1] (total progress in parallel mode) */
   penProgress: number;
-  /** 每笔应绘制的点数（前缀截断；= curve.count 表示画满） */
+  /** how many points each pen should draw (prefix truncation; = curve.count means fully drawn) */
   perPenPoints: number[];
-  /** 当前笔的曲线参数 t（齿轮位姿用），并行模式 = 0 */
+  /** the current pen's curve parameter t (for the gear pose), 0 in parallel mode */
   gearT: number;
 }
 
 export interface FramePlanOptions {
-  /** true=多笔分步（当前笔激活，未开始的笔不画）；false=并行（所有笔同步推进） */
+  /** true=multi-pen step (current pen active, not-yet-started pens not drawn); false=parallel (all pens advance in sync) */
   step?: boolean;
 }
 
 /**
- * 计算某总进度下每笔应绘制多少点（纯函数，无定时器）。
- * - step 模式：computeSteps 决定当前笔，已完成笔画满，未开始的不画
- * - 并行模式：每笔按各自 count 比例同步推进
+ * Compute how many points each pen draws at a given total progress (pure function, no timers).
+ * - step mode: computeSteps decides the current pen; finished pens draw fully, not-yet-started ones draw nothing
+ * - parallel mode: each pen advances in sync by its own count ratio
  */
 export function createFramePlan(
   items: RenderItem[],

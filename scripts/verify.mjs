@@ -1,4 +1,4 @@
-// 无头浏览器冒烟验证：打开应用页面，检查 JS 错误与画布渲染
+// Headless browser smoke test: open the app page, check JS errors and canvas rendering
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -49,19 +49,19 @@ console.log('INFO:', JSON.stringify(info));
 const stats = await canvasStats();
 console.log('CANVAS:', JSON.stringify(stats));
 
-// 交互冒烟：切外切模式
+// interaction smoke test: switch to outside mode
 await page.click('[data-mode="outside"]');
 await page.waitForTimeout(400);
 const stats2 = await canvasStats();
 console.log('CANVAS(outside):', JSON.stringify(stats2));
 
-// 添加一支笔
+// add a pen
 await page.click('#add-pen');
 await page.waitForTimeout(300);
 const penCount = await page.evaluate(() => document.querySelectorAll('.pen-card').length);
 console.log('PENS after add:', penCount);
 
-// 随机灵感
+// random inspiration
 await page.click('#random');
 await page.waitForTimeout(500);
 const info2 = await page.evaluate(() => ({
@@ -72,19 +72,19 @@ console.log('AFTER RANDOM:', JSON.stringify(info2));
 const stats3 = await canvasStats();
 console.log('CANVAS(random):', JSON.stringify(stats3));
 
-// 播放动画 2 秒后暂停
+// play the animation for 2 seconds then pause
 await page.click('#play');
 await page.waitForTimeout(2000);
 const playText = await page.textContent('#play');
-await page.click('#play'); // 暂停
+await page.click('#play'); // pause
 await page.waitForTimeout(300);
 const playText2 = await page.textContent('#play');
 console.log('PLAY BTN:', playText, '->', playText2);
 
-// 应用一个预设
+// apply a preset
 await page.evaluate(() => {
   const chips = [...document.querySelectorAll('#preset-chips .chip')];
-  chips.find(c => c.textContent.includes('蛛网'))?.click();
+  chips.find(c => c.textContent.includes('Spiderweb'))?.click();
 });
 await page.waitForTimeout(500);
 const info3 = await page.evaluate(() => ({
@@ -92,7 +92,7 @@ const info3 = await page.evaluate(() => ({
   petals: document.getElementById('info-petals').textContent,
   pens: document.querySelectorAll('.pen-card').length,
 }));
-console.log('PRESET 蛛网:', JSON.stringify(info3));
+console.log('PRESET Spiderweb:', JSON.stringify(info3));
 
 console.log('JS ERRORS:', errors.length ? errors : 'none');
 await browser.close();

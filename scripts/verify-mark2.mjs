@@ -24,17 +24,17 @@ const r = await page.evaluate(() => {
   };
   const gcx = cx + 42 * scale, gcy = cy;
   const spin = 5.96 * Math.PI / 180;
-  // 密采样：滚动中心 → 笔尖 66px，每 4px
+  // dense sampling: rolling center -> pen tip 66px, every 4px
   const trace = [];
   for (let d = 4; d <= 66; d += 4) {
     trace.push({ d, color: px(gcx + d * Math.cos(spin), gcy + d * Math.sin(spin)) });
   }
   return trace;
 });
-// 判定：淡红线（alpha 0.6 红混白）或纯红笔尖：r > 140 且 r-b > 40
+// decision: faint red line (alpha 0.6 red mixed with white) or pure red tip: r > 140 and r-b > 40
 const reddish = (p) => p[0] > 140 && p[0] - p[2] > 40;
 const bad = r.trace.filter((t) => !reddish(t.color));
-console.log('采样点:', r.trace.length, '| 非红色点:', bad.length ? JSON.stringify(bad) : '无');
-console.log('全部连续红色:', bad.length === 0 ? '✅ 红线从滚动中心连续延伸到笔尖' : '⚠');
-console.log('JS错误:', errors.length ? errors : '无');
+console.log('samples:', r.trace.length, '| non-red points:', bad.length ? JSON.stringify(bad) : 'none');
+console.log('all continuously red:', bad.length === 0 ? '✅ red line extends continuously from the rolling center to the pen tip' : '⚠');
+console.log('JS errors:', errors.length ? errors : 'none');
 await browser.close();

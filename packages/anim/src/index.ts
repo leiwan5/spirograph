@@ -1,4 +1,4 @@
-// @spirograph/anim — 可选动画驱动库（配合 @spirograph/core）
+// @spirograph/anim — optional animation driver library (used with @spirograph/core)
 export { rafScheduler, timerScheduler, autoScheduler } from './scheduler.js';
 export type { FrameScheduler } from './scheduler.js';
 export { DrawAnimation } from './animation.js';

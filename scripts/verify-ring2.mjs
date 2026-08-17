@@ -1,4 +1,4 @@
-// 修正采样密度：步长 1/1000 曲线点 + 邻域容差
+// fixed sampling density: step of 1/1000 curve points + neighborhood tolerance
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -82,10 +82,10 @@ for (const [x, y] of pts) {
     } else if (pa && isRed(pa)) redStayed++;
   }
 }
-console.log('采样点:', pts.length, '(dpr=' + dpr + ')');
-console.log('改笔二前 曲线经过处有内容:', hitBefore, '| 改后有内容:', hitAfter);
-console.log('笔一红像素点:', redPts, '| 被改动:', redChanged, '| 其中被笔二蓝覆盖:', redBecameBlue, '| 保持红色:', redStayed);
-console.log('结论:', hitBefore === hitAfter && hitBefore > 500
-  ? '✅ 笔一曲线位置完全没动（每个采样点前后都有内容，内容还在原地）'
-  : '⚠ 需检查: hitBefore=' + hitBefore + ' hitAfter=' + hitAfter);
+console.log('samples:', pts.length, '(dpr=' + dpr + ')');
+console.log('content on the curve before changing pen 2:', hitBefore, '| after:', hitAfter);
+console.log('pen-1 red pixels:', redPts, '| changed:', redChanged, '| covered by pen-2 blue:', redBecameBlue, '| stayed red:', redStayed);
+console.log('conclusion:', hitBefore === hitAfter && hitBefore > 500
+  ? '✅ pen-1 curve position did not move at all (every sample point has content before and after; content stays in place)'
+  : '⚠ needs check: hitBefore=' + hitBefore + ' hitAfter=' + hitAfter);
 await browser.close();

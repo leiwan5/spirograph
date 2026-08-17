@@ -1,7 +1,7 @@
-// 用户核心场景终验（修复后）：
-// A) 环固定 + 72/30 + 39/79：变动笔一 → 笔二纹丝不动
-// B) 环固定 + 72/30 + 39/79：变动笔二 → 笔一位置不动（只可能被笔二覆盖）
-// C) 环像素恒定：72+30 与 96+63 下 hole=100 曲线都贴环内沿（半径 = 理论值）
+// Final verification of the user's core scenarios (after the fix):
+// A) Ring fixed + 72/30 + 39/79: change pen one -> pen two does not move at all
+// B) Ring fixed + 72/30 + 39/79: change pen two -> pen one's position does not move (can only be covered by pen two)
+// C) Ring pixels constant: under 72+30 and 96+63, the hole=100 curve clings to the ring's inner edge (radius = theoretical value)
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -48,19 +48,19 @@ async function measure(label, change) {
     }
     if (pureBlue(r1, g1, b1)) blueMoved++;
   }
-  console.log(label, '→ 笔一(红)变动:', redMoved, '| 笔二(蓝)变动:', blueMoved, '| 红变蓝(被覆盖):', redToBlue);
+  console.log(label, '-> pen one (red) moved:', redMoved, '| pen two (blue) moved:', blueMoved, '| red->blue (covered):', redToBlue);
   return { redMoved, blueMoved };
 }
 
 await setHole(0, 39); await setHole(1, 79);
 await page.waitForTimeout(500);
 
-// A: 变动笔一 39→20
-let a = await measure('A 变动笔一 39→20', () => setHole(0, 20));
-// B: 变动笔二 79→40（复位笔一）
-let b = await measure('B 变动笔二 79→40', async () => { await setHole(0, 39); await setHole(1, 40); });
+// A: change pen one 39->20
+let a = await measure('A change pen one 39->20', () => setHole(0, 20));
+// B: change pen two 79->40 (reset pen one)
+let b = await measure('B change pen two 79->40', async () => { await setHole(0, 39); await setHole(1, 40); });
 
-// C: 环像素恒定（用正确 mode 重新验证）
+// C: ring pixels constant (re-verify with the correct mode)
 const ring = await page.evaluate(async () => {
   const curve = await import('/src/math/curve.ts');
   const ren = await import('/src/render/renderer.ts');
@@ -81,12 +81,12 @@ const ring = await page.evaluate(async () => {
   return { r72: maxR(72, 30), r96: maxR(96, 63), expected: (Math.min(W, H) - 2 * pad) / 2 };
 });
 
-console.log('C 环半径: 72+30 =', ring.r72.toFixed(1), '| 96+63 =', ring.r96.toFixed(1), '| 理论 =', ring.expected.toFixed(1),
-  Math.abs(ring.r72 - ring.r96) < 1 && Math.abs(ring.r72 - ring.expected) < 3 ? '✅ 环恒定' : '⚠ 异常');
+console.log('C ring radius: 72+30 =', ring.r72.toFixed(1), '| 96+63 =', ring.r96.toFixed(1), '| theoretical =', ring.expected.toFixed(1),
+  Math.abs(ring.r72 - ring.r96) < 1 && Math.abs(ring.r72 - ring.expected) < 3 ? '✅ ring constant' : '⚠ anomaly');
 
-// 结论判定
-console.log('A 判定:', a.blueMoved === 0 ? '✅ 变动笔一，笔二纹丝不动' : '⚠ 笔二动了');
-console.log('B 判定:', b.redToBlue === b.redMoved
-  ? '✅ 笔一所有变动都来自"被笔二新曲线覆盖"（位置未移动）'
-  : (b.redMoved === 0 ? '✅ 笔一完全没动' : '⚠ 笔一存在非覆盖性变动 ' + (b.redMoved - b.redToBlue)));
+// Conclusion verdict
+console.log('A verdict:', a.blueMoved === 0 ? '✅ changed pen one, pen two did not move at all' : '⚠ pen two moved');
+console.log('B verdict:', b.redToBlue === b.redMoved
+  ? '✅ all pen one changes come from "covered by the new pen two curve" (position did not move)'
+  : (b.redMoved === 0 ? '✅ pen one did not move at all' : '⚠ pen one has non-cover changes ' + (b.redMoved - b.redToBlue)));
 await browser.close();

@@ -1,4 +1,4 @@
-// 复现用户 bug：预设/随机/URL 之后改动参数是否有反应
+// Reproduce the user bug: after preset/random/URL, do parameter changes take effect?
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -30,42 +30,42 @@ async function changePen1Hole(v) {
   await page.waitForTimeout(400);
 }
 
-// 场景1：点预设 → 改参数
+// Scene 1: click preset -> change parameter
 await page.goto('http://localhost:5273/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
 await page.evaluate(() => {
-  [...document.querySelectorAll('#preset-chips .chip')].find((c) => c.textContent.includes('蛛网')).click();
+  [...document.querySelectorAll('#preset-chips .chip')].find((c) => c.textContent.includes('Spiderweb')).click();
 });
 await page.waitForTimeout(500);
 const cardsAfterPreset = await page.evaluate(() => document.querySelectorAll('.pen-card').length);
 const h1a = await canvasHash();
-await changePen1Hole(80); // 预设第一支笔 hole 40 → 80
+await changePen1Hole(80); // preset first pen hole 40 -> 80
 const h1b = await canvasHash();
-console.log('1) 预设蛛网后:', '卡片数', cardsAfterPreset, '| 改孔洞画布变化:', h1a !== h1b ? '✅ 有反应' : '❌ 无反应（bug 复现）');
+console.log('1) after preset Spiderweb:', 'card count', cardsAfterPreset, '| canvas changed by hole edit:', h1a !== h1b ? '✅ reacts' : '❌ no reaction (bug reproduced)');
 
-// 场景2：随机 → 改参数
+// Scene 2: random -> change parameter
 await page.click('#random');
 await page.waitForTimeout(500);
 const cardsAfterRandom = await page.evaluate(() => document.querySelectorAll('.pen-card').length);
 const h2a = await canvasHash();
 await changePen1Hole(30);
 const h2b = await canvasHash();
-console.log('2) 随机灵感后:', '卡片数', cardsAfterRandom, '| 改孔洞画布变化:', h2a !== h2b ? '✅ 有反应' : '❌ 无反应');
+console.log('2) after random:', 'card count', cardsAfterRandom, '| canvas changed by hole edit:', h2a !== h2b ? '✅ reacts' : '❌ no reaction');
 
-// 场景3：URL 加载（多笔）→ 改参数
+// Scene 3: URL load (multi-pen) -> change parameter
 await page.goto('http://localhost:5273/?ring=144&rolling=60&mode=inside&pen=40,3a86ff,1.8&pen=70,00bbf9,1.5&pen=90,d9a404,1.5&bg=1b1b2f&scale=fixed', { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
 const h3a = await canvasHash();
 await changePen1Hole(80);
 const h3b = await canvasHash();
 const cardsUrl = await page.evaluate(() => document.querySelectorAll('.pen-card').length);
-console.log('3) URL 加载后:', '卡片数', cardsUrl, '| 改孔洞画布变化:', h3a !== h3b ? '✅ 有反应' : '❌ 无反应');
+console.log('3) after URL load:', 'card count', cardsUrl, '| canvas changed by hole edit:', h3a !== h3b ? '✅ reacts' : '❌ no reaction');
 
-// 场景4：预设后滑块显示值是否与状态一致
+// Scene 4: after a preset, do the sliders' displayed values match the state
 await page.goto('http://localhost:5273/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(500);
 await page.evaluate(() => {
-  [...document.querySelectorAll('#preset-chips .chip')].find((c) => c.textContent.includes('蛛网')).click();
+  [...document.querySelectorAll('#preset-chips .chip')].find((c) => c.textContent.includes('Spiderweb')).click();
 });
 await page.waitForTimeout(500);
 const sliderVals = await page.evaluate(() => {
@@ -76,7 +76,7 @@ const sliderVals = await page.evaluate(() => {
     slider: +c.querySelector('.pen-hole').value,
   }));
 });
-console.log('4) 预设后卡片与状态一致:', JSON.stringify(sliderVals),
-  sliderVals.every((x) => x.state === x.slider) ? '✅' : '❌ 不一致');
-console.log('JS错误:', errors.length ? errors : '无');
+console.log('4) cards/state consistent after preset:', JSON.stringify(sliderVals),
+  sliderVals.every((x) => x.state === x.slider) ? '✅' : '❌ inconsistent');
+console.log('JS errors:', errors.length ? errors : 'none');
 await browser.close();

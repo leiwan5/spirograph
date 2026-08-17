@@ -22,7 +22,7 @@ const r = await page.evaluate(() => {
     const i = (Math.round(y) * W + Math.round(x)) * 4;
     return [img[i], img[i + 1], img[i + 2]];
   };
-  // 环带区（386-395px，60°-300° 避开滚动齿轮）齿形深色像素
+  // tooth dark pixels in the ring band (386-395px, 60°-300° avoiding the rolling gear)
   let toothDark = 0, bandFilled = 0;
   for (let deg = 60; deg < 300; deg += 1) {
     const a = (deg * Math.PI) / 180;
@@ -32,9 +32,9 @@ const r = await page.evaluate(() => {
       else if (p[0] < 250) bandFilled++;
     }
   }
-  // 环内干净（300px 半径）
+  // ring interior is clean (300px radius)
   const inside = px(cx, cy + 300);
-  // 齿形结构：95° 起 72 齿顶/齿谷
+  // tooth structure: 72 tips/valleys starting at 95°
   const scale = 5.52, toothH = 7 / scale;
   const tipR = (72 - 0.5 * toothH) * scale;
   const rootR = (72 - 1.5 * toothH) * scale;
@@ -49,16 +49,16 @@ const r = await page.evaluate(() => {
   }
   return { toothDark, bandFilled, inside, tipDark, rootDark };
 });
-console.log('齿形深色像素:', r.toothDark, r.toothDark > 8000 ? '✅ 齿形清晰' : '⚠');
-console.log('环带淡色填充:', r.bandFilled);
-console.log('环内颜色:', r.inside.join(','), r.inside[0] === 255 ? '✅ 干净' : '⚠');
-console.log('齿顶:', r.tipDark, '/72 | 齿谷:', r.rootDark, '/72');
+console.log('tooth dark pixels:', r.toothDark, r.toothDark > 8000 ? '✅ teeth clear' : '⚠');
+console.log('ring band light fill:', r.bandFilled);
+console.log('ring interior color:', r.inside.join(','), r.inside[0] === 255 ? '✅ clean' : '⚠');
+console.log('tooth tips:', r.tipDark, '/72 | valleys:', r.rootDark, '/72');
 
 await page.click('#play');
 await page.waitForTimeout(1500);
-console.log('动画:', errors.length ? '❌' : '✅ 正常');
+console.log('animation:', errors.length ? '❌' : '✅ normal');
 await page.click('#play');
 const shot = await page.locator('#canvas').screenshot();
 writeFileSync('scripts/shot-gears-final.png', shot);
-console.log('截图: scripts/shot-gears-final.png');
+console.log('screenshot: scripts/shot-gears-final.png');
 await browser.close();

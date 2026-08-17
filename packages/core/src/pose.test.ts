@@ -3,50 +3,50 @@ import { computeGearPose, computeSteps, weightedSteps } from './pose.js';
 import { gradientColorAt, lerpColor } from './gradient.js';
 import { sampleCurve } from './math/curve.js';
 
-describe('渐变颜色插值（间隔模型，闭合回环）', () => {
-  // 颜色等距落在闭合区间点（间距 spacing%，第 1 色在 0 处），色用尽循环；
-  // 曲线闭合：最后一格渐变回初始色（收笔衔接）。返回值统一为 rgb(...) 字符串。
-  const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00']; // 红 绿 蓝 黄
+describe('gradient color interpolation (spacing model, closed loop)', () => {
+  // colors spaced evenly on the closed interval points (spacing %, 1st color at 0), cycling once exhausted;
+  // curve closes: the last slot fades back to the initial color (pen-end join). Return values are rgb(...) strings.
+  const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00']; // red green blue yellow
   const spacing = 10;
 
-  it('lerpColor 线性插值', () => {
+  it('lerpColor linear interpolation', () => {
     expect(lerpColor('#ff0000', '#0000ff', 0)).toBe('rgb(255,0,0)');
     expect(lerpColor('#ff0000', '#0000ff', 1)).toBe('rgb(0,0,255)');
     expect(lerpColor('#ff0000', '#0000ff', 0.5)).toBe('rgb(128,0,128)');
   });
 
-  it('间隔点正好是设置的颜色（循环）', () => {
-    expect(gradientColorAt(colors, 0.0, spacing)).toBe('rgb(255,0,0)');   // 0  → 红
-    expect(gradientColorAt(colors, 0.1, spacing)).toBe('rgb(0,255,0)');   // 10 → 绿
-    expect(gradientColorAt(colors, 0.2, spacing)).toBe('rgb(0,0,255)');   // 20 → 蓝
-    expect(gradientColorAt(colors, 0.3, spacing)).toBe('rgb(255,255,0)'); // 30 → 黄
-    expect(gradientColorAt(colors, 0.4, spacing)).toBe('rgb(255,0,0)');   // 40 → 循环回红
-    expect(gradientColorAt(colors, 0.8, spacing)).toBe('rgb(255,0,0)');   // 80 → 红
-    expect(gradientColorAt(colors, 0.9, spacing)).toBe('rgb(0,255,0)');   // 90 → 绿
+  it('spacing points are exactly the set colors (cycling)', () => {
+    expect(gradientColorAt(colors, 0.0, spacing)).toBe('rgb(255,0,0)');   // 0  → red
+    expect(gradientColorAt(colors, 0.1, spacing)).toBe('rgb(0,255,0)');   // 10 → green
+    expect(gradientColorAt(colors, 0.2, spacing)).toBe('rgb(0,0,255)');   // 20 → blue
+    expect(gradientColorAt(colors, 0.3, spacing)).toBe('rgb(255,255,0)'); // 30 → yellow
+    expect(gradientColorAt(colors, 0.4, spacing)).toBe('rgb(255,0,0)');   // 40 → cycles back to red
+    expect(gradientColorAt(colors, 0.8, spacing)).toBe('rgb(255,0,0)');   // 80 → red
+    expect(gradientColorAt(colors, 0.9, spacing)).toBe('rgb(0,255,0)');   // 90 → green
   });
 
-  it('闭合处（100%≡0%）渐变回初始色', () => {
-    expect(gradientColorAt(colors, 1.0, spacing)).toBe('rgb(255,0,0)'); // 收笔 = 初始红
+  it('fades back to the initial color at the closure (100%≡0%)', () => {
+    expect(gradientColorAt(colors, 1.0, spacing)).toBe('rgb(255,0,0)'); // pen-end = initial red
   });
 
-  it('spacing 不整除 100 时末尾仍渐变回初始色', () => {
-    expect(gradientColorAt(colors, 1.0, 30)).toBe('rgb(255,0,0)'); // 100 收笔回红
-    expect(gradientColorAt(colors, 0.90, 30)).toBe('rgb(255,255,0)'); // 90 → 黄
+  it('when spacing does not divide 100, the end still fades back to the initial color', () => {
+    expect(gradientColorAt(colors, 1.0, 30)).toBe('rgb(255,0,0)'); // 100 pen-end back to red
+    expect(gradientColorAt(colors, 0.90, 30)).toBe('rgb(255,255,0)'); // 90 → yellow
   });
 
-  it('段内整段渐变（中点）', () => {
-    // [0,10)：红→绿；5% = (255,127,127)? 红(255,0,0)→绿(0,255,0) 中点 = (128,128,0)
+  it('whole-segment gradient within a segment (midpoint)', () => {
+    // [0,10): red→green; 5% = (255,127,127)? red(255,0,0)→green(0,255,0) midpoint = (128,128,0)
     expect(gradientColorAt(colors, 0.05, spacing)).toBe('rgb(128,128,0)');
   });
 
-  it('空 = 黑；单色 = 该色', () => {
+  it('empty = black; solid = that color', () => {
     expect(gradientColorAt([], 0.5, spacing)).toBe('#000000');
     expect(gradientColorAt(['#123456'], 0.5, spacing)).toBe('#123456');
   });
 });
 
-describe('computeSteps（多笔分步）', () => {
-  it('总进度映射到笔索引与笔内进度', () => {
+describe('computeSteps (multi-pen steps)', () => {
+  it('maps total progress to pen index and within-pen progress', () => {
     expect(computeSteps(3, 0).penIndex).toBe(0);
     expect(computeSteps(3, 0).penProgress).toBeCloseTo(0, 10);
     expect(computeSteps(3, 0.33).penIndex).toBe(0);
@@ -64,38 +64,38 @@ describe('computeSteps（多笔分步）', () => {
   });
 });
 
-describe('weightedSteps（按曲线长度加权的真实速度分步）', () => {
-  const counts = [100, 300, 100]; // 总 500：笔1(300/500=60% 时间，笔划多→占时多)
-  it('笔划多的笔占更多时间，进度按长度加权', () => {
-    // 笔0 占 [0,100/500)=[0,0.2)
+describe('weightedSteps (curve-length-weighted true-speed steps)', () => {
+  const counts = [100, 300, 100]; // total 500: pen1 (300/500=60% time, more strokes → more time)
+  it('pens with more strokes take more time; progress is weighted by length', () => {
+    // pen0 occupies [0,100/500)=[0,0.2)
     expect(weightedSteps(counts, 0.1).penIndex).toBe(0);
     expect(weightedSteps(counts, 0.1).penProgress).toBeCloseTo(0.5, 10); // 50/100
-    // 0.2 → 100，进入笔1；笔1 占 [0.2, 0.8)
+    // 0.2 → 100, enter pen1; pen1 occupies [0.2, 0.8)
     expect(weightedSteps(counts, 0.2).penIndex).toBe(1);
     expect(weightedSteps(counts, 0.2).penProgress).toBeCloseTo(0, 10);
-    // 0.5 → 250，笔1 内 (250-100)/300 = 0.5
+    // 0.5 → 250, within pen1 (250-100)/300 = 0.5
     expect(weightedSteps(counts, 0.5).penIndex).toBe(1);
     expect(weightedSteps(counts, 0.5).penProgress).toBeCloseTo(0.5, 10);
-    // 笔2 占 [0.8,1]
+    // pen2 occupies [0.8,1]
     expect(weightedSteps(counts, 0.85).penIndex).toBe(2);
     expect(weightedSteps(counts, 0.9).penProgress).toBeCloseTo(0.5, 10); // (450-400)/100
   });
-  it('边界：0 → 第一笔 0；1 → 最后一笔 1', () => {
+  it('boundary: 0 → first pen 0; 1 → last pen 1', () => {
     expect(weightedSteps(counts, 0).penIndex).toBe(0);
     expect(weightedSteps(counts, 0).penProgress).toBe(0);
     expect(weightedSteps(counts, 1).penIndex).toBe(2);
     expect(weightedSteps(counts, 1).penProgress).toBe(1);
   });
-  it('空数组返回 (0,0)', () => {
+  it('empty array returns (0,0)', () => {
     expect(weightedSteps([], 0.5)).toEqual({ penIndex: 0, penProgress: 0 });
   });
 });
 
-describe('computeGearPose（齿轮位姿）', () => {
-  it('t=0 时孔位与曲线起点一致（内切）', () => {
+describe('computeGearPose (gear pose)', () => {
+  it('the hole position coincides with the curve start at t=0 (inside)', () => {
     const R = 72, r = 30, d = 0.5 * r;
     const pose = computeGearPose(R, r, 'inside', 0);
-    // 孔世界位置 = 中心(R−r, 0) + d*(cos spin, sin spin)
+    // hole world position = center(R−r, 0) + d*(cos spin, sin spin)
     const hx = (R - r) + d * Math.cos(pose.spinAngle);
     const hy = 0 + d * Math.sin(pose.spinAngle);
     const c = sampleCurve(R, r, 'inside', 50);
@@ -103,7 +103,7 @@ describe('computeGearPose（齿轮位姿）', () => {
     expect(hy).toBeCloseTo(c.points[1], 10);
   });
 
-  it('t=0 时孔位与曲线起点一致（外切）', () => {
+  it('the hole position coincides with the curve start at t=0 (outside)', () => {
     const R = 72, r = 30, d = 0.5 * r;
     const pose = computeGearPose(R, r, 'outside', 0);
     const hx = (R + r) + d * Math.cos(pose.spinAngle);
@@ -113,7 +113,7 @@ describe('computeGearPose（齿轮位姿）', () => {
     expect(hy).toBeCloseTo(c.points[1], 10);
   });
 
-  it('自转角随 t 连续变化（无跳变）', () => {
+  it('the spin angle varies continuously with t (no jumps)', () => {
     const pose1 = computeGearPose(72, 30, 'inside', 1.0);
     const pose2 = computeGearPose(72, 30, 'inside', 1.001);
     expect(Math.abs(pose2.spinAngle - pose1.spinAngle)).toBeLessThan(0.05);

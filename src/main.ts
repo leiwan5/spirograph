@@ -12,7 +12,7 @@ import { DrawAnimation } from '@spirograph/anim';
 import { randomSettings } from './ui/presets';
 import { applyUrlParams, syncUrl } from './state/url';
 
-// 先用 URL 参数初始化状态（必须在 buildPanel 之前，控件才能显示 URL 中的值）
+// Initialize state from URL params first (before buildPanel so controls show URL values)
 applyUrlParams();
 
 const root = document.getElementById('app')!;
@@ -20,13 +20,13 @@ const canvas = document.createElement('canvas');
 canvas.id = 'canvas';
 const panel = buildPanel(root, canvas);
 
-// ---- 曲线缓存（仅孔洞/齿轮变化时重新采样） ----
+// ---- Curve cache (re-sample only when hole/gear changes) ----
 let cacheKey = '';
 let cacheItems: RenderItem[] = [];
 
 function buildItems(): RenderItem[] {
   const s = getState();
-  // 防御：pens 意外为空时回退默认笔，保证曲线永远可生成
+  // Guard: fall back to default pens if pens is unexpectedly empty so a curve can always be generated
   const pens = s.pens.length > 0 ? s.pens : DEFAULT_STATE.pens;
   const key =
     s.mode + '|' + s.ringTeeth + '|' + s.rollingTeeth + '|' +
@@ -38,7 +38,7 @@ function buildItems(): RenderItem[] {
     }));
     cacheKey = key;
   } else {
-    // 颜色/粗细可能已变：合并最新笔属性，曲线复用
+    // Color/width may have changed: merge the latest pen properties, reuse the curve
     const byId = new Map(pens.map((p) => [p.id, p] as const));
     cacheItems = cacheItems.map((item) => ({
       curve: item.curve,
@@ -48,7 +48,7 @@ function buildItems(): RenderItem[] {
   return cacheItems;
 }
 
-// ---- 渲染 ----
+// ---- Rendering ----
 function canvasSize(): { width: number; height: number } {
   const rect = canvas.getBoundingClientRect();
   return {
@@ -79,34 +79,34 @@ function renderStatic(): void {
     bounds: items.length ? computeBounds(items.map((i) => i.curve)) : null,
   };
   if (s.showGears) {
-    // 齿轮画在曲线之下：静态显示初始位姿
+    // Gears drawn below the curve: statically show the initial pose
     const pens = s.pens.length > 0 ? s.pens : DEFAULT_STATE.pens;
     drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, 0, pens, 0);
   }
   renderFull(ctx, items, t);
 }
 
-// 播放模式：单笔一次（默认） / 多笔同时
+// Play mode: one pen at a time (default) / all pens together
 let playMode: 'simultaneous' | 'sequential' = 'sequential';
 
-/** 渲染当前进度（动画帧）：按播放模式绘制曲线，齿轮为可选叠加 */
+/** Render the current progress (animation frame): draw the curve per play mode, gears as an optional overlay */
 function renderProgress(progress: number): void {
   const s = getState();
   const { width, height } = canvasSize();
   const ctx = clearCanvas(canvas, width, height, s.background, window.devicePixelRatio || 1);
   const { items, t } = computeTransformFor(width, height);
   if (items.length === 0) {
-    // 防御：无笔可画时直接渲染静态图，避免空数组越界
+    // Guard: render the static image when there is nothing to draw, avoiding an out-of-bounds empty array
     renderStatic();
     return;
   }
   if (playMode === 'sequential') {
-    // 单笔一次：一次画一支（按曲线长度加权，真实恒定速度），画完画下一支
+    // One pen at a time: draw one pen (weighted by curve length, true constant speed), then move to the next
     if (s.showGears) {
       const { penIndex, penProgress } = weightedSteps(items.map((i) => i.curve.count - 1), progress);
       const curve = items[penIndex]?.curve;
       if (curve) {
-        // 齿轮跟随当前激活笔的局部进度：齿尖随笔尖同步移动/转动
+        // Gear follows the local progress of the active pen: the tooth tip moves/rotates in sync with the pen tip
         const gearT = penProgress * 2 * Math.PI * curve.periodTurns;
         drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, gearT, s.pens, penIndex);
       }
@@ -114,16 +114,16 @@ function renderProgress(progress: number): void {
     renderSteps(ctx, items, t, progress);
     return;
   }
-  // 多笔同时：所有笔同步绘制
+  // All pens together: every pen draws in sync
   if (s.showGears) {
-    // 齿轮随基准笔（第一支）的总进度转动
+    // Gear rotates with the total progress of the reference pen (the first one)
     const gearT = items[0].curve ? progress * 2 * Math.PI * items[0].curve.periodTurns : 0;
     drawGears(ctx, t, s.ringTeeth, s.rollingTeeth, s.mode, gearT, s.pens, 0);
   }
   renderPartial(ctx, items, t, progress);
 }
 
-// ---- 动画 ----
+// ---- Animation ----
 let anim: DrawAnimation | null = null;
 
 function togglePlay(): void {
@@ -138,9 +138,9 @@ function togglePlay(): void {
     }
     return;
   }
-  // 基准时长按总段数动态计算，保证"笔划速度一致"（恒定段/秒，与图形复杂度和笔数无关）
+  // Base duration is computed dynamically from the total number of segments so stroke speed stays consistent (constant segments/second, independent of pattern complexity and pen count)
   const totalSegs = buildItems().reduce((n, i) => n + (i.curve.count - 1), 0);
-  const SEGS_PER_SEC = 350; // 每笔恒定绘制段速
+  const SEGS_PER_SEC = 350; // constant per-pen drawing segment speed
   const baseDurationMs = Math.max(1000, (totalSegs / SEGS_PER_SEC) * 1000);
   anim = new DrawAnimation(
     renderProgress,
@@ -156,7 +156,7 @@ function togglePlay(): void {
   panel.setPlayingUI(true, false);
 }
 
-// 参数变更 → 停止动画并重绘静态图；速度/显示齿轮变更 → 只调速度/更新齿轮（不中断动画）
+// Parameter change → stop the animation and redraw the static image; speed/show-gears change → only adjust speed/update gears (don't interrupt the animation)
 let prevSpeed = getState().speed;
 let prevGears = getState().showGears;
 subscribe(() => {
@@ -168,7 +168,7 @@ subscribe(() => {
   }
   if (s.showGears !== prevGears) {
     prevGears = s.showGears;
-    // 齿轮仅叠加显示，不影响进度 → 不停止动画，下一帧自然生效
+    // Gears are only an overlay and don't affect progress → don't stop the animation; it takes effect on the next frame
     return;
   }
   if (anim) {
@@ -179,9 +179,9 @@ subscribe(() => {
   renderStatic();
 });
 
-// 浮动工具栏播放按钮：共用 togglePlay（播放/暂停/恢复）
+// Floating toolbar play button: shared togglePlay (play/pause/resume)
 panel.onPlayRequest(togglePlay);
-// 浮动工具栏停止按钮：停止动画并回静态图
+// Floating toolbar stop button: stop the animation and return to the static image
 panel.onStopRequest(() => {
   if (anim) {
     anim.stop();
@@ -190,7 +190,7 @@ panel.onStopRequest(() => {
   panel.setPlayingUI(false);
   renderStatic();
 });
-// 播放模式切换（多笔同时 / 单笔一次）：仅改下一帧绘制方式，不中断动画
+// Play mode switch (all together / one at a time): only changes how the next frame is drawn, does not interrupt the animation
 panel.onPlayModeChange((mode) => {
   playMode = mode;
 });
@@ -198,10 +198,10 @@ panel.onRandomRequest(() => randomSettings());
 panel.onExportPng((size) => exportPng(buildItems(), getState().background, size));
 panel.onExportSvg((size) => exportSvg(buildItems(), getState().background, size));
 
-// 任何状态变化（含速度）→ 防抖同步地址栏
+// Any state change (including speed) → debounce-sync the address bar
 subscribe(syncUrl);
 
-// 初始渲染 + 窗口缩放适配
+// Initial render + window resize adaptation
 renderStatic();
 const ro = new ResizeObserver(() => {
   if (anim) {

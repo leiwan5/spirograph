@@ -7,31 +7,31 @@ await page.waitForTimeout(500);
 
 const r = await page.evaluate(async () => {
   const ren = await import('/src/render/renderer.ts');
-  const colors = ['#e63946', '#1d6fa5', '#f4a261', '#2a9d8f']; // 红蓝橙绿
+  const colors = ['#e63946', '#1d6fa5', '#f4a261', '#2a9d8f']; // red blue orange green
   const sp = 10;
-  const probe = (p) => { // p 为位置 %
+  const probe = (p) => { // p is position %
     const t = p / 100;
     return { at: p, color: ren.gradientColorAt(colors, t, sp), want: null };
   };
-  // 间隔点：0/10/20/30/40 依次为 红/蓝/橙/绿/红(循环)
+  // interval points: 0/10/20/30/40 are red/blue/orange/green/red (wraps around)
   const points = [0, 10, 20, 30, 40, 50].map((p) => {
     const c = ren.gradientColorAt(colors, p / 100, sp);
     return { p, c };
   });
-  // 段内中点：5 → 红蓝过渡中点
+  // segment midpoint: 5 → red-blue transition midpoint
   const mid5 = ren.gradientColorAt(colors, 0.05, sp);
   const mid15 = ren.gradientColorAt(colors, 0.15, sp);
   return { points, mid5, mid15 };
 });
 const hex = (rgb) => {
-  // 'rgb(r,g,b)' → 判断大致
+  // 'rgb(r,g,b)' → rough judgment
   return rgb;
 };
-console.log('间隔点颜色 (期望 0红/10蓝/20橙/30绿/40红/50蓝):');
+console.log('interval point colors (expected 0red/10blue/20orange/30green/40red/50blue):');
 r.points.forEach(p => console.log('  ' + p.p + '%: ' + p.c));
-console.log('段内中点: 5% ->', r.mid5, '(红蓝过渡) | 15% ->', r.mid15, '(蓝橙过渡)');
-// 校验
-const expectAt = ['红','蓝','橙','绿','红','蓝'];
+console.log('segment midpoints: 5% ->', r.mid5, '(red-blue transition) | 15% ->', r.mid15, '(blue-orange transition)');
+// verification
+const expectAt = ['red','blue','orange','green','red','blue'];
 const classify = (c) => {
   const m = c.match(/rgb\((\d+),(\d+),(\d+)\)/);
   if (m) {
@@ -45,8 +45,8 @@ const classify = (c) => {
   }
   return c;
 };
-console.log('间隔点判定:', r.points.map(p => classify(p.c)).join(', '));
+console.log('interval point classification:', r.points.map(p => classify(p.c)).join(', '));
 const ok = r.points.map(p => classify(p.c));
-console.log('期望: red, blue, orange, green, red, blue');
-console.log(ok[0]==='red'&&ok[1]==='blue'&&ok[2]==='orange'&&ok[3]==='green'&&ok[4]==='red'&&ok[5]==='blue' ? '✅ 间隔点颜色序列正确' : '⚠');
+console.log('expected: red, blue, orange, green, red, blue');
+console.log(ok[0]==='red'&&ok[1]==='blue'&&ok[2]==='orange'&&ok[3]==='green'&&ok[4]==='red'&&ok[5]==='blue' ? '✅ interval point color sequence is correct' : '⚠');
 await browser.close();

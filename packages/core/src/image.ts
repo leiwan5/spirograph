@@ -10,7 +10,7 @@ export interface ImageParams {
   size: number;
 }
 
-/** 从 query string 解析图片参数（格式与前端 URL 参数一致） */
+/** Parse image params from a query string (same format as the frontend URL params) */
 export function parseImageParams(search: string): ImageParams {
   const patch = parseState(search);
   const mode = patch.mode ?? DEFAULT_STATE.mode;
@@ -28,14 +28,14 @@ export function parseImageParams(search: string): ImageParams {
     scaleMode: patch.scaleMode ?? DEFAULT_STATE.scaleMode,
     showGears: patch.showGears ?? DEFAULT_STATE.showGears,
   };
-  // size 参数（默认 1000，上限 4096）
+  // size param (default 1000, cap 4096)
   const sizeRaw = getQueryValue(search, 'size');
   const sizeNum = sizeRaw ? Number(sizeRaw) : NaN;
   const size = Number.isFinite(sizeNum) ? Math.min(4096, Math.max(64, Math.round(sizeNum))) : 1000;
   return { state, size };
 }
 
-/** 构造渲染条目（与前端 buildItems 相同的曲线采样逻辑） */
+/** Build render items (same curve-sampling logic as the frontend buildItems) */
 export function buildItems(s: AppState): RenderItem[] {
   return s.pens.map((pen) => ({
     curve: sampleCurve(s.ringTeeth, s.rollingTeeth, s.mode, pen.hole),
@@ -43,7 +43,7 @@ export function buildItems(s: AppState): RenderItem[] {
   }));
 }
 
-/** 生成 SVG 字符串（纯字符串，无 DOM） */
+/** Generate an SVG string (pure string, no DOM) */
 export function generateSvg(search: string): string {
   const { state, size } = parseImageParams(search);
   const items = buildItems(state);
@@ -51,8 +51,8 @@ export function generateSvg(search: string): string {
 }
 
 /**
- * 生成 PNG 字节（Uint8Array）：纯 JS 像素渲染 + pako deflate 编码。
- * 无 Node 专属依赖，可运行于 Node / 浏览器 / React Native / Vercel / Cloudflare Workers。
+ * Generate PNG bytes (Uint8Array): pure-JS pixel rendering + pako deflate encoding.
+ * No Node-specific dependencies; runs in Node / browser / React Native / Vercel / Cloudflare Workers.
  */
 export function generatePng(search: string): Uint8Array {
   const { state, size } = parseImageParams(search);

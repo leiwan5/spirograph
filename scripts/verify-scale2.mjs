@@ -1,4 +1,4 @@
-// 深挖 fixed 模式下笔二像素变动的颜色构成
+// dig into the color composition of pen-2 pixel changes in fixed mode
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -47,8 +47,8 @@ const result = await page.evaluate(async () => {
       otherColors.set(key, (otherColors.get(key) || 0) + 1);
     }
   }
-  // 顺便确认：笔二曲线本体（远离笔一的点）采样检查
-  // 取笔二曲线中点附近区域检查蓝色是否还在原位 —— 用图像差分区域定位
+  // incidentally confirm: sample-check pen-2's curve body (points far from pen 1)
+  // take a region near the middle of pen-2's curve and check whether the blue is still in place - locate it via an image-diff region
   return {
     pen2Total,
     pen2Changed,
@@ -58,7 +58,7 @@ const result = await page.evaluate(async () => {
   };
 });
 console.log(JSON.stringify(result, null, 1));
-console.log('解读:', result.becameOther === 0
-  ? '✅ 全部变动像素都变成了笔一红色 —— 笔二曲线本体未动，只是被变大的笔一覆盖'
-  : '⚠ 存在非笔一颜色的变动，需进一步分析');
+console.log('interpretation:', result.becameOther === 0
+  ? '✅ all changed pixels became pen-1 red - pen-2 curve body did not move, it was merely covered by the enlarged pen 1'
+  : '⚠ there are changes in colors other than pen-1, needs further analysis');
 await browser.close();

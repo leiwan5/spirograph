@@ -1,9 +1,9 @@
-// 真实跨源验证：5299 端口的页面引用 5273 的图片
+// Real cross-origin validation: a page on port 5299 references images served by 5273
 import { chromium } from 'playwright-core';
 import { createServer } from 'node:http';
 import { readFileSync } from 'node:fs';
 
-// 临时静态服务器（模拟"另一个网站"）
+// temporary static server (simulating "another website")
 const server = createServer((req, res) => {
   res.setHeader('Content-Type', 'text/html');
   res.end(`<!doctype html><html><body>
@@ -36,7 +36,7 @@ const r = await page.evaluate(() => {
     root: root.naturalWidth > 0 ? '✅ ' + root.naturalWidth + 'px' : '❌',
   };
 });
-console.log('跨站引用:', JSON.stringify(r, null, 1));
-console.log('JS错误:', errors.length ? errors : '无');
+console.log('cross-site reference:', JSON.stringify(r, null, 1));
+console.log('JS errors:', errors.length ? errors : 'none');
 server.close();
 await browser.close();

@@ -1,4 +1,4 @@
-// 90° 方向径向扫描：380-400px 逐像素，看齿形结构
+// Radial scan at 90°: pixel by pixel from 380-400px to inspect the tooth structure
 import { chromium } from 'playwright-core';
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
 const browser = await chromium.launch({

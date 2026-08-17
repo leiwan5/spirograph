@@ -2,19 +2,19 @@ import type { RenderItem } from './types.js';
 import { computeBounds, computeTransform } from './geometry.js';
 import { buildRenderData } from './segments.js';
 
-/** 每支笔导出点数上限（超出抽样），与旧版一致 */
+/** Max export points per pen (sampled beyond this), matching the legacy version */
 const MAX_EXPORT_POINTS_PER_PEN = 12_000;
 
 /**
- * 生成 SVG 文档字符串。尺寸 sizePx × sizePx，笔宽以 1000px 为基准按比例放大。
- * 颜色与 Canvas/PNG 同源（segmentColor），渐变逐段 path + 收笔线，保证无断裂。
+ * Generate an SVG markup string. Size sizePx × sizePx, pen width scaled proportionally on a 1000px base.
+ * Colors share the same source as Canvas/PNG (segmentColor); gradients use per-segment paths + a closure segment, guaranteeing no gaps.
  */
 export function buildSvg(items: RenderItem[], background: string, sizePx = 2048): string {
   const bounds = computeBounds(items.map((i) => i.curve));
   const padding = sizePx * 0.04;
   const t = computeTransform(bounds, sizePx, sizePx, padding);
 
-  // 单色笔大图抽样（每笔最多 ~12k 点）；多色笔必须逐段全量（保证渐变连续）
+  // solid pens: sample large images (~12k points max per pen); gradient pens must be full per-segment (for continuous gradients)
   const decimate = items.map((item) => {
     if (item.pen.colors.length > 1) return 1;
     const { count } = item.curve;
@@ -27,7 +27,7 @@ export function buildSvg(items: RenderItem[], background: string, sizePx = 2048)
   for (const pen of data.pens) {
     const w = (pen.width * widthScale).toFixed(2);
     if (pen.uniformColor !== null) {
-      // 单色：一条连续 path（相邻段共享端点，曲线天然闭合——末点 = 首点）
+      // solid: one continuous path (adjacent segments share endpoints, the curve is naturally closed — last point = first point)
       let d = '';
       for (let i = pen.first; i < pen.first + pen.count; i++) {
         const s = data.segments[i];
@@ -39,7 +39,7 @@ export function buildSvg(items: RenderItem[], background: string, sizePx = 2048)
         `  <path d="${d}" fill="none" stroke="${pen.uniformColor}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`,
       );
     } else {
-      // 渐变：逐段 path（每段独立颜色），圆角 cap 共享顶点重叠，绝对无断裂
+      // gradient: per-segment paths (each with its own color), rounded caps overlap at shared vertices, absolutely gap-free
       for (let i = pen.first; i < pen.first + pen.count; i++) {
         const s = data.segments[i];
         pathEls.push(

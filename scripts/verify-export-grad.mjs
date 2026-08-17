@@ -8,12 +8,12 @@ const browser = await chromium.launch({
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
-// 渐变 + 循环 URL
+// Gradient + loop URL
 const GRAD = 'ring=72&rolling=30&pen=40,e63946,2.5,10,30,1,1d6fa5';
 await page.goto('http://localhost:5273/?' + GRAD, { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
 
-// 在页面里定义像素分析函数
+// Define the pixel analysis function in the page
 async function analyzePixels(src) {
   return page.evaluate(async (url) => {
     const resp = await fetch(url);
@@ -48,13 +48,13 @@ async function analyzePixels(src) {
 
 // 1) /api/image PNG
 const png = await analyzePixels('/api/image?' + GRAD + '&format=png&size=512');
-console.log('1) /api/image PNG: 红', png.red, '蓝', png.blue, png.red > 100 && png.blue > 100 ? '✅ 渐变' : '⚠');
+console.log('1) /api/image PNG: red', png.red, 'blue', png.blue, png.red > 100 && png.blue > 100 ? '✅ gradient' : '⚠');
 
-// 2) /api/image SVG（转 canvas 分析）
+// 2) /api/image SVG (analyze via canvas)
 const svg = await analyzePixels('/api/image?' + GRAD + '&format=svg&size=512');
-console.log('2) /api/image SVG: 红', svg.red, '蓝', svg.blue, svg.red > 100 && svg.blue > 100 ? '✅ 渐变' : '⚠');
+console.log('2) /api/image SVG: red', svg.red, 'blue', svg.blue, svg.red > 100 && svg.blue > 100 ? '✅ gradient' : '⚠');
 
-// 3) UI 导出 PNG（下载文件分析）
+// 3) UI export PNG (analyze the downloaded file)
 await page.evaluate(() => { document.getElementById('img-size').value = '512'; });
 const [pngDl] = await Promise.all([
   page.waitForEvent('download', { timeout: 10000 }),
@@ -62,13 +62,13 @@ const [pngDl] = await Promise.all([
 ]);
 const fs = await import('node:fs');
 const pngPath = await pngDl.path();
-// 用页面 canvas 分析下载的 PNG
+// Analyze the downloaded PNG using the page canvas
 const uiPng = await page.evaluate(async (p) => {
-  const buf = await (await fetch('file://' + p)).arrayBuffer(); // file 协议 fetch 不行
+  const buf = await (await fetch('file://' + p)).arrayBuffer(); // file protocol fetch does not work
   return null;
 }, pngPath);
-console.log('3) UI 导出 PNG 文件大小:', fs.statSync(pngPath).size, 'B（内容分析改用 dataURL 读取）');
-// 用 base64 读入分析
+console.log('3) UI export PNG file size:', fs.statSync(pngPath).size, 'B (content analyzed via dataURL instead)');
+// Read in via base64 and analyze
 const pngB64 = fs.readFileSync(pngPath).toString('base64');
 const uiPngResult = await page.evaluate(async (b64) => {
   const img = new Image();
@@ -88,15 +88,15 @@ const uiPngResult = await page.evaluate(async (b64) => {
   }
   return { red, blue, total };
 }, pngB64);
-console.log('3) UI 导出 PNG: 红', uiPngResult.red, '蓝', uiPngResult.blue, uiPngResult.red > 100 && uiPngResult.blue > 100 ? '✅ 渐变' : '⚠');
+console.log('3) UI export PNG: red', uiPngResult.red, 'blue', uiPngResult.blue, uiPngResult.red > 100 && uiPngResult.blue > 100 ? '✅ gradient' : '⚠');
 
-// 4) UI 导出 SVG（多段 path 颜色）
+// 4) UI export SVG (multiple path colors)
 const [svgDl] = await Promise.all([
   page.waitForEvent('download', { timeout: 10000 }),
   page.click('#export-svg'),
 ]);
 const svgText = fs.readFileSync(await svgDl.path(), 'utf8');
 const strokes = [...svgText.matchAll(/stroke="([^"]*)"/g)].map((m) => m[1]);
-console.log('4) UI 导出 SVG: path 数', strokes.length, '| 去重色', new Set(strokes).size, new Set(strokes).size > 5 ? '✅ 渐变' : '⚠');
-console.log('JS错误:', errors.length ? errors : '无');
+console.log('4) UI export SVG: path count', strokes.length, '| distinct colors', new Set(strokes).size, new Set(strokes).size > 5 ? '✅ gradient' : '⚠');
+console.log('JS errors:', errors.length ? errors : 'none');
 await browser.close();

@@ -1,7 +1,7 @@
 {
   "name": "@spirograph/anim",
   "version": "0.1.0",
-  "description": "万花尺可选动画驱动库：可注入帧调度器（rAF/Node timer）+ 绘制动画 + 帧计划计算，配合 @spirograph/core 使用",
+  "description": "Optional spirograph animation driver library: injectable frame scheduler (rAF/Node timer) + drawing animation + frame-plan computation, used with @spirograph/core",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,

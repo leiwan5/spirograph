@@ -1,16 +1,16 @@
 import type { DrawingMode } from './types.js';
 import { meshPhase } from './math/gear.js';
 
-/** 齿轮位姿：滚动中心方向角 + 滚动齿轮自转角 */
+/** Gear pose: rolling-center direction angle + rolling gear spin angle */
 export interface GearPose {
   centerAngle: number;
   spinAngle: number;
 }
 
 /**
- * 计算滚动齿轮在参数 t 时刻的位姿（纯滚动，曲线坐标单位 = 齿数）。
- * 内切：中心在半径 (R−r) 圆上，自转角 = −(R−r)/r·t + 啮合相位（齿尖对准环齿谷）
- * 外切：中心在半径 (R+r) 圆上，自转角 = (R+r)/r·t + π
+ * Compute the rolling gear's pose at parameter t (pure rolling, curve coordinate unit = teeth).
+ * inside: center on the (R−r) circle, spin = −(R−r)/r·t + mesh phase (tooth tip aligned to the ring valley)
+ * outside: center on the (R+r) circle, spin = (R+r)/r·t + π
  */
 export function computeGearPose(ringTeeth: number, rollingTeeth: number, mode: DrawingMode, t: number): GearPose {
   const k = mode === 'inside' ? (ringTeeth - rollingTeeth) / rollingTeeth : (ringTeeth + rollingTeeth) / rollingTeeth;
@@ -20,7 +20,7 @@ export function computeGearPose(ringTeeth: number, rollingTeeth: number, mode: D
   };
 }
 
-/** 多笔分步进度：总进度 [0,1] → 当前笔索引 + 该笔内进度 [0,1] */
+/** Multi-pen step progress: total progress [0,1] → current pen index + progress within that pen [0,1] */
 export function computeSteps(penCount: number, totalProgress: number): { penIndex: number; penProgress: number } {
   const n = Math.max(1, penCount);
   const seg = 1 / n;
@@ -30,9 +30,9 @@ export function computeSteps(penCount: number, totalProgress: number): { penInde
 }
 
 /**
- * 按曲线长度加权的分步进度（真实速度）：每支笔的完成时间与其曲线段数成正比，
- * 而不是固定总时长下各笔等分时间片（否则笔划少的太慢、笔划多的太快）。
- * counts = 各笔曲线段数（count-1 或 totalSamples）。
+ * Curve-length-weighted step progress (true speed): each pen's completion time is proportional to its curve segment count,
+ * rather than dividing time slices equally among pens under a fixed total duration (otherwise pens with few strokes are too slow and pens with many are too fast).
+ * counts = each pen's curve segment count (count-1 or totalSamples).
  */
 export function weightedSteps(
   counts: number[],

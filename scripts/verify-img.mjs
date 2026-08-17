@@ -1,4 +1,4 @@
-// <img> 引用验证：/api/image 与 /?format= 都能被 img 加载
+// <img> reference validation: both /api/image and /?format= can be loaded via an img element
 import { chromium } from 'playwright-core';
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
 const browser = await chromium.launch({
@@ -25,7 +25,7 @@ const result = await page.evaluate(async () => {
     rootPng: await loadImg(base + '/?' + qs + '&format=png&size=512'),
     apiSvg: await loadImg(base + '/api/image?' + qs + '&format=svg'),
     rootSvg: await loadImg(base + '/?' + qs + '&format=svg'),
-    noFormat: await loadImg(base + '/?' + qs), // 无 format → HTML → 应失败
+    noFormat: await loadImg(base + '/?' + qs), // no format -> HTML -> should fail
   };
 });
 console.log(JSON.stringify(result, null, 1));
@@ -34,7 +34,7 @@ const checks = [
   ['/?format=png', result.rootPng.ok && result.rootPng.w === 512],
   ['/api/image SVG', result.apiSvg.ok],
   ['/?format=svg', result.rootSvg.ok],
-  ['无 format 返回 HTML（img 应失败）', !result.noFormat.ok],
+  ['no format returns HTML (img should fail)', !result.noFormat.ok],
 ];
 for (const [name, ok] of checks) console.log((ok ? '✅' : '❌') + ' ' + name);
 await browser.close();

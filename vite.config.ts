@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import type { Plugin, Connect } from 'vite';
 
-/** 拦截 ?format=png|svg 请求，直接返回图片（可被 <img> 引用、右键保存） */
+/** Intercept ?format=png|svg requests and return the image directly (usable in <img>, saveable via right-click) */
 function spirographImagePlugin(): Plugin {
   return {
     name: 'spirograph-image',
@@ -20,7 +20,7 @@ function imageMiddleware(server: any): Connect.NextHandleFunction {
     const url = new URL(req.url ?? '/', 'http://localhost');
     const format = url.searchParams.get('format');
     const isImagePath = url.pathname === '/api/image';
-    // 支持 /?format=png|svg 与 /api/image?format=png|svg 两种端点
+    // support both /?format=png|svg and /api/image?format=png|svg endpoints
     if ((!isImagePath && format !== 'png' && format !== 'svg') || (isImagePath && format !== 'png' && format !== 'svg')) {
       return next();
     }
@@ -44,7 +44,7 @@ function imageMiddleware(server: any): Connect.NextHandleFunction {
         }
       })
       .catch((err: unknown) => {
-        console.error('[spirograph-image] 生成失败:', err);
+        console.error('[spirograph-image] generation failed:', err);
         res.statusCode = 500;
         res.end('image generation failed');
       });
@@ -53,8 +53,8 @@ function imageMiddleware(server: any): Connect.NextHandleFunction {
 
 export default defineConfig({
   plugins: [spirographImagePlugin()],
-  // base 从环境变量推断，便于 GitHub Pages 子路径部署（如 /spirograph/）。
-  // 本地开发/预览默认相对路径 './'；CI 中通过 BASE_URL 传入仓库名子路径。
+  // base is inferred from the environment variable, for GitHub Pages subpath deploys (e.g. /spirograph/).
+  // Local dev/preview uses the relative path './'; CI passes the repo-name subpath via BASE_URL.
   base: process.env.BASE_URL || './',
   server: { port: 5173, open: false },
   build: { target: 'es2022' },

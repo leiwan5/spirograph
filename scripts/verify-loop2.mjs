@@ -15,7 +15,7 @@ const colors = await page.evaluate(() => {
   let red = 0, blue = 0, purple = 0, total = 0;
   for (let i = 0; i < d.length; i += 16) {
     const r = d[i], g = d[i + 1], b = d[i + 2];
-    if (r > 240 && g > 240 && b > 240) continue; // 背景
+    if (r > 240 && g > 240 && b > 240) continue; // background
     total++;
     if (r > 200 && g < 130 && b < 130) red++;
     else if (b > 200 && r < 100) blue++;
@@ -23,12 +23,12 @@ const colors = await page.evaluate(() => {
   }
   return { red, blue, purple, total };
 });
-console.log('循环渐变(2色,起点20,长度30):');
-console.log('  红色段像素:', colors.red, '| 蓝色段像素:', colors.blue, '| 过渡紫:', colors.purple, '| 非背景总数:', colors.total);
+console.log('loop gradient (2 colors, start 20, length 30):');
+console.log('  red-segment pixels:', colors.red, '| blue-segment pixels:', colors.blue, '| transition purple:', colors.purple, '| non-background total:', colors.total);
 const ok = colors.red > 50 && colors.blue > 50 && colors.purple > 100 && colors.total > 500;
-console.log(ok ? '✅ 循环渐变（红→蓝 多周期）' : '⚠ ' + JSON.stringify(colors));
+console.log(ok ? '✅ loop gradient (red→blue multi-cycle)' : '⚠ ' + JSON.stringify(colors));
 
-// 对比：不循环时（起点20长度30 → 后段 50% 纯蓝）
+// comparison: non-loop (start 20 length 30 -> second half stays pure blue)
 await page.goto('http://localhost:5273/?ring=72&rolling=30&pen=40,e63946,2.5,20,30,1d6fa5', { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
 const colors2 = await page.evaluate(() => {
@@ -43,5 +43,5 @@ const colors2 = await page.evaluate(() => {
   }
   return { blue, total };
 });
-console.log('不循环(起点20长度30): 蓝像素', colors2.blue, '/', colors2.total, colors2.blue > 100 ? '✅ 后段保持纯蓝' : '⚠');
+console.log('non-loop (start 20 length 30): blue pixels', colors2.blue, '/', colors2.total, colors2.blue > 100 ? '✅ second half stays pure blue' : '⚠');
 await browser.close();

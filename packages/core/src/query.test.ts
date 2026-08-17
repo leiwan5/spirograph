@@ -10,12 +10,12 @@ function baseState() {
 }
 
 describe('query serialize/parse', () => {
-  it('序列化包含全部参数', () => {
+  it('serializes all params', () => {
     const qs = serializeState(baseState());
     expect(qs).toContain('ring=72');
     expect(qs).toContain('rolling=30');
     expect(qs).toContain('mode=inside');
-    // 单色笔：hole,width,color
+    // solid pen: hole,width,color
     expect(qs).toContain('pen=40,2.5,e63946');
     expect(qs).toContain('pen=75,2,1d6fa5');
     expect(qs).toContain('bg=ffffff');
@@ -24,7 +24,7 @@ describe('query serialize/parse', () => {
     expect(qs).toContain('gears=0');
   });
 
-  it('解析后与状态一致（往返）', () => {
+  it('parses back to the same state (round trip)', () => {
     const s = {
       ...baseState(),
       background: '#1b1b2f',
@@ -48,7 +48,7 @@ describe('query serialize/parse', () => {
     expect(patch.scaleMode).toBe('fixed');
   });
 
-  it('gears 参数解析', () => {
+  it('parses the gears param', () => {
     expect(parseState('?gears=1').showGears).toBe(true);
     expect(parseState('?gears=true').showGears).toBe(true);
     expect(parseState('?gears=0').showGears).toBe(false);
@@ -57,7 +57,7 @@ describe('query serialize/parse', () => {
     expect(parseState('?').showGears).toBeUndefined();
   });
 
-  it('非法值被忽略', () => {
+  it('ignores invalid values', () => {
     const patch = parseState('?ring=abc&rolling=999&mode=sideways&pen=bad&bg=xyz&speed=99&scale=foo');
     expect(patch.ringTeeth).toBeUndefined();
     expect(patch.rollingTeeth).toBeUndefined();
@@ -68,23 +68,23 @@ describe('query serialize/parse', () => {
     expect(patch.scaleMode).toBeUndefined();
   });
 
-  it('单色解析：hole,width,c1', () => {
+  it('parses a solid pen: hole,width,c1', () => {
     const s = parseState('?pen=40,2.5,e63946');
     expect(s.pens![0]).toEqual({ hole: 40, colors: ['#e63946'], spacing: 20, width: 2.5 });
   });
 
-  it('多色解析：hole,width,spacing,c1[,c2[,c3[,c4]]]', () => {
+  it('parses a multi-color pen: hole,width,spacing,c1[,c2[,c3[,c4]]]', () => {
     const g = parseState('?pen=40,2.5,15,1d6fa5,f4a261');
     expect(g.pens![0]).toEqual({ hole: 40, colors: ['#1d6fa5', '#f4a261'], spacing: 15, width: 2.5 });
-    // 非法 spacing / 颜色 → 整笔忽略
+    // invalid spacing / color → the whole pen is ignored
     expect(parseState('?pen=40,2.5,150,1d6fa5').pens).toBeUndefined();
     expect(parseState('?pen=40,2.5,15,zzzzzz').pens).toBeUndefined();
-    // 4 色（7 段）
+    // 4 colors (7 fields)
     const four = parseState('?pen=40,2.5,10,e63946,1d6fa5,f4a261,2a9d8f');
     expect(four.pens![0].colors).toEqual(['#e63946', '#1d6fa5', '#f4a261', '#2a9d8f']);
   });
 
-  it('多色序列化往返（spacing）', () => {
+  it('multi-color serialization round trip (spacing)', () => {
     const s = { ...baseState(), pens: [{ id: 1, hole: 40, colors: ['#e63946', '#1d6fa5', '#f4a261', '#2a9d8f'], spacing: 10, width: 2.5 }] };
     const qs = serializeState(s);
     expect(qs).toContain('pen=40,2.5,10,e63946,1d6fa5,f4a261,2a9d8f');
@@ -93,44 +93,44 @@ describe('query serialize/parse', () => {
     expect(back.pens![0].spacing).toBe(10);
   });
 
-  it('多笔解析保持顺序', () => {
+  it('preserves order across multiple pens', () => {
     const patch = parseState('?pen=10,1,ff0000&pen=20,2,00ff00&pen=30,3,0000ff');
     expect(patch.pens).toHaveLength(3);
     expect(patch.pens![1]).toEqual({ hole: 20, colors: ['#00ff00'], spacing: 20, width: 2 });
   });
 
-  it('部分参数可单独提供', () => {
+  it('allows providing only some params', () => {
     const patch = parseState('?ring=144&pen=60,1.8,3a86ff');
     expect(patch.ringTeeth).toBe(144);
     expect(patch.rollingTeeth).toBeUndefined();
     expect(patch.pens).toEqual([{ hole: 60, colors: ['#3a86ff'], spacing: 20, width: 1.8 }]);
   });
 
-  it('空 query 返回空补丁', () => {
+  it('empty query returns an empty patch', () => {
     expect(parseState('')).toEqual({});
     expect(parseState('?')).toEqual({});
   });
 
-  it('内置编解码支持重复键与空值', () => {
-    // pen 重复键顺序保留（已在多笔测试覆盖）；无等号键值
+  it('built-in codec supports duplicate keys and empty values', () => {
+    // duplicate pen keys keep order (covered by the multi-pen test); keys without "=" values
     expect(parseState('?foo')).toEqual({});
     expect(parseState('?pen=10,1,ff0000&pen=20,2,00ff00').pens).toHaveLength(2);
   });
 
-  it('URL 编码兼容：+ 号与 %XX', () => {
-    // 颜色 / 数值不含特殊字符，但解析器须容忍编码输入
+  it('is URL-encoding compatible: + sign and %XX', () => {
+    // colors / numbers contain no special chars, but the parser must tolerate encoded input
     const p = parseState('?ring%3D72%26rolling%3D30');
-    expect(Object.keys(p)).toHaveLength(0); // 整体编码的键不会被误解析
+    expect(Object.keys(p)).toHaveLength(0); // fully-encoded keys are not mis-parsed
     const p2 = parseState('?pen=40,2.5,e63946');
     expect(p2.pens).toHaveLength(1);
     expect(p2.pens![0].colors).toEqual(['#e63946']);
   });
 
-  it('间隔段与颜色段无歧义（间隔恒为数字段）', () => {
-    // 6 位纯数字串按颜色解析（如 2a9d8f 合法 hex），间隔必须在颜色组前
-    const g = parseState('?pen=40,2.5,e63946,2a9d8f'); // len=4 → 第二段视为间隔？2a9d8f 不是数字 → 整笔忽略
+  it('the spacing field is unambiguous against colors (spacing is always a numeric field)', () => {
+    // 6-digit all-numeric strings parse as colors (e.g. 2a9d8f is a valid hex); spacing must come before the color group
+    const g = parseState('?pen=40,2.5,e63946,2a9d8f'); // len=4 → is the 2nd segment spacing? 2a9d8f isn't numeric → whole pen ignored
     expect(g.pens).toBeUndefined();
-    const ok = parseState('?pen=40,2.5,10,2a9d8f'); // 显式间隔 10 + 颜色 2a9d8f
+    const ok = parseState('?pen=40,2.5,10,2a9d8f'); // explicit spacing 10 + color 2a9d8f
     expect(ok.pens![0].colors).toEqual(['#2a9d8f']);
   });
 });

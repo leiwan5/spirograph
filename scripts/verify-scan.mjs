@@ -1,4 +1,4 @@
-// 沿半径方向扫描：从 360px 到 400px（齿带区域）逐像素输出颜色
+// Radial scan: output color pixel by pixel from 360px to 400px (tooth band area)
 import { chromium } from 'playwright-core';
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
 const browser = await chromium.launch({
@@ -20,8 +20,8 @@ const scan = await page.evaluate(() => {
     const i = (Math.round(y) * W + Math.round(x)) * 4;
     return [img[i], img[i + 1], img[i + 2]];
   };
-  // 沿 x 轴正方向（角度 0，齿形上可能在齿顶或齿谷）
-  // 角度 0.5*step（齿顶中心）：从 380 到 400
+  // along the positive x-axis (angle 0, may land on a tooth tip or valley)
+  // angle 0.5*step (tooth tip center): from 380 to 400
   const step = Math.PI * 2 / 72;
   const out = [];
   for (const angle of [0.5 * step, 1.0 * step, 0.2 * step]) {
@@ -35,7 +35,7 @@ const scan = await page.evaluate(() => {
   return out;
 });
 for (const s of scan) {
-  console.log('角度 ' + s.angle + ':');
+  console.log('Angle ' + s.angle + ':');
   console.log('  ' + s.row.join(' | '));
 }
 await browser.close();

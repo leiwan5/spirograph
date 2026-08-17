@@ -5,7 +5,7 @@ import { generatePng, generateSvg } from '@spirograph/core';
 export default function handler(req: VercelRequest, res: VercelResponse): void {
   const format = String(req.query.format ?? '');
   if (format !== 'png' && format !== 'svg') {
-    res.status(400).json({ error: 'format 参数必须为 png 或 svg' });
+    res.status(400).json({ error: 'format param must be png or svg' });
     return;
   }
   res.setHeader('Cache-Control', 'public, max-age=3600');
@@ -19,7 +19,7 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
       res.send(Buffer.from(generatePng(String(req.url ?? ''))));
     }
   } catch (err) {
-    console.error('[api/image] 生成失败:', err);
+    console.error('[api/image] generation failed:', err);
     res.status(500).send('image generation failed');
   }
 }

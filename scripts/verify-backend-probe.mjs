@@ -1,4 +1,4 @@
-// 验证后台 API 探测：带后端（vite preview 中间件）→ 显示链接按钮；纯静态 → 隐藏
+// Verify backend API probe: with a backend (vite preview middleware) -> link button shown; pure static -> hidden
 import { chromium } from 'playwright-core';
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
 const browser = await chromium.launch({
@@ -13,20 +13,20 @@ async function check(url, label) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(url, { waitUntil: 'networkidle' });
-  // 等待探测完成（默认 6s 超时，正常场景瞬时完成）
+  // Wait for probe to finish (default 6s timeout; normal scenarios complete instantly)
   await page.waitForTimeout(1200);
   const visible = await page.evaluate(() => {
     const btn = document.querySelector('#copy-image-link');
     return btn ? !btn.hidden && btn.offsetParent !== null : false;
   });
-  console.log(`${label}: 链接按钮${visible ? '✅ 显示' : '❌ 隐藏'}`);
-  console.log(`  JS错误: ${errors.length ? errors : '无'}`);
+  console.log(`${label}: link button ${visible ? '✅ shown' : '❌ hidden'}`);
+  console.log(`  JS errors: ${errors.length ? errors : 'none'}`);
   await context.close();
   return visible;
 }
 
-const withBackend = await check('http://localhost:5273/?ring=96&rolling=63&pen=35,f15bb5,2.5&scale=fixed', '[带后端 vite preview]');
-const noBackend = await check('http://localhost:5274/?ring=96&rolling=63&pen=35,f15bb5,2.5&scale=fixed', '[纯静态 http.server]');
+const withBackend = await check('http://localhost:5273/?ring=96&rolling=63&pen=35,f15bb5,2.5&scale=fixed', '[backend vite preview]');
+const noBackend = await check('http://localhost:5274/?ring=96&rolling=63&pen=35,f15bb5,2.5&scale=fixed', '[pure static http.server]');
 
 await browser.close();
-console.log('\n结果:', withBackend && !noBackend ? '✅ 全部符合预期' : '⚠ 与预期不符');
+console.log('\nresult:', withBackend && !noBackend ? '✅ all as expected' : '⚠ does not match expectation');

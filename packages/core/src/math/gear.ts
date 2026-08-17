@@ -1,4 +1,4 @@
-/** 最大公约数 */
+/** Greatest common divisor */
 export function gcd(a: number, b: number): number {
   a = Math.abs(Math.round(a));
   b = Math.abs(Math.round(b));
@@ -10,15 +10,15 @@ export function gcd(a: number, b: number): number {
   return a;
 }
 
-/** 化简齿数比，返回 p:q = ringTeeth/gcd : rollingTeeth/gcd */
+/** Reduce the teeth ratio, returning p:q = ringTeeth/gcd : rollingTeeth/gcd */
 export function reduceRatio(ringTeeth: number, rollingTeeth: number): { p: number; q: number } {
   const g = gcd(ringTeeth, rollingTeeth);
   return { p: ringTeeth / g, q: rollingTeeth / g };
 }
 
 /**
- * 花瓣数：
- * 内切 (R−r)/gcd = p−q；外切 (R+r)/gcd = p+q
+ * Petal count:
+ * inside (R−r)/gcd = p−q; outside (R+r)/gcd = p+q
  */
 export function petals(ringTeeth: number, rollingTeeth: number, mode: 'inside' | 'outside'): number {
   const { p, q } = reduceRatio(ringTeeth, rollingTeeth);
@@ -26,11 +26,11 @@ export function petals(ringTeeth: number, rollingTeeth: number, mode: 'inside' |
 }
 
 /**
- * 内切啮合初始相位：使 t=0 时滚动齿轮齿尖对准最近的环形齿轮齿谷中心。
- * 滚动中心在 (R−r, 0)，齿尖相对滚动中心方向 θ = spin + 0.5·stepRoll。
- * 齿尖的极角（环中心为原点）须等于谷中心方向 φ = (j+1)·stepRing：
- *   sin(θ − φ) = sin(φ)·(R−r)/(r+toothDepth)   （滚动中心偏心修正）
- * 对相邻几个谷中心取使 |spin| 最小的解。外切（环外无齿）不需要偏移。
+ * Inside-mesh initial phase: makes the rolling gear tooth tip point at the nearest ring gear valley center when t=0.
+ * Rolling center at (R−r, 0), tooth tip direction relative to the rolling center θ = spin + 0.5·stepRoll.
+ * The tooth tip's polar angle (ring center as origin) must equal the valley center direction φ = (j+1)·stepRing:
+ *   sin(θ − φ) = sin(φ)·(R−r)/(r+toothDepth)   (rolling-center eccentricity correction)
+ * Take the adjacent valley centers and pick the solution that minimizes |spin|. Outside (no outer teeth) needs no offset.
  */
 export function meshPhase(ringTeeth: number, rollingTeeth: number, toothDepth = 0.2): number {
   const stepRing = (Math.PI * 2) / ringTeeth;
@@ -57,12 +57,12 @@ export function meshPhase(ringTeeth: number, rollingTeeth: number, toothDepth = 
   return best;
 }
 
-/** 校验组合合法性：内切时滚动齿轮齿数必须小于环形齿轮 */
+/** Validate a combination: in inside mode the rolling teeth must be fewer than the ring teeth */
 export function validateGears(ringTeeth: number, rollingTeeth: number, mode: 'inside' | 'outside'): string | null {
-  if (!Number.isInteger(ringTeeth) || ringTeeth < 2) return '环形齿轮齿数必须是不小于 2 的整数';
-  if (!Number.isInteger(rollingTeeth) || rollingTeeth < 1) return '滚动齿轮齿数必须是不小于 1 的整数';
+  if (!Number.isInteger(ringTeeth) || ringTeeth < 2) return 'ring teeth must be an integer of at least 2';
+  if (!Number.isInteger(rollingTeeth) || rollingTeeth < 1) return 'rolling teeth must be an integer of at least 1';
   if (mode === 'inside' && rollingTeeth >= ringTeeth) {
-    return '内切模式下滚动齿轮齿数必须小于环形齿轮';
+    return 'in inside mode the rolling teeth must be less than the ring teeth';
   }
   return null;
 }

@@ -2,9 +2,9 @@ import type { FrameScheduler } from './scheduler.js';
 import { autoScheduler } from './scheduler.js';
 
 /**
- * 模拟绘制动画：按进度比例回调渲染，支持速度倍率、暂停/恢复、中断清理。
- * 采用单调时间驱动，暂停时记录已消耗时间，恢复后续算。
- * 调度器可注入（浏览器 rAF / Node timer / RN rAF），默认 autoScheduler。
+ * Simulated drawing animation: calls back rendering by progress ratio, supports speed multiplier, pause/resume, and interrupt cleanup.
+ * Driven by monotonic time; on pause it records elapsed time and recomputes on resume.
+ * The scheduler is injectable (browser rAF / Node timer / RN rAF), defaulting to autoScheduler.
  */
 export class DrawAnimation {
   private rafId = 0;
@@ -76,8 +76,8 @@ export class DrawAnimation {
     try {
       this.tick(progress);
     } catch (err) {
-      // 渲染异常：停止动画并回退静态图，错误可见便于诊断
-      console.error('[Spirograph] 动画渲染异常，已停止：', err);
+      // render error: stop the animation and fall back to the static image, keep the error visible for diagnosis
+      console.error('[Spirograph] animation render error, stopped:', err);
       this.stop();
       this.onDone();
       return;

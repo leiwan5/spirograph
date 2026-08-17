@@ -1,4 +1,4 @@
-// B 场景：笔一变动像素的 after 颜色构成（覆盖 vs 移动）
+// Case B: after-color composition of pen one's changed pixels (cover vs move)
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -33,7 +33,7 @@ const after = await page.evaluate(() => {
 
 const isRedCore = (r, g, b) => Math.abs(r - 230) <= 3 && Math.abs(g - 57) <= 3 && Math.abs(b - 70) <= 3;
 const isBlueCore = (r, g, b) => Math.abs(r - 29) <= 3 && Math.abs(g - 111) <= 3 && Math.abs(b - 165) <= 3;
-const isBlueish = (r, g, b) => b > 100 && b - r > 40; // 偏蓝（覆盖或混色）
+const isBlueish = (r, g, b) => b > 100 && b - r > 40; // bluish (covered or blended)
 const isWhiteish = (r, g, b) => r > 230 && g > 230 && b > 230;
 
 const colors = new Map();
@@ -51,12 +51,12 @@ for (let i = 0; i < before.length; i += 4) {
   else if (isWhiteish(r2, g2, b2)) becameWhite++;
   else becameOther++;
 }
-console.log('笔一变动核心像素总数:', total);
-console.log('→ 变成蓝色系（被笔二覆盖）:', becameBlue);
-console.log('→ 变成白色系（笔一消失?）:', becameWhite);
-console.log('→ 其他颜色:', becameOther);
-console.log('颜色Top5:', [...colors.entries()].sort((x, y) => y[1] - x[1]).slice(0, 5));
-console.log('判定:', becameOther === 0
-  ? '✅ 全部变动都是"被笔二蓝覆盖"——笔一没有移动，只是被盖住了（物理叠印）'
-  : '⚠ 存在其他颜色变动');
+console.log('total pen one changed core pixels:', total);
+console.log('-> turned blue (covered by pen two):', becameBlue);
+console.log('-> turned white (pen one disappeared?):', becameWhite);
+console.log('-> other colors:', becameOther);
+console.log('color Top5:', [...colors.entries()].sort((x, y) => y[1] - x[1]).slice(0, 5));
+console.log('verdict:', becameOther === 0
+  ? '✅ all changes are "covered by pen two blue" - pen one did not move, it was merely covered (physical overprint)'
+  : '⚠ there are other color changes');
 await browser.close();

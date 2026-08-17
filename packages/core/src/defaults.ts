@@ -1,6 +1,6 @@
 import type { AppState } from './types.js';
 
-/** 默认状态：query 解析、图片端点、CLI 的缺省回退值（与 web 应用初始状态一致） */
+/** Default state: fallback values for query parsing, image endpoint, and CLI (matching the web app's initial state) */
 export const DEFAULT_STATE: AppState = {
   mode: 'inside',
   ringTeeth: 72,

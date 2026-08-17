@@ -31,8 +31,8 @@ try {
   });
   const reddish = (p) => p[0] > 140 && p[0] - p[2] > 40;
   const bad = r.filter((t) => !reddish(t.color));
-  console.log('采样点:', r.length, '| 非红色点:', bad.length ? JSON.stringify(bad) : '无');
-  console.log('判定:', bad.length === 0 ? '✅ 红线从滚动中心连续延伸到笔尖' : '⚠');
+  console.log('samples:', r.length, '| non-red points:', bad.length ? JSON.stringify(bad) : 'none');
+  console.log('result:', bad.length === 0 ? '✅ red line extends continuously from the rolling center to the pen tip' : '⚠');
 } catch (e) {
   console.log('ERROR:', e.message);
 }

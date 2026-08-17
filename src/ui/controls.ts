@@ -6,7 +6,7 @@ import { COMBO_PRESETS, RING_PRESETS, ROLLING_PRESETS } from './presets';
 import { getLang, setLang, t, subscribeLang, type Lang, type I18nKey } from './i18n';
 import { copyImageLinkUrl, probeImageApi } from './backend';
 
-/** 渐变附加色的默认取色（取色相轮上与当前色差异大的颜色） */
+/** Default color for an additional gradient color (picks one far from the current color on the color wheel) */
 function nextGradientColor(base: string): string {
   const palette = [
     '#e63946', '#1d6fa5', '#f4a261', '#2a9d8f', '#9b5de5',
@@ -32,9 +32,9 @@ export interface PanelApi {
   onExportSvg(cb: (size: number) => void): void;
 }
 
-/** 构建顶部工具栏 + 左侧控件面板 + 右侧画布容器，返回面板 API */
+/** Build the top toolbar + left control panel + right canvas container, returning the panel API */
 export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelApi {
-  // ---- 顶部水平工具栏（显示/动画/导出等与图形参数无关的功能）----
+  // ---- top horizontal toolbar (display/animation/export and other non-graphic-parameter functions) ----
   const toolbarEl = document.createElement('header');
   toolbarEl.className = 'toolbar';
   toolbarEl.innerHTML = `
@@ -62,7 +62,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     </div>
   `;
 
-  // ---- 左侧面板（仅图形参数）----
+  // ---- left panel (graphic parameters only) ----
   const panelEl = document.createElement('aside');
   panelEl.className = 'panel';
   panelEl.innerHTML = `
@@ -107,7 +107,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   stage.className = 'stage';
   stage.appendChild(canvas);
 
-  // ---- 画布右下角浮动工具栏（常驻：播放 + 显示齿轮；播放中展开暂停/停止/速度）----
+  // ---- floating toolbar at the canvas bottom-right (always visible: play + show gears; expands play/pause/stop/speed while playing) ----
   const animFloat = document.createElement('div');
   animFloat.className = 'anim-float';
   animFloat.innerHTML = `
@@ -132,7 +132,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   root.appendChild(toolbarEl);
   root.appendChild(workspace);
 
-  // ---- 设置 modal（画布相关设置：背景色 / 显示齿轮 / 图片尺寸）----
+  // ---- settings modal (canvas-related settings: background color / show gears / image size) ----
   const settingsModal = document.createElement('div');
   settingsModal.className = 'settings-modal';
   settingsModal.hidden = true;
@@ -172,7 +172,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   `;
   root.appendChild(settingsModal);
 
-  // ---- 元素引用 ----
+  // ---- element references ----
   const $panel = <T extends HTMLElement>(id: string): T => panelEl.querySelector('#' + id) as T;
   const $toolbar = <T extends HTMLElement>(id: string): T => toolbarEl.querySelector('#' + id) as T;
   const ringSlider = $panel<HTMLInputElement>('ring');
@@ -194,13 +194,13 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   const infoTurns = $panel('info-turns');
   const infoSamplesRow = $panel('info-samples-row');
   const langSeg = $toolbar<HTMLElement>('lang-seg');
-  // 设置 modal
+  // settings modal
   const $modal = <T extends HTMLElement>(id: string): T => settingsModal.querySelector('#' + id) as T;
   const bgColor = $modal<HTMLInputElement>('bg');
   const gearsCheck = $modal<HTMLInputElement>('show-gears');
   const imgSizeSelect = $modal<HTMLSelectElement>('img-size');
   const settingsCloseBtn = $modal<HTMLButtonElement>('settings-close');
-  // 浮动工具栏（常驻）
+  // floating toolbar (always visible)
   const floatPlayBtn = animFloat.querySelector<HTMLButtonElement>('#float-play')!;
   const floatStopBtn = animFloat.querySelector<HTMLButtonElement>('#float-stop')!;
   const speedDownBtn = animFloat.querySelector<HTMLButtonElement>('#speed-down')!;
@@ -209,7 +209,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   const floatGearsBtn = animFloat.querySelector<HTMLButtonElement>('#float-gears')!;
   const floatModeBtns = Array.from(animFloat.querySelectorAll<HTMLButtonElement>('#float-mode button'));
 
-  // ---- 回调（由 main 注入）----
+  // ---- callbacks (injected by main) ----
   let onPlay: () => void = () => {};
   let onStop: () => void = () => {};
   let onPlayModeChange: (mode: 'simultaneous' | 'sequential') => void = () => {}
@@ -217,7 +217,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   let onPng: (size: number) => void = () => {};
   let onSvg: (size: number) => void = () => {};
 
-  // ---- 快捷 chips ----
+  // ---- quick chips ----
   const ringChips: HTMLButtonElement[] = [];
   for (const v of RING_PRESETS) {
     const b = document.createElement('button');
@@ -237,7 +237,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     rollingChips.push(b);
   }
 
-  // 预设组合
+  // preset combinations
   const presetChips: HTMLButtonElement[] = [];
   function renderPresetChips(): void {
     presetChipsEl.innerHTML = '';
@@ -246,7 +246,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       const b = document.createElement('button');
       b.className = 'chip';
       b.addEventListener('click', () => {
-        activePenIndex = 0; // 整体替换 → 焦点回第一个
+        activePenIndex = 0; // full replace → focus back to the first pen
         setPens(p.pens.map((pp) => ({ hole: pp.hole, colors: [...pp.colors], spacing: 20, width: pp.width })));
         setState({ mode: p.mode, ringTeeth: p.ring, rollingTeeth: p.rolling });
       });
@@ -264,7 +264,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     });
   }
 
-  // ---- 齿轮变更处理 ----
+  // ---- gear change handling ----
   function handleRing(v: number): void {
     const s = getState();
     if (s.mode === 'inside' && s.rollingTeeth >= v) {
@@ -285,7 +285,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   ringSlider.addEventListener('input', () => handleRing(Math.round(+ringSlider.value)));
   rollingSlider.addEventListener('input', () => handleRolling(Math.round(+rollingSlider.value)));
 
-  // ---- 模式切换 ----
+  // ---- mode switch ----
   const segButtons = panelEl.querySelectorAll<HTMLButtonElement>('#mode-seg button');
   segButtons.forEach((b) => {
     b.addEventListener('click', () => {
@@ -299,7 +299,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     });
   });
 
-  // ---- 缩放模式 ----
+  // ---- scale mode ----
   const scaleButtons = settingsModal.querySelectorAll<HTMLButtonElement>('#scale-seg button');
   scaleButtons.forEach((b) => {
     b.addEventListener('click', () => {
@@ -307,31 +307,31 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     });
   });
 
-  // ---- 语言切换 ----
+  // ---- language switch ----
   langSeg.querySelectorAll<HTMLButtonElement>('button').forEach((b) => {
     b.addEventListener('click', () => setLang(b.dataset.lang as Lang));
   });
 
-  // ---- 背景色 / 速度 / 显示齿轮 ----
+  // ---- background color / speed / show gears ----
   bgColor.addEventListener('input', () => setState({ background: bgColor.value }));
   gearsCheck.addEventListener('change', () => setState({ showGears: gearsCheck.checked }));
 
-  // ---- 笔列表 ----
-  // 笔的 id 集合（结构指纹）：setPens/预设/随机/URL 整体替换时重建卡片，
-  // 单纯值变化（拖动滑块）不重建，保证拖动流畅
+  // ---- pen list ----
+  // The pen id set (structural fingerprint): reconstruct cards on setPens/preset/random/URL full replaces,
+  // do not rebuild on plain value changes (slider drags), to keep dragging smooth
   let lastPenIds = '';
   let activePenIndex = 0;
 
-  /** 渲染笔标签页 + 当前笔卡片（tab view） */
+  /** Render the pen tabs + current pen card (tab view) */
   function renderPens(): void {
     const s = getState();
     const pens = s.pens;
     if (pens.length === 0) return;
-    // 焦点越界（如删除）时回退
+    // fall back when focus is out of range (e.g. after delete)
     if (activePenIndex >= pens.length) activePenIndex = pens.length - 1;
     if (activePenIndex < 0) activePenIndex = 0;
 
-    // ---- 标签行：各笔 + 添加 ----
+    // ---- tab row: each pen + add ----
     pensTabsEl.innerHTML = '';
     pens.forEach((pen, idx) => {
       const tab = document.createElement('button');
@@ -345,18 +345,18 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       });
       pensTabsEl.appendChild(tab);
     });
-    // 添加笔标签
+    // add pen tab
     const addTab = document.createElement('button');
     addTab.className = 'pen-tab pen-tab-add';
     addTab.innerHTML = '<i class="fa-solid fa-plus"></i>';
     addTab.title = t('addPenTitle');
     addTab.addEventListener('click', () => {
-      activePenIndex = getState().pens.length; // 新笔追加在末尾
+      activePenIndex = getState().pens.length; // the new pen is appended at the end
       addPen();
     });
     pensTabsEl.appendChild(addTab);
 
-    // ---- 当前笔卡片 ----
+    // ---- current pen card ----
     pensEl.innerHTML = '';
     pensEl.appendChild(buildPenCard(pens[activePenIndex], activePenIndex + 1));
   }
@@ -399,7 +399,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       widthVal.textContent = widthSlider.value;
     });
 
-    // ---- 颜色列表（1 个 = 单色；≥ 2 个 = 渐变）----
+    // ---- color list (1 = solid; ≥ 2 = gradient) ----
     const gradAdd = card.querySelector<HTMLButtonElement>('.pen-grad-add')!;
     const gradOpts = card.querySelector<HTMLElement>('.pen-grad-opts')!;
     const gradSpacing = card.querySelector<HTMLInputElement>('.pen-grad-spacing')!;
@@ -410,7 +410,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       return getState().pens.find((p) => p.id === pen.id)?.colors ?? pen.colors;
     }
 
-    /** 渲染颜色槽列表（1-4 个颜色）：≥2 个才显示删除与间隔 */
+    /** Render the color slot list (1-4 colors): delete and spacing only show for ≥2 */
     function renderColors(): void {
       const cs = currentColors();
       gradOpts.classList.toggle('show', cs.length > 1);
@@ -426,7 +426,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
         swatch.title = t('gradSlotTitle', { n: idx + 1 });
         swatch.addEventListener('input', () => {
           setPen(pen.id, { colors: currentColors().map((x, i) => (i === idx ? swatch.value : x)) });
-          // 首色 → 更新笔头圆点
+          // first color → update the pen head dot
           if (idx === 0) dot.style.background = swatch.value;
         });
         const del = document.createElement('button');
@@ -434,7 +434,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
         del.innerHTML = '<i class="fa-solid fa-xmark"></i>';
         del.style.display = cs.length <= 1 ? 'none' : 'inline-block';
         del.addEventListener('click', () => {
-          // 删除后至少保留 1 个颜色（少于 2 个即回到单色）
+          // keep at least 1 color after delete (fewer than 2 returns to solid)
           setPen(pen.id, { colors: currentColors().filter((_, i) => i !== idx) });
           renderColors();
         });
@@ -465,12 +465,12 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     return card;
   }
 
-  // ---- 浮动工具栏（常驻）----
-  // 播放/暂停：进入播放时额外展开 停止 + 速度组
+  // ---- floating toolbar (always visible) ----
+  // play/pause: expanding the stop + speed group when entering play
   floatPlayBtn.addEventListener('click', () => onPlay());
-  // 停止（方块 fa-stop）
+  // stop (square fa-stop)
   floatStopBtn.addEventListener('click', () => onStop());
-  // 速度 −/+：整数步进（步长 1，范围 1-10）
+  // speed −/+: integer steps (step 1, range 1-10)
   function nudgeSpeed(delta: number): void {
     const s = getState();
     const next = Math.min(10, Math.max(1, Math.round(s.speed) + delta));
@@ -478,7 +478,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   }
   speedDownBtn.addEventListener('click', () => nudgeSpeed(-1));
   speedUpBtn.addEventListener('click', () => nudgeSpeed(1));
-  // 播放模式切换（多笔同时 / 单笔一次）→ 主逻辑
+  // play mode switch (all together / one at a time) → main logic
   floatModeBtns.forEach((b) => {
     b.addEventListener('click', () => {
       const mode = b.dataset.mode as 'simultaneous' | 'sequential';
@@ -486,7 +486,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       onPlayModeChange(mode);
     });
   });
-  // 显示齿轮（带 toggle state 的按钮）
+  // show gears (button with toggle state)
   function setGearsOn(on: boolean): void {
     floatGearsBtn.classList.toggle('active', on);
     floatGearsBtn.setAttribute('aria-pressed', String(on));
@@ -496,7 +496,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     setState({ showGears: next });
     setGearsOn(next);
   });
-  // 播放状态变化 → 展开/收起 停止 + 速度组
+  // play state change → expand/collapse stop + speed group
   function syncFloatBar(playing: boolean): void {
     const show = playing;
     floatStopBtn.hidden = !show;
@@ -505,7 +505,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     speedUpBtn.hidden = !show;
   }
 
-  // ---- 设置 modal：打开/关闭 ----
+  // ---- settings modal: open/close ----
   function openSettings(): void {
     settingsModal.hidden = false;
     settingsBtn.classList.add('active');
@@ -516,29 +516,29 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   }
   settingsBtn.addEventListener('click', () => (settingsModal.hidden ? openSettings() : closeSettings()));
   settingsCloseBtn.addEventListener('click', closeSettings);
-  // 点遮罩（modal 本体）关闭
+  // click on the overlay (the modal body) closes it
   settingsModal.addEventListener('click', (e) => {
     if (e.target === settingsModal) closeSettings();
   });
-  // Esc 关闭
+  // Esc closes
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !settingsModal.hidden) closeSettings();
   });
 
   randomBtn.addEventListener('click', () => {
-    activePenIndex = 0; // 随机整体替换 → 焦点回第一个
+    activePenIndex = 0; // random full replace → focus back to the first pen
     onRandom();
   });
   exportPngBtn.addEventListener('click', () => onPng(Number(imgSizeSelect.value)));
   exportSvgBtn.addEventListener('click', () => onSvg(Number(imgSizeSelect.value)));
 
-  // 复制当前参数的图片链接（/api/image?...&format=png）
+  // copy the image link for the current params (/api/image?...&format=png)
   copyLinkBtn.addEventListener('click', async () => {
     const url = copyImageLinkUrl(serializeState(getState()), Number(imgSizeSelect.value));
     try {
       await navigator.clipboard.writeText(url);
     } catch {
-      // 降级方案：临时 textarea + execCommand
+      // fallback: temp textarea + execCommand
       const ta = document.createElement('textarea');
       ta.value = url;
       ta.style.position = 'fixed';
@@ -554,12 +554,12 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     }, 1600);
   });
 
-  // 探测后台图片端点：不可用（如 GitHub Pages 纯静态）→ 保持隐藏
+  // probe the backend image endpoint: when unavailable (e.g. GitHub Pages pure static) → keep hidden
   probeImageApi().then((ok) => {
     if (ok) copyLinkBtn.hidden = false;
   });
 
-  // ---- 信息区（可变部分）----
+  // ---- info area (variable part) ----
   let lastInfo: { n: number; reduced: boolean } | null = null;
   function renderInfoSamples(): void {
     infoSamplesRow.innerHTML = lastInfo
@@ -569,7 +569,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
       : '–';
   }
 
-  // ---- 同步控件到状态（状态变化时调用）----
+  // ---- sync controls to state (called on state change) ----
   function syncControls(): void {
     const s = getState();
     ringSlider.value = String(s.ringTeeth);
@@ -588,7 +588,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     ringChips.forEach((b) => b.classList.toggle('active', +b.textContent! === s.ringTeeth));
     rollingChips.forEach((b) => b.classList.toggle('active', +b.textContent! === s.rollingTeeth));
 
-    // pens 结构变化（预设/随机/URL/增删笔）→ 重建笔卡片
+    // pens structural change (preset/random/URL/add/remove) → rebuild pen cards
     const penIds = s.pens.map((p) => p.id).join(',');
     if (penIds !== lastPenIds) {
       lastPenIds = penIds;
@@ -610,10 +610,10 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     renderInfoSamples();
   }
 
-  // ---- 语言本地化（不重建面板；笔卡片重建以保证新文案） ----
+  // ---- language localization (does not rebuild the panel; pen cards rebuild to ensure new copy) ----
   let playState: { playing: boolean; paused: boolean } = { playing: false, paused: false };
   function localize(): void {
-    // 静态文案（工具栏 + 面板 + 浮动工具栏 + 设置 modal）
+    // static copy (toolbar + panel + floating toolbar + settings modal)
     [toolbarEl, panelEl, animFloat, settingsModal].forEach((scope) => {
       scope.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
         const key = el.dataset.i18n as I18nKey | undefined;
@@ -624,29 +624,29 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
         if (key) el.title = t(key);
       });
     });
-    // 语言按钮高亮
+    // language button highlight
     langSeg.querySelectorAll<HTMLButtonElement>('button').forEach((b) => {
       b.classList.toggle('active', b.dataset.lang === getLang());
     });
-    // 预设 chips（文案 + title）
+    // preset chips (copy + title)
     localizePresetChips();
-    // 笔卡片（含文案）重建
+    // pen cards (with copy) rebuild
     const s = getState();
     if (s.pens.length > 0) renderPens();
-    // 播放按钮状态保持
+    // keep the play button state
     setPlayingUI(playState.playing, playState.paused);
-    // 复制链接按钮图标复位（FA）
+    // copy link button icon reset (FA)
     copyLinkBtn.innerHTML = '<i class="fa-solid fa-link"></i>';
-    // 信息区
+    // info area
     renderInfoSamples();
-    // 文档标题
+    // document title
     document.title = 'Spirograph ' + t('appTitleSub');
   }
   function setPlayingUI(playing: boolean, paused = false): void {
     playState = { playing, paused };
-    // 播放状态 → 停止/速度组显隐
+    // play state → show/hide stop/speed group
     syncFloatBar(playing);
-    // 浮动工具栏播放按钮（Font Awesome 图标）
+    // floating toolbar play button (Font Awesome icon)
     floatPlayBtn.innerHTML = !playing || paused
       ? '<i class="fa-solid fa-play"></i>'
       : '<i class="fa-solid fa-pause"></i>';
@@ -657,8 +657,8 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
   subscribe(syncControls);
   subscribeLang(localize);
   renderPresetChips();
-  syncControls(); // 首次同步会重建笔卡片（lastPenIds 为空）
-  localize(); // 应用当前语言（默认英文）
+  syncControls(); // first sync rebuilds pen cards (lastPenIds is empty)
+  localize(); // apply current language (default English)
 
   return {
     setPlayingUI,

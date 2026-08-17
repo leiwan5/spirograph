@@ -1,6 +1,6 @@
-// 复现：72×30，笔一 hole=39，笔二 hole=79
-// 场景A(auto)：变动笔一 → 笔二是否变？  场景B(auto)：变动笔二 → 笔一是否变？
-// 场景C(fixed)：变动笔二 → 笔一是否变？
+// Reproduce: 72×30, pen one hole=39, pen two hole=79
+// Scenario A (auto): change pen one -> does pen two change?  Scenario B (auto): change pen two -> does pen one change?
+// Scenario C (fixed): change pen two -> does pen one change?
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -13,7 +13,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 await page.goto('http://localhost:5273/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
 
-// 设置齿轮 72+30，笔一 hole=39，笔二 hole=79
+// Set gears 72+30, pen one hole=39, pen two hole=79
 await page.evaluate(() => {
   const pens = document.querySelectorAll('.pen-card');
   const h1 = pens[0].querySelector('.pen-hole');
@@ -54,24 +54,24 @@ async function measure(label, setup, change) {
   for (let i = 0; i < before.length; i += 4) {
     if (before[i] !== after[i] || before[i + 1] !== after[i + 1] || before[i + 2] !== after[i + 2]) diff++;
   }
-  console.log(label + ': 差异像素 =', diff);
+  console.log(label + ': diff pixels =', diff);
   return diff;
 }
 
-// A. auto 模式：笔一 39 → 20
+// A. auto mode: pen one 39 -> 20
 await setScaleMode('auto');
-await measure('A [auto] 变动笔一(39→20)，全图差异',
+await measure('A [auto] change pen one (39->20), full-image diff',
   async () => { await setHole(0, 39); await setHole(1, 79); },
   async () => { await setHole(0, 20); });
 
-// B. auto 模式：笔二 79 → 40
-await measure('B [auto] 变动笔二(79→40)，全图差异',
+// B. auto mode: pen two 79 -> 40
+await measure('B [auto] change pen two (79->40), full-image diff',
   async () => { await setHole(0, 39); await setHole(1, 79); },
   async () => { await setHole(1, 40); });
 
-// C. fixed 模式：笔二 79 → 40
+// C. fixed mode: pen two 79 -> 40
 await setScaleMode('fixed');
-await measure('C [fixed] 变动笔二(79→40)，全图差异',
+await measure('C [fixed] change pen two (79->40), full-image diff',
   async () => { await setHole(0, 39); await setHole(1, 79); },
   async () => { await setHole(1, 40); });
 

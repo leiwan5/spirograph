@@ -1,4 +1,4 @@
-// 齿形可见度统计 + 截图保存
+// tooth visibility stats + screenshot save
 import { chromium } from 'playwright-core';
 import { writeFileSync } from 'node:fs';
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -11,7 +11,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 await page.goto('http://localhost:5273/?ring=72&rolling=30&pen=40,e63946,2.5&pen=75,1d6fa5,2&scale=fixed&gears=1', { waitUntil: 'networkidle' });
 await page.waitForTimeout(700);
 
-// 环带区域（距中心 385-400px）深色像素（齿形描边）统计
+// count dark pixels (tooth outlines) in the ring band (385-400px from center)
 const stats = await page.evaluate(() => {
   const c = document.getElementById('canvas');
   const ctx = c.getContext('2d');
@@ -23,21 +23,21 @@ const stats = await page.evaluate(() => {
     return [img[i], img[i + 1], img[i + 2]];
   };
   let toothDark = 0, bandFilled = 0;
-  // 只采样 60°-300°（避开滚动齿轮遮挡）
+  // only sample 60°-300° (avoiding the rolling gear obstruction)
   for (let deg = 60; deg < 300; deg += 1) {
     const a = (deg * Math.PI) / 180;
     for (let rad = 386; rad <= 395; rad += 1) {
       const p = px(cx + rad * Math.cos(a), cy + rad * Math.sin(a));
-      if (p[0] < 205) toothDark++;          // 齿形深色描边
-      else if (p[0] < 250) bandFilled++;    // 环带淡色填充
+      if (p[0] < 205) toothDark++;          // tooth dark outline
+      else if (p[0] < 250) bandFilled++;    // ring band light fill
     }
   }
   return { toothDark, bandFilled };
 });
-console.log('环带深色(齿形)像素:', stats.toothDark, '| 环带淡色填充像素:', stats.bandFilled,
-  stats.toothDark > 3000 ? '✅ 齿形清晰可见' : '⚠ 齿形不明显');
+console.log('ring band dark (tooth) pixels:', stats.toothDark, '| ring band light fill pixels:', stats.bandFilled,
+  stats.toothDark > 3000 ? '✅ teeth clearly visible' : '⚠ teeth not visible');
 
 const shot = await page.locator('#canvas').screenshot();
 writeFileSync('scripts/shot-gears-fixed.png', shot);
-console.log('截图已保存 scripts/shot-gears-fixed.png（可自行打开查看）');
+console.log('screenshot saved to scripts/shot-gears-fixed.png (open it to view)');
 await browser.close();

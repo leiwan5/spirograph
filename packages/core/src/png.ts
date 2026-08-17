@@ -6,9 +6,9 @@ import { buildRenderData, type BuildRenderDataOptions } from './segments.js';
 import type { Transform } from './types.js';
 
 /**
- * 光栅化：图案 + 背景 → RGBA 像素（抗锯齿画线）。
- * 颜色同源（buildRenderData 逐段取色），与 Canvas/SVG 一致。
- * scaleMode='fixed' 时用环固定包围盒（与前端缩放一致）。
+ * Rasterize: pattern + background → RGBA pixels (anti-aliased line drawing).
+ * Colors share the same source (buildRenderData per-segment), consistent with Canvas/SVG.
+ * With scaleMode='fixed' the fixed-ring bounding box is used (matching the frontend scale).
  */
 export function rasterize(
   items: RenderItem[],
@@ -44,7 +44,7 @@ export function rasterize(
   return rgba;
 }
 
-/** 抗锯齿画线：像素中心到线段距离决定覆盖度（1px 渐变边缘） */
+/** Anti-aliased line drawing: the distance from the pixel center to the segment determines coverage (1px gradient edge) */
 function plotLine(
   data: Uint8Array,
   size: number,
@@ -85,10 +85,10 @@ function plotLine(
   }
 }
 
-// ==================== PNG 编码（pako deflate，纯 JS，无全局编码器依赖） ====================
+// ==================== PNG encoding (pako deflate, pure JS, no global encoder dependency) ====================
 const PNG_SIGNATURE = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
 
-/** PNG chunk type 恒为 ASCII，手写字节避免依赖全局编码 API（Hermes/老 RN 无此全局） */
+/** PNG chunk types are always ASCII; hand-write the bytes to avoid depending on a global encoding API (Hermes/old RN lack it) */
 function asciiBytes(s: string): Uint8Array {
   const out = new Uint8Array(s.length);
   for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
@@ -133,7 +133,7 @@ function pngChunk(type: string, data: Uint8Array): Uint8Array {
   return out;
 }
 
-/** RGBA 像素 → PNG 文件字节（filter=0 每行，deflate level 6） */
+/** RGBA pixels → PNG file bytes (filter=0 per row, deflate level 6) */
 export function encodePng(width: number, height: number, rgba: Uint8Array): Uint8Array {
   const stride = width * 4 + 1;
   const raw = new Uint8Array(stride * height);

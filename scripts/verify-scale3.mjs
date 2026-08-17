@@ -1,4 +1,4 @@
-// 对照实验：不改参数重绘 vs 改笔一孔洞
+// control experiment: redraw with no parameter change vs changing pen-1's hole
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -38,16 +38,16 @@ const result = await page.evaluate(async () => {
     return { n, box: n ? [minX, minY, maxX, maxY] : null };
   }
 
-  // 实验1：不改参数，触发 no-op 重绘（dispatch 相同值）
+  // Experiment 1: no parameter change, trigger a no-op redraw (dispatch the same value)
   const imgA = grab();
   const slider = document.querySelectorAll('.pen-card')[0].querySelector('.pen-hole');
   slider.value = '40';
-  slider.dispatchEvent(new Event('input')); // 值未变，但会触发 setState+重绘
+  slider.dispatchEvent(new Event('input')); // value unchanged, but still triggers setState+redraw
   await new Promise((r) => setTimeout(r, 500));
   const imgB = grab();
   const base = diffStats(imgA, imgB);
 
-  // 实验2：改笔一孔洞 40 → 150
+  // Experiment 2: change pen-1 hole 40 -> 150
   const imgC = grab();
   slider.value = '150';
   slider.dispatchEvent(new Event('input'));
@@ -55,14 +55,14 @@ const result = await page.evaluate(async () => {
   const imgD = grab();
   const changed = diffStats(imgC, imgD);
 
-  // 实验3：改回 40，与 imgA 对比（应完全还原 = 确定性）
+  // Experiment 3: change back to 40, compare with imgA (should fully restore = deterministic)
   slider.value = '40';
   slider.dispatchEvent(new Event('input'));
   await new Promise((r) => setTimeout(r, 500));
   const imgE = grab();
   const restored = diffStats(imgA, imgE);
 
-  // 实验4：实验2 的差异像素颜色采样（取前 5 个）
+  // Experiment 4: sample colors of Experiment 2's diff pixels (take the first 5)
   const samples = [];
   for (let i = 0; i < imgC.length && samples.length < 5; i += 4) {
     if (imgC[i] !== imgD[i] || imgC[i + 1] !== imgD[i + 1] || imgC[i + 2] !== imgD[i + 2]) {

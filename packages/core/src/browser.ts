@@ -1,13 +1,13 @@
-// @spirograph/core/browser — 浏览器 Canvas 2D 渲染入口
-// 不依赖 DOM lib：使用最小结构化 Canvas2D/CanvasElementLike 接口，
-// 由调用方（web 应用）把真实 canvas / ctx 传入（结构兼容，仅需一次类型断言）。
+// @spirograph/core/browser — browser Canvas 2D rendering entry
+// Does not depend on the DOM lib: uses the minimal structural Canvas2D/CanvasElementLike interfaces,
+// the caller (web app) passes in the real canvas / ctx (structurally compatible, needs one type assertion).
 import type { Bounds, Pen, RenderItem, Transform, DrawingMode } from './types.js';
 import { computeBounds, computeTransform, applyTransform, gearHoleRadius } from './geometry.js';
 import { segmentColor, closureColor } from './segments.js';
 import { generateHolePattern } from './pattern.js';
 import { computeGearPose, weightedSteps } from './pose.js';
 
-/** 最小 Canvas 2D 上下文接口（仅本包用到的成员，编译无需 DOM lib） */
+/** Minimal Canvas 2D context interface (only the members this package uses; no DOM lib needed for compilation) */
 export interface Canvas2D {
   save(): void;
   restore(): void;
@@ -27,19 +27,19 @@ export interface Canvas2D {
   lineCap: string;
   lineJoin: string;
   lineWidth: number;
-  /** string | object：真实 ctx 的 strokeStyle 是 string | CanvasGradient | CanvasPattern，放宽以保证结构兼容 */
+  /** string | object: the real ctx's strokeStyle is string | CanvasGradient | CanvasPattern; widened for structural compatibility */
   strokeStyle: string | object;
   fillStyle: string | object;
 }
 
-/** 最小 canvas 元素接口（尺寸 + getContext） */
+/** Minimal canvas element interface (size + getContext) */
 export interface CanvasElementLike {
   width: number;
   height: number;
   getContext(type: '2d'): Canvas2D | null;
 }
 
-/** 清空画布并绘制背景（dpr 由调用方注入，避免依赖 window） */
+/** Clear the canvas and draw the background (dpr injected by the caller to avoid depending on window) */
 export function clearCanvas(
   canvas: CanvasElementLike,
   width: number,
@@ -61,9 +61,9 @@ export function clearCanvas(
 }
 
 /**
- * 渲染完整图案。所有曲线按笔顺序叠加。
- * 单色笔：一条 path（快速）；渐变笔：逐段绘制 + 收笔线（颜色同源 segmentColor）。
- * lineCap/lineJoin 用 round 保证平滑衔接。
+ * Render the full pattern. All curves are overlaid in pen order.
+ * Solid pens: one path (fast); gradient pens: per-segment drawing + a closure segment (color from segmentColor).
+ * lineCap/lineJoin use round for smooth joins.
  */
 export function renderFull(ctx: Canvas2D, items: RenderItem[], transform: Transform): void {
   ctx.save();
@@ -89,7 +89,7 @@ export function renderFull(ctx: Canvas2D, items: RenderItem[], transform: Transf
 }
 
 /**
- * 渲染动画进度：每支笔按各自总点数比例同步推进（模拟多笔同时绘制）。
+ * Render animation progress: each pen advances in sync by its own total point-count ratio (simulating all pens drawing together).
  */
 export function renderPartial(
   ctx: Canvas2D,
@@ -121,11 +121,11 @@ export function renderPartial(
 }
 
 /**
- * 渐变曲线绘制（绝对无断裂）：逐点分段绘制，相邻两点的圆角 cap 在共享顶点
- * 完全重叠（等效连续 single-path 的 round join），无论转角多尖、点距多大，
- * 整条线都连续无缝。每段颜色同源 segmentColor。
- * closed=true 时补一条收笔连线（最后点→起点）闭合曲线；
- * 动画部分绘制（closed=false）不画收笔线，避免笔尖到起点出现多余连线。
+ * Gradient-curve drawing (absolutely gap-free): draws segment by point; the rounded caps of adjacent points overlap completely
+ * at the shared vertex (equivalent to a continuous single-path round join) — no matter how sharp the corner or how far apart the points,
+ * the whole line is continuous and seamless. Each segment's color comes from segmentColor.
+ * closing with closed=true appends a closure line (last point → start) to close the curve;
+ * partial animation drawing (closed=false) draws no closure line, avoiding an extra line from the pen tip to the start.
  */
 export function strokeGradientCurve(
   ctx: Canvas2D,
@@ -151,7 +151,7 @@ export function strokeGradientCurve(
       ctx.lineTo(x1, y1);
       ctx.stroke();
     }
-    // 收笔：最后一点 → 起点，闭合曲线，收笔色渐变回初始色（仅完整绘制时）
+    // closure: last point → start, closes the curve, closure color fades back to the initial color (only when fully drawn)
     if (closed) {
       ctx.strokeStyle = closureColor(pen);
       const [xn, yn] = applyTransform(transform, points[2 * (count - 1)], points[2 * (count - 1) + 1]);
@@ -162,7 +162,7 @@ export function strokeGradientCurve(
       ctx.stroke();
     }
   } else if (count === 1) {
-    // 单点：画一个小圆点
+    // single point: draw a small dot
     ctx.fillStyle = closureColor(pen);
     ctx.beginPath();
     ctx.arc(points[0] * transform.scale + transform.offsetX, points[1] * transform.scale + transform.offsetY, lineWidth / 2, 0, Math.PI * 2);
@@ -170,7 +170,7 @@ export function strokeGradientCurve(
   }
 }
 
-/** 绘制齿轮系统（画在曲线之下），真实万花尺外观 + 淡色半透明（同旧 renderer.drawGears） */
+/** Draw the gear system (under the curve), realistic spirograph look + light translucent (same as the old renderer.drawGears) */
 export function drawGears(
   ctx: Canvas2D,
   transform: Transform,
@@ -199,7 +199,7 @@ export function drawGears(
   ctx.lineJoin = 'round';
   ctx.lineWidth = 1.4;
 
-  // ================= 环形齿轮（内齿圈，静止） =================
+  // ================= ring gear (internal tooth ring, stationary) =================
   const ringOuter = (R + toothH * 1.2) * scale;
   const ringRoot = (R + toothH * 0.3) * scale;
   const ringTip = (R - toothH * 0.7) * scale;
@@ -235,7 +235,7 @@ export function drawGears(
   ctx.strokeStyle = strokeSoft;
   ctx.stroke();
 
-  // ================= 滚动齿轮（外齿圆盘） =================
+  // ================= rolling gear (external-tooth disc) =================
   const gx = centerR * Math.cos(pose.centerAngle) * scale + offsetX;
   const gy = centerR * Math.sin(pose.centerAngle) * scale + offsetY;
   const discRoot = (r - toothH * 0.7) * scale;
@@ -296,7 +296,7 @@ export function drawGears(
   ctx.restore();
 }
 
-/** 绘制笔孔与笔尖（画在曲线之上，保证可见）（同旧 renderer.drawPenHoles） */
+/** Draw pen holes and pen tips (drawn above the curve to guarantee visibility) (same as the old renderer.drawPenHoles) */
 export function drawPenHoles(
   ctx: Canvas2D,
   transform: Transform,
@@ -324,8 +324,8 @@ export function drawPenHoles(
 }
 
 /**
- * 分步渲染曲线（配合齿轮动画）：已完成的笔画全，当前笔按进度画，未开始的笔不画。
- * 返回当前笔索引。
+ * Step-render curves (with the gear animation): finished pens draw fully, the current pen draws by progress, not-yet-started pens do not draw.
+ * Returns the current pen index.
  */
 export function renderSteps(
   ctx: Canvas2D,
@@ -333,7 +333,7 @@ export function renderSteps(
   transform: Transform,
   totalProgress: number,
 ): number {
-  // 按曲线长度加权：笔划多的占更多时间（真实恒定绘制速度）
+  // weighted by curve length: pens with more strokes take more time (true constant drawing speed)
   const { penIndex, penProgress } = weightedSteps(items.map((i) => i.curve.count - 1), totalProgress);
   ctx.save();
   ctx.lineCap = 'round';
@@ -360,7 +360,7 @@ export function renderSteps(
   return penIndex;
 }
 
-/** 把完整图案绘制到指定尺寸的离屏画布（导出高清 PNG 用；canvas 由调用方创建） */
+/** Draw the full pattern onto an offscreen canvas of the given size (for high-res PNG export; canvas created by the caller) */
 export function renderToCanvasAt(
   items: RenderItem[],
   background: string,

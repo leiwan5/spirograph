@@ -11,7 +11,7 @@ export const PALETTE = [
 
 export interface ComboPreset {
   name: string;
-  /** 英文名（默认语言为英文） */
+  /** English name (default language is English) */
   nameEn: string;
   mode: 'inside' | 'outside';
   ring: number;
@@ -19,7 +19,7 @@ export interface ComboPreset {
   pens: Array<{ hole: number; colors: string[]; width: number }>;
 }
 
-/** 经典齿轮组合预设（含多笔配色） */
+/** Classic gear-combination presets (with multi-pen color schemes) */
 export const COMBO_PRESETS: ComboPreset[] = [
   {
     name: '经典星花 72×30', nameEn: 'Classic Star 72×30',
@@ -88,7 +88,7 @@ function round1(v: number): number {
   return Math.round(v * 10) / 10;
 }
 
-/** 随机灵感：随机齿数 + 孔洞 + 配色（避开退化组合） */
+/** Random inspiration: random teeth + holes + colors (avoiding degenerate combinations) */
 export function randomSettings(): void {
   const mode: 'inside' | 'outside' = Math.random() < 0.75 ? 'inside' : 'outside';
   const ring = randInt(40, 180);

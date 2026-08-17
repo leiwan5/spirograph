@@ -1,19 +1,19 @@
 import type { AppState, Pen } from './types.js';
 
 /**
- * URL query 参数格式（与 web 应用分享链接、图片端点、CLI 完全一致）：
+ * URL query parameter format (identical to the web app's share links, image endpoints, and CLI):
  *   ring=72&rolling=30&mode=inside
- *   &pen=40,2.5,e63946                   单色笔：孔洞,粗细,颜色1
- *   &pen=40,2.5,10,e63946,1d6fa5        多色笔：孔洞,粗细,间隔,颜色1[,颜色2[,颜色3[,颜色4]]]
- *   （仅 1 个颜色 = 单色；≥ 2 个颜色 = 渐变。间隔在颜色组前，与 6 位 hex 无歧义）
+ *   &pen=40,2.5,e63946                   solid pen: hole,width,color1
+ *   &pen=40,2.5,10,e63946,1d6fa5        multi-color pen: hole,width,spacing,color1[,color2[,color3[,color4]]]
+ *   (exactly 1 color = solid; ≥ 2 colors = gradient. Spacing comes before the color group, unambiguous with 6-digit hex)
  *   &bg=ffffff&speed=1&scale=auto&gears=1
- * 颜色一律使用不带 # 的 6 位 hex（避免 # 截断 query）。
+ * Colors always use 6-digit hex without # (to avoid # truncating the query).
  *
- * 本模块使用内置纯字符串 query 编解码器（不依赖全局 URL 解析类），
- * 保证在 Node / 浏览器 / React Native（Hermes）三端行为一致、零 polyfill。
+ * This module uses a built-in pure-string query codec (no dependency on the global URL parser),
+ * guaranteeing identical behavior and zero polyfills across Node / browser / React Native (Hermes).
  */
 
-/** URL 解码（%XX → 字符，+ → 空格）；序列化侧值均为安全 ASCII（数字/hex/逗号），无需编码 */
+/** URL decode (%XX → char, + → space); serialized values are all safe ASCII (digits/hex/commas), no encoding needed */
 function decodeComponent(s: string): string {
   let out = '';
   for (let i = 0; i < s.length; i++) {
@@ -35,7 +35,7 @@ function decodeComponent(s: string): string {
   return out;
 }
 
-/** 解析 query string → 键值对数组（保留重复键与原始顺序） */
+/** Parse a query string → array of key/value pairs (preserves duplicate keys and original order) */
 function parseQuery(search: string): Array<{ key: string; value: string }> {
   const s = search.startsWith('?') ? search.slice(1) : search;
   if (s === '') return [];
@@ -46,12 +46,12 @@ function parseQuery(search: string): Array<{ key: string; value: string }> {
   });
 }
 
-/** 取单个 query 参数值（首个匹配；无则 null），图片端点/CLI 用 */
+/** Take a single query param value (first match; null if absent), used by image endpoints / CLI */
 export function getQueryValue(search: string, key: string): string | null {
   return parseQuery(search).find((p) => p.key === key)?.value ?? null;
 }
 
-/** 序列化状态 → query string（不含 ?），键序稳定 */
+/** Serialize state → query string (without ?), stable key order */
 export function serializeState(s: AppState): string {
   const parts: string[] = [];
   parts.push('ring=' + String(s.ringTeeth));
@@ -60,11 +60,11 @@ export function serializeState(s: AppState): string {
   for (const pen of s.pens) {
     const penParts: (number | string)[] = [pen.hole, pen.width];
     if (pen.colors.length > 1) {
-      // 多色（渐变）：hole,width,spacing,c1[,c2[,c3[,c4]]]
+      // multi-color (gradient): hole,width,spacing,c1[,c2[,c3[,c4]]]
       penParts.push(String(pen.spacing));
       for (const c of pen.colors) penParts.push(c.replace('#', '').toLowerCase());
     } else {
-      // 单色：hole,width,c1
+      // solid: hole,width,c1
       penParts.push((pen.colors[0] ?? '#000000').replace('#', '').toLowerCase());
     }
     parts.push('pen=' + penParts.join(','));
@@ -76,10 +76,10 @@ export function serializeState(s: AppState): string {
   return parts.join('&');
 }
 
-/** URL 解析出的状态补丁（笔不含 id，由 store 分配） */
+/** State patch parsed from a URL (pens have no id; assigned by the store) */
 export type UrlPatch = Partial<Omit<AppState, 'pens'>> & { pens?: Array<Omit<Pen, 'id'>> };
 
-/** 解析 query string → 状态补丁（非法值一律忽略，不抛错） */
+/** Parse a query string → state patch (invalid values are always ignored, never throw) */
 export function parseState(search: string): UrlPatch {
   const pairs = parseQuery(search);
   const get = (k: string): string | undefined => pairs.find((p) => p.key === k)?.value;
@@ -120,8 +120,8 @@ export function parseState(search: string): UrlPatch {
 
 function parsePen(raw: string): Omit<Pen, 'id'> | null {
   const parts = raw.split(',');
-  // 3 段单色：hole,width,c1
-  // 4-7 段多色：hole,width,spacing,c1[,c2[,c3[,c4]]]
+  // 3-field solid: hole,width,c1
+  // 4-7-field multi-color: hole,width,spacing,c1[,c2[,c3[,c4]]]
   if (parts.length < 3 || parts.length > 7) return null;
   const hole = Number(parts[0]);
   const width = Number(parts[1]);
@@ -131,7 +131,7 @@ function parsePen(raw: string): Omit<Pen, 'id'> | null {
   let spacing = 20;
   let colorParts = parts.slice(2);
   if (parts.length >= 4) {
-    // 多色：间隔必须是 1-100 的数字（与 6 位 hex 颜色无歧义）
+    // multi-color: spacing must be a 1-100 number (unambiguous with 6-digit hex colors)
     if (!/^\d+(\.\d+)?$/.test(parts[2])) return null;
     const sp = Number(parts[2]);
     if (!(sp >= 1 && sp <= 100)) return null;

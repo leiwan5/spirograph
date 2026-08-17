@@ -1,4 +1,4 @@
-// 用用户的 URL 复现
+// Reproduce using the user's URL
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -16,17 +16,17 @@ const URL = 'http://localhost:5273/?ring=73&rolling=15&mode=inside&pen=57%2C2a9d
 await page.goto(URL, { waitUntil: 'networkidle' });
 await page.waitForTimeout(800);
 
-// 状态确认
+// state confirmation
 const st = await page.evaluate(() => {
   const s = window.__dshStore.getState();
   return { ring: s.ringTeeth, rolling: s.rollingTeeth, pens: s.pens.length, gears: s.showGears, scale: s.scaleMode, speed: s.speed };
 });
-console.log('加载状态:', JSON.stringify(st));
+console.log('load state:', JSON.stringify(st));
 
-// 播放
+// play
 await page.click('#play');
 await page.waitForTimeout(1000);
-console.log('播放 1s 后 pageerror:', errors.length ? errors : '无');
+console.log('pageerror after playing 1s:', errors.length ? errors : 'none');
 const frame1 = await page.evaluate(() => {
   const c = document.getElementById('canvas');
   const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
@@ -34,15 +34,15 @@ const frame1 = await page.evaluate(() => {
   for (let i = 0; i < d.length; i += 4) if (!(d[i] === 255 && d[i + 1] === 255 && d[i + 2] === 255)) n++;
   return n;
 });
-console.log('画布非背景像素:', frame1);
+console.log('canvas non-background pixels:', frame1);
 
-// 暂停 → 再播放（用户可能多次操作）
+// pause → play again (the user may interact multiple times)
 if (errors.length === 0) {
-  await page.click('#play'); // 暂停
+  await page.click('#play'); // pause
   await page.waitForTimeout(300);
-  await page.click('#play'); // 再播
+  await page.click('#play'); // play again
   await page.waitForTimeout(1500);
-  console.log('暂停再播后 pageerror:', errors.length ? errors : '无');
+  console.log('pageerror after pause and replay:', errors.length ? errors : 'none');
 }
-console.log('按钮状态:', await page.textContent('#play'));
+console.log('button state:', await page.textContent('#play'));
 await browser.close();

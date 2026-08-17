@@ -5,13 +5,13 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# 允许本工作流的 GITHUB_TOKEN 对 Pages 进行写操作
+# Allow this workflow's GITHUB_TOKEN to write to Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# 同一时间只允许一个部署任务；取消进行中的旧任务
+# Only one deployment at a time; cancel in-progress old runs
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -33,7 +33,7 @@ jobs:
         run: npm ci
 
       - name: Build
-        # BASE_URL 传入仓库名子路径（如 /spirograph/），供 Vite 生成正确的资源引用
+        # BASE_URL passes the repo-name subpath (e.g. /spirograph/) so Vite generates correct asset references
         run: npm run build
         env:
           BASE_URL: /${{ github.event.repository.name }}/

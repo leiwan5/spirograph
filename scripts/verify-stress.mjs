@@ -1,4 +1,4 @@
-// 高压操作序列：预设/随机/齿轮/播放/改参数 乱序 20 轮，监控崩溃
+// High-pressure operation sequence: preset/random/gears/play/change-params in random order over 40 rounds, monitoring for crashes
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -32,18 +32,18 @@ const ops = [
 
 for (let i = 0; i < 40; i++) {
   const op = ops[Math.floor(Math.random() * ops.length)];
-  try { await op(); } catch (e) { /* 元素可能不存在 */ }
+  try { await op(); } catch (e) { /* element may not exist */ }
   await page.waitForTimeout(80 + Math.random() * 150);
 }
 await page.waitForTimeout(1000);
-console.log('40 轮随机操作后 pageerror:', errors.length ? errors : '无');
-console.log('画布非背景像素:', await page.evaluate(() => {
+console.log('pageerror after 40 rounds of random operations:', errors.length ? errors : 'none');
+console.log('canvas non-background pixels:', await page.evaluate(() => {
   const c = document.getElementById('canvas');
   const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
   let n = 0;
   for (let i = 0; i < d.length; i += 4) if (!(d[i] === 255 && d[i + 1] === 255 && d[i + 2] === 255)) n++;
   return n;
 }));
-// 检查 pens 状态
+// check pens state
 console.log('pens:', await page.evaluate(() => window.__dshStore.getState().pens.length));
 await browser.close();

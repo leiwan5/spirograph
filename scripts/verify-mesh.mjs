@@ -22,13 +22,13 @@ const r = await page.evaluate(() => {
     const i = (Math.round(y) * W + Math.round(x)) * 4;
     return [img[i], img[i + 1], img[i + 2]];
   };
-  // 沿 x 正方向（滚动齿轮中心方向）扫描半径 380-410
+  // scan along the +x direction (toward the rolling gear center), radius 380-410
   const scan = [];
   for (let rad = 380; rad <= 410; rad += 2) {
     scan.push(rad + ':' + px(cx + rad, cy).join(','));
   }
-  // 深色（齿形描边）最大半径：滚动齿尖应 ≤ (72+0.2h)*scale ≈ 399.2
-  // 环谷底 = (72+0.3h)*scale ≈ 399.8，环外缘 = (72+1.2h)*scale ≈ 404.6
+  // max radius of dark (tooth-stroke) pixels: rolling tooth tip should be <= (72+0.2h)*scale ≈ 399.2
+  // ring valley bottom = (72+0.3h)*scale ≈ 399.8, ring outer edge = (72+1.2h)*scale ≈ 404.6
   let deepest = 0;
   for (let rad = 380; rad <= 410; rad += 1) {
     const p = px(cx + rad, cy);
@@ -36,10 +36,10 @@ const r = await page.evaluate(() => {
   }
   return { scan, deepest };
 });
-console.log('x+ 方向扫描（380-410）:');
+console.log('x+ direction scan (380-410):');
 console.log(r.scan.join(' | '));
-console.log('最远深色像素半径:', r.deepest, 'px');
-console.log('期望: 滚动齿尖 ≈399.2 | 环谷底 ≈399.8 | 环外缘 ≈404.6');
-console.log('判定:', r.deepest <= 401 ? '✅ 滚动齿未超出环谷底/外缘' : '⚠ 仍有超出');
-console.log('JS错误:', errors.length ? errors : '无');
+console.log('farthest dark-pixel radius:', r.deepest, 'px');
+console.log('expected: rolling tooth tip ≈399.2 | ring valley bottom ≈399.8 | ring outer edge ≈404.6');
+console.log('result:', r.deepest <= 401 ? '✅ rolling tooth does not exceed the ring valley bottom/outer edge' : '⚠ still exceeds');
+console.log('JS errors:', errors.length ? errors : 'none');
 await browser.close();

@@ -1,16 +1,16 @@
 /**
- * 帧调度器：动画库唯一的平台依赖点。
- * 浏览器/RN 注入 rAF 调度器，Node 注入 timer 调度器，核心永远不触碰定时器。
+ * Frame scheduler: the animation library's only platform-dependency point.
+ * Browser/RN inject an rAF scheduler, Node injects a timer scheduler, the core never touches timers.
  */
 
-/** 帧调度接口：时间源 + 帧回调注册/取消 */
+/** Frame scheduler interface: time source + frame callback register/cancel */
 export interface FrameScheduler {
   now(): number;
   requestFrame(cb: (ts: number) => void): number;
   cancelFrame(id: number): void;
 }
 
-// 无 DOM lib 编译：仅声明我们用到的两个全局（存在性运行时探测）
+// No DOM-lib compilation: only declare the two globals we use (runtime presence detection)
 declare global {
   // eslint-disable-next-line no-var
   var requestAnimationFrame: ((cb: (ts: number) => void) => number) | undefined;
@@ -18,7 +18,7 @@ declare global {
   var cancelAnimationFrame: ((id: number) => void) | undefined;
 }
 
-/** 浏览器 / React Native：使用全局 requestAnimationFrame + performance.now */
+/** browser / React Native: uses the global requestAnimationFrame + performance.now */
 export function rafScheduler(): FrameScheduler {
   return {
     now: () => (typeof performance !== 'undefined' ? performance.now() : Date.now()),
@@ -26,7 +26,7 @@ export function rafScheduler(): FrameScheduler {
       if (typeof globalThis.requestAnimationFrame === 'function') {
         return globalThis.requestAnimationFrame(cb);
       }
-      // 无 rAF 的环境降级为 ~16ms timer
+      // environments without rAF fall back to a ~16ms timer
       return setTimeout(() => cb(Date.now()), 16) as unknown as number;
     },
     cancelFrame: (id) => {
@@ -39,7 +39,7 @@ export function rafScheduler(): FrameScheduler {
   };
 }
 
-/** Node：setTimeout ~16ms 降级调度 */
+/** Node: setTimeout ~16ms fallback scheduling */
 export function timerScheduler(intervalMs = 16): FrameScheduler {
   return {
     now: () => Date.now(),
@@ -48,7 +48,7 @@ export function timerScheduler(intervalMs = 16): FrameScheduler {
   };
 }
 
-/** 自动选择：有 rAF 用 rAF，否则 timer */
+/** auto-select: use rAF when available, otherwise timer */
 export function autoScheduler(): FrameScheduler {
   return typeof globalThis.requestAnimationFrame === 'function' ? rafScheduler() : timerScheduler();
 }

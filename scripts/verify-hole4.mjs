@@ -21,30 +21,30 @@ const r = await page.evaluate(async () => {
     const i = (Math.round(y) * W + Math.round(x)) * 4;
     return [img[i], img[i + 1], img[i + 2]];
   };
-  // 笔一曲线起点（= 笔一孔位）
+  // pen 1 curve start (= pen 1 hole position)
   const curve = await import('/src/math/curve.ts');
   const ren = await import('/src/render/renderer.ts');
   const data = curve.sampleCurve(72, 30, 'inside', 40);
   const scale = 5.52;
   const sx = data.points[0] * scale + cx;
   const sy = data.points[1] * scale + cy;
-  // 滚动齿轮中心（t=0：42 单位 x 方向）
+  // rolling gear center (t=0: 42 units along x)
   const gcx = cx + 42 * scale, gcy = cy;
-  // 笔一孔在盘面局部：frac=0.4，angle=0 → 距滚动中心 = 0.4×30×scale
-  // 孔阵中 0.4 圈的存在性：由单测保证；这里验证笔尖画在孔中心
-  const center = px(sx, sy); // 应红色笔尖
-  const holeRing = px(sx - 3.5, sy); // 孔描边附近（空心圆边 3.5px）
-  // 孔阵整体：盘面上应有多个空心圆孔（在 0.4/0.75 圈及补充圈）
-  // 数盘面（滚动中心 160px 半径内）的孔描边像素：找"圆环"难，改验证孔阵函数输出
+  // pen 1 hole in disc-local coords: frac=0.4, angle=0 -> distance from rolling center = 0.4×30×scale
+  // existence of the 0.4 ring in the hole array is guaranteed by unit tests; here we verify the pen tip is drawn at the hole center
+  const center = px(sx, sy); // should be the red pen tip
+  const holeRing = px(sx - 3.5, sy); // near the hole outline (hollow circle edge 3.5px)
+  // the hole array overall: the disc should have multiple hollow circle holes (at the 0.4/0.75 rings and the supplementary ring)
+  // counting hole-outline pixels on the disc (within 160px radius of the rolling center) is hard; instead validate the hole-array function output
   const pattern = ren.generateHolePattern([{ hole: 40 }, { hole: 75 }]);
   const fracs = [...new Set(pattern.map((h) => h.frac))].sort((a, b) => a - b);
   return { center, holeRing, fracs, totalHoles: pattern.length };
 });
 const isRed = (p) => p[0] > 180 && p[1] < 130 && p[2] < 130;
 const isDark = (p) => p[0] < 110 && p[1] < 130 && p[2] < 150 && p[0] > 30;
-console.log('笔尖像素:', r.center.join(','), isRed(r.center) ? '✅ 笔尖在孔中心' : '⚠');
-console.log('孔边3.5px处:', r.holeRing.join(','), isDark(r.holeRing) ? '✅ 孔描边（空心圆）' : '⚠ 需检查');
-console.log('孔阵半径档位:', JSON.stringify(r.fracs.map(f => (f * 100).toFixed(0) + '%')));
-console.log('孔总数:', r.totalHoles, r.fracs.includes(0.4) && r.fracs.includes(0.75) ? '✅ 含笔参数圈(40%/75%)' : '⚠');
-console.log('JS错误:', errors.length ? errors : '无');
+console.log('pen tip pixel:', r.center.join(','), isRed(r.center) ? 'OK pen tip at hole center' : 'WARN');
+console.log('at hole edge 3.5px:', r.holeRing.join(','), isDark(r.holeRing) ? 'OK hole outline (hollow circle)' : 'WARN needs check');
+console.log('hole array radius rings:', JSON.stringify(r.fracs.map(f => (f * 100).toFixed(0) + '%')));
+console.log('total holes:', r.totalHoles, r.fracs.includes(0.4) && r.fracs.includes(0.75) ? 'OK includes pen param rings (40%/75%)' : 'WARN');
+console.log('JS errors:', errors.length ? errors : 'none');
 await browser.close();

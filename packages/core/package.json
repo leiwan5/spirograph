@@ -1,7 +1,7 @@
 {
   "name": "@spirograph/core",
   "version": "0.1.0",
-  "description": "跨平台万花尺（Spirograph）图案生成核心：纯数学曲线采样、几何变换、线段级渲染数据、SVG/PNG 序列化，零 DOM/Node 依赖",
+  "description": "Cross-platform spirograph pattern generation core: pure-math curve sampling, geometry transforms, segment-level render data, SVG/PNG serialization, zero DOM/Node dependencies",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,

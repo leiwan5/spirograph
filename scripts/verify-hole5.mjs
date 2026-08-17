@@ -26,13 +26,13 @@ const r = await page.evaluate(async () => {
   const scale = 5.52;
   const sx = data.points[0] * scale + cx;
   const sy = data.points[1] * scale + cy;
-  // 孔半径（节圆）：0.035×30×5.52 = 5.8px；笔尖 = 5.8×0.72 = 4.2px
-  // 中心：红色笔尖；4.2px 处：孔描边（深色）；7px 处：无白圈（应为背景/曲线色）
+  // hole radius (pitch circle): 0.035×30×5.52 = 5.8px; pen tip = 5.8×0.72 = 4.2px
+  // center: red pen tip; at 4.2px: hole outline (dark); at 7px: no white ring (should be background/curve color)
   const center = px(sx, sy);
   const tipEdge = px(sx - 4.2, sy);
   const holeEdge = px(sx - 5.8, sy);
-  const beyond = px(sx - 7, sy); // 白圈位置（应无白色圈）
-  // 找孔描边环的实际中心：沿 +x 方向扫描深色孔描边位置（应左右对称于 sx）
+  const beyond = px(sx - 7, sy); // white-ring position (should have no white ring)
+  // find the actual center of the hole-outline ring: scan along +x for the dark hole outline (should be symmetric about sx)
   let leftDark = null, rightDark = null;
   for (let dx = 2; dx < 10; dx++) {
     const pL = px(sx - dx, sy);
@@ -46,9 +46,9 @@ const r = await page.evaluate(async () => {
 const isRed = (p) => p[0] > 180 && p[1] < 130 && p[2] < 130;
 const isDark = (p) => p[0] < 130 && p[1] < 150 && p[2] < 170;
 const isWhiteish = (p) => p[0] > 200 && p[1] > 200 && p[2] > 200;
-console.log('孔中心(红色笔尖):', r.center.join(','), isRed(r.center) ? '✅' : '⚠');
-console.log('笔尖边缘4.2px:', r.tipEdge.join(','), '孔描边5.8px:', r.holeEdge.join(','), isDark(r.holeEdge) ? '✅ 孔描边可见' : '⚠');
-console.log('白圈位置7px:', r.beyond.join(','), !isWhiteish(r.beyond) ? '✅ 无白圈' : '⚠ 仍有白圈');
-console.log('孔描边环: 左', r.leftDark, 'px | 右', r.rightDark, 'px', r.leftDark !== null && r.rightDark !== null && Math.abs(r.leftDark - r.rightDark) <= 1 ? '✅ 孔环与笔尖同心' : '⚠ 偏心');
-console.log('JS错误:', errors.length ? errors : '无');
+console.log('hole center (red pen tip):', r.center.join(','), isRed(r.center) ? 'OK' : 'WARN');
+console.log('pen tip edge 4.2px:', r.tipEdge.join(','), 'hole outline 5.8px:', r.holeEdge.join(','), isDark(r.holeEdge) ? 'OK hole outline visible' : 'WARN');
+console.log('white-ring position 7px:', r.beyond.join(','), !isWhiteish(r.beyond) ? 'OK no white ring' : 'WARN still has white ring');
+console.log('hole-outline ring: left', r.leftDark, 'px | right', r.rightDark, 'px', r.leftDark !== null && r.rightDark !== null && Math.abs(r.leftDark - r.rightDark) <= 1 ? 'OK hole ring concentric with pen tip' : 'WARN off-center');
+console.log('JS errors:', errors.length ? errors : 'none');
 await browser.close();

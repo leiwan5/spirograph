@@ -1,4 +1,4 @@
-// 调试：采样点屏幕坐标 vs 画布实际红色像素分布
+// Debug: sampled point screen coordinates vs the canvas's actual red pixel distribution
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -22,7 +22,6 @@ const dbg = await page.evaluate(async () => {
   const rect = c.getBoundingClientRect();
   const W = Math.floor(rect.width), H = Math.floor(rect.height);
   console.log('canvas css:', rect.width, rect.height, '| pixel:', c.width, c.height, '| dpr:', window.devicePixelRatio);
-
   const data = curve.sampleCurve(72, 30, 'inside', 39);
   const pad = Math.max(24, Math.min(W, H) * 0.04);
   const t = ren.computeTransform(ren.computeFixedBounds(72, 30, 'inside'), W, H, pad);
@@ -34,7 +33,7 @@ const dbg = await page.evaluate(async () => {
     const [x, y] = ren.applyTransform(t, data.points[2 * i], data.points[2 * i + 1]);
     pts.push([Math.round(x), Math.round(y)]);
   }
-  // 红色像素实际分布
+  // Actual red pixel distribution
   const img = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
   let redCount = 0, minX = W, minY = H, maxX = 0, maxY = 0;
   const redSamples = [];
@@ -49,7 +48,7 @@ const dbg = await page.evaluate(async () => {
       }
     }
   }
-  // 采样点处颜色
+  // Color at the sampled point
   function at(x, y) {
     if (x < 0 || y < 0 || x >= c.width || y >= c.height) return null;
     const i = (y * c.width + x) * 4;

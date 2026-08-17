@@ -1,4 +1,4 @@
-// 诊断：PNG CRC 校验 + data URI 解码 + 直接访问 + 同源页面 img
+// Diagnostics: PNG CRC check + data URI decode + direct access + same-origin page img
 import { chromium } from 'playwright-core';
 import { readFileSync } from 'node:fs';
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -9,7 +9,7 @@ const browser = await chromium.launch({
 });
 const page = await browser.newPage();
 
-// 1) CRC 校验（Node 侧解析 /tmp/a.png 的每个 chunk）
+// 1) CRC check (parse each chunk of /tmp/a.png on the Node side)
 const crcOk = await (async () => {
   const buf = readFileSync('/tmp/a.png');
   const table = new Array(256);
@@ -30,15 +30,15 @@ const crcOk = await (async () => {
     const data = buf.subarray(off + 8, off + 8 + len);
     const stored = buf.readUInt32BE(off + 8 + len);
     const calc = crc32(Buffer.concat([Buffer.from(type), data]));
-    if (stored !== calc) { ok = false; console.log('CRC 不匹配:', type, stored, calc); }
+    if (stored !== calc) { ok = false; console.log('CRC mismatch:', type, stored, calc); }
     if (type === 'IEND') break;
     off += 12 + len;
   }
   return ok;
 })();
-console.log('1) PNG chunk CRC:', crcOk ? '✅ 全部正确' : '❌ 有错误');
+console.log('1) PNG chunk CRC:', crcOk ? '✅ all correct' : '❌ errors found');
 
-// 2) data URI 解码（绕过网络，验证浏览器能否解码字节）
+// 2) data URI decode (bypass the network, verify the browser can decode the bytes)
 const dataUri = await page.evaluate(async () => {
   const resp = await fetch('http://localhost:5273/api/image?ring=72&rolling=30&format=png&size=256');
   const blob = await resp.blob();
@@ -54,13 +54,13 @@ const dataUri = await page.evaluate(async () => {
     img.src = dataUrl;
   });
 });
-console.log('2) data URI 解码:', dataUri.ok ? '✅ 浏览器可解码 (' + dataUri.w + 'px)' : '❌ 解码失败');
+console.log('2) data URI decode:', dataUri.ok ? '✅ browser can decode (' + dataUri.w + 'px)' : '❌ decode failed');
 
-// 3) 直接访问（page.goto 图片 URL → 浏览器显示图片）
+// 3) direct access (page.goto the image URL -> browser displays the image)
 const resp = await page.goto('http://localhost:5273/api/image?ring=72&rolling=30&format=png&size=256');
-console.log('3) 直接访问:', resp.ok() ? '✅ HTTP ' + resp.status() + ' | ' + resp.headers()['content-type'] : '❌');
+console.log('3) direct access:', resp.ok() ? '✅ HTTP ' + resp.status() + ' | ' + resp.headers()['content-type'] : '❌');
 
-// 4) 同源页面内 img 加载
+// 4) img load inside a same-origin page
 await page.goto('http://localhost:5273/', { waitUntil: 'networkidle' });
 const sameOrigin = await page.evaluate(async () => {
   return new Promise((resolve) => {
@@ -70,9 +70,9 @@ const sameOrigin = await page.evaluate(async () => {
     img.src = '/api/image?ring=72&rolling=30&format=png&size=256';
   });
 });
-console.log('4) 同源页面 img:', sameOrigin.ok ? '✅ 加载成功 (' + sameOrigin.w + 'px)' : '❌ 失败');
+console.log('4) same-origin page img:', sameOrigin.ok ? '✅ loaded (' + sameOrigin.w + 'px)' : '❌ failed');
 
-// 5) 外部页面（data: URL HTML）img 引用
+// 5) external page (data: URL HTML) img reference
 const ext = await browser.newPage();
 await ext.goto('data:text/html,<html><body><img id="i"></body></html>');
 const extResult = await ext.evaluate(async () => {
@@ -83,5 +83,5 @@ const extResult = await ext.evaluate(async () => {
     img.src = 'http://localhost:5273/api/image?ring=72&rolling=30&format=png&size=256';
   });
 });
-console.log('5) data: 页面 img 跨源引用:', extResult.ok ? '✅ (' + extResult.w + 'px)' : '❌ 失败');
+console.log('5) data: page img cross-origin reference:', extResult.ok ? '✅ (' + extResult.w + 'px)' : '❌ failed');
 await browser.close();

@@ -1,7 +1,7 @@
 /**
- * 平台通用全局的最小声明（无 DOM lib 编译）：
- * console / performance / setTimeout / clearTimeout 在浏览器、Node、RN 均存在。
- * rAF/cancelAF 由 scheduler.ts 声明并运行时探测。
+ * Minimal declarations of platform-common globals (no DOM-lib compilation):
+ * console / performance / setTimeout / clearTimeout exist in browser, Node, and RN.
+ * rAF/cancelAF are declared in scheduler.ts and detected at runtime.
  */
 declare const console: {
   error(...data: unknown[]): void;

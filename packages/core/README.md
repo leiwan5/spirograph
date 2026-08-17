@@ -1,41 +1,41 @@
 # @spirograph/core
 
-跨平台万花尺（Spirograph）图案生成核心库。**零 DOM / 零 Node 依赖**，同一套代码可在浏览器、Node.js、React Native（Hermes）、Vercel / Cloudflare Workers 运行。
+Cross-platform spirograph pattern generation core library. **Zero DOM / zero Node dependencies** — the same code runs in browsers, Node.js, React Native (Hermes), and Vercel / Cloudflare Workers.
 
-- 纯数学：齿轮化简、曲线采样（hypotrochoid / epitrochoid）
-- 几何：包围盒、居中变换
-- 渐变取色：三端统一（Canvas / SVG / PNG 颜色决策一致）
-- **线段级渲染契约** `buildRenderData`：坐标已变换、颜色已解析，各平台渲染器直接消费
-- SVG 字符串 / PNG 字节（pako 纯 JS 编码，无 TextEncoder / URLSearchParams 依赖）
+- Pure math: gear reduction, curve sampling (hypotrochoid / epitrochoid)
+- Geometry: bounding boxes, centering transforms
+- Gradient color sampling: unified across targets (consistent color decisions for Canvas / SVG / PNG)
+- **Segment-level render contract** `buildRenderData`: coordinates already transformed, colors already resolved, ready for renderers on every platform
+- SVG string / PNG bytes (pako pure-JS encoding, no TextEncoder / URLSearchParams dependency)
 
-## 安装
+## Install
 
 ```bash
 npm install @spirograph/core
 ```
 
-## 使用
+## Usage
 
 ```ts
 import { DEFAULT_STATE, parseState, buildItems, buildSvg, generatePng } from '@spirograph/core';
 
-// 从 URL query 解析（与 web 分享链接 / 图片端点同一格式）
+// Parse from a URL query (same format as web share links / image endpoints)
 const patch = parseState('?ring=72&rolling=30&pen=40,2.5,e63946&pen=75,2,1d6fa5');
 const items = buildItems({ ...DEFAULT_STATE, ...patch, pens: patch.pens ?? DEFAULT_STATE.pens });
 
-// SVG 字符串
+// SVG string
 const svg = buildSvg(items, '#ffffff', 2048);
 
-// PNG 字节（Node / Serverless / 浏览器均可，纯 JS）
+// PNG bytes (works in Node / Serverless / browser, pure JS)
 const png = generatePng('?ring=72&rolling=30&pen=40,2.5,e63946'); // Uint8Array
 
-// 线段级渲染数据（RN / React / Svelte 等平台渲染器消费）
+// Segment-level render data (consumed by RN / React / Svelte etc. platform renderers)
 import { computeBounds, computeTransform, buildRenderData } from '@spirograph/core';
 const t = computeTransform(computeBounds(items.map(i => i.curve)), 800, 800, 32);
 const data = buildRenderData(items, t); // { segments, pens }
 ```
 
-### 浏览器 Canvas 渲染（`@spirograph/core/browser`）
+### Browser Canvas rendering (`@spirograph/core/browser`)
 
 ```ts
 import { clearCanvas, renderFull } from '@spirograph/core/browser';
@@ -46,25 +46,25 @@ const t = computeTransform(computeBounds(items.map(i => i.curve)), 800, 800, 32)
 renderFull(ctx, items, t);
 ```
 
-## Pen 语义
+## Pen semantics
 
-`Pen.colors: string[]` —— 笔的颜色列表：
-- **仅 1 个颜色 = 单色笔**（`colors: ['#e63946']`）
-- **≥ 2 个颜色 = 渐变笔**：沿曲线按 `spacing`（% 曲线长度）间隔循环取色
-- `spacing` 在单色笔时忽略；`segmentColor` / `buildRenderData` 统一处理两种语义
+`Pen.colors: string[]` — the pen's list of colors:
+- **Exactly 1 color = solid pen** (`colors: ['#e63946']`)
+- **≥ 2 colors = gradient pen**: cycles through colors along the curve at `spacing` (% of curve length) intervals
+- `spacing` is ignored for solid pens; `segmentColor` / `buildRenderData` handle both semantics uniformly
 
-## 曲线采样
+## Curve sampling
 
-- 内切（hypotrochoid）：`x=(R−r)cos t + d·cos((R−r)/r·t)`，`y=(R−r)sin t − d·sin((R−r)/r·t)`
-- 外切（epitrochoid）：`x=(R+r)cos t − d·cos((R+r)/r·t)`，`y=(R+r)sin t − d·sin((R+r)/r·t)`
-- 齿数同模数，半径与齿数成正比；闭合周期 `T=2π·q`（q = 滚动齿数/gcd）
-- 采样上限 `MAX_SAMPLES=150_000`，超出自动降采样保闭合
+- Inside (hypotrochoid): `x=(R−r)cos t + d·cos((R−r)/r·t)`, `y=(R−r)sin t − d·sin((R−r)/r·t)`
+- Outside (epitrochoid): `x=(R+r)cos t − d·cos((R+r)/r·t)`, `y=(R+r)sin t − d·sin((R+r)/r·t)`
+- Teeth share the same module, so radii are proportional to tooth counts; the closing period is `T=2π·q` (q = rolling teeth/gcd)
+- Sampling cap `MAX_SAMPLES=150_000`; beyond that, auto-downsampling keeps the curve closed
 
-## 打包/发布
+## Build / publish
 
 ```bash
-npm run build   # tsc -b → dist/（ESM + .d.ts）
-npm pack        # 本地验证发布物
+npm run build   # tsc -b → dist/ (ESM + .d.ts)
+npm pack        # verify the tarball locally
 ```
 
-`exports` 子路径：`.`（纯）、`./browser`（Canvas 渲染）。`sideEffects: false` 支持 tree-shaking。
+`exports` subpaths: `.` (pure), `./browser` (Canvas rendering). `sideEffects: false` enables tree-shaking.

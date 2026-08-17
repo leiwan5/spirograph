@@ -1,6 +1,6 @@
-// 环固定模式核心验证：
-// 1) 变动笔二(79→40)：笔一曲线屏幕坐标集合前后完全一致（位置没动，只是被覆盖）
-// 2) 内切环像素大小恒定（72+30 与 96+63 下 hole=100 曲线都恰好贴环内沿）
+// Core validation of ring-fixed mode:
+// 1) Changing pen 2 (79→40): pen 1's curve screen-coordinate set is identical before/after (position doesn't move, it's merely overlaid)
+// 2) The ring pixel size is constant in the inside-cut mode (with 72+30 and 96+63, the hole=100 curve exactly touches the ring's inner edge)
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -26,7 +26,7 @@ const setHole = (idx, v) => page.evaluate(([i, val]) => {
 await setHole(0, 39); await setHole(1, 79);
 await page.waitForTimeout(500);
 
-// 用页面里的模块复算：笔一曲线(hole=39) + 环固定 transform → 屏幕坐标
+// recompute with the page's module: pen-1 curve (hole=39) + ring-fixed transform -> screen coords
 const pen1ScreenPts = await page.evaluate(async () => {
   const curve = await import('/src/math/curve.ts');
   const ren = await import('/src/render/renderer.ts');
@@ -45,7 +45,7 @@ const pen1ScreenPts = await page.evaluate(async () => {
   return { pts, W, H };
 });
 
-// 抓像素
+// grab pixels
 async function grab() {
   return page.evaluate(() => {
     const c = document.getElementById('canvas');
@@ -82,14 +82,14 @@ for (const [x, y] of pen1ScreenPts.pts) {
     }
   }
 }
-console.log('笔一曲线采样点:', sampled);
-console.log('改笔二前 曲线经过处有内容的点:', onCurveBefore, '| 改后:', onCurveAfter);
-console.log('笔一红像素点:', redPts, '| 变动:', redChanged, '| 其中变成笔二蓝(被覆盖):', redBecameBlue);
-console.log('结论:', onCurveBefore === onCurveAfter
-  ? '✅ 笔一曲线屏幕位置完全没动（内容还在原地，只是部分被笔二新曲线覆盖）'
-  : '⚠ 笔一位置变了');
+console.log('pen-1 curve sample points:', sampled);
+console.log('points with content on the curve before changing pen 2:', onCurveBefore, '| after:', onCurveAfter);
+console.log('pen-1 red pixels:', redPts, '| changed:', redChanged, '| of which turned pen-2 blue (covered):', redBecameBlue);
+console.log('conclusion:', onCurveBefore === onCurveAfter
+  ? '✅ pen-1 curve screen position did not move at all (content stays in place, only partly covered by pen 2 new curve)'
+  : '⚠ pen-1 position changed');
 
-// 环像素恒定验证：hole=100 曲线恰好贴环内沿，且 72+30 与 96+63 下环像素半径相同
+// ring pixel constancy check: at hole=100 the curve exactly touches the ring inner edge, and the ring pixel radius is the same for 72+30 and 96+63
 const ringCheck = await page.evaluate(async () => {
   const curve = await import('/src/math/curve.ts');
   const ren = await import('/src/render/renderer.ts');
@@ -113,8 +113,8 @@ const ringCheck = await page.evaluate(async () => {
   const r96 = maxScreenR(96, 63);
   return { r72, r96, expected: (Math.min(W, H) - 2 * pad) / 2 };
 });
-console.log('环像素半径(72+30):', ringCheck.r72.toFixed(1), '| (96+63):', ringCheck.r96.toFixed(1), '| 理论:', ringCheck.expected.toFixed(1));
-console.log('结论:', Math.abs(ringCheck.r72 - ringCheck.r96) < 1 && Math.abs(ringCheck.r72 - ringCheck.expected) < 3
-  ? '✅ 环像素大小恒定且图案恰好贴环内沿'
-  : '⚠ 环不恒定');
+console.log('ring pixel radius (72+30):', ringCheck.r72.toFixed(1), '| (96+63):', ringCheck.r96.toFixed(1), '| theoretical:', ringCheck.expected.toFixed(1));
+console.log('conclusion:', Math.abs(ringCheck.r72 - ringCheck.r96) < 1 && Math.abs(ringCheck.r72 - ringCheck.expected) < 3
+  ? '✅ ring pixel size is constant and the pattern exactly touches the ring inner edge'
+  : '⚠ ring not constant');
 await browser.close();

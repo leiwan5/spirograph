@@ -1,4 +1,4 @@
-// 像素级验证齿轮外观：齿数交替、盘面填充、孔圈
+// Pixel-level verification of gear appearance: alternating teeth, disc fill, hole ring
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -21,9 +21,9 @@ const analysis = await page.evaluate(() => {
     const i = (Math.round(y) * W + Math.round(x)) * 4;
     return [img[i], img[i + 1], img[i + 2]];
   }
-  // 环齿带半径：R=72, scale=(864-69.12)/144=5.52 → 齿带 388..394px，采 391
+  // ring tooth-band radius: R=72, scale=(864-69.12)/144=5.52 -> tooth band 388..394px, sample 391
   const ringBandR = (72 - 6 / 5.52) * 5.52;
-  // 沿环一周采样，统计"非白色像素"的交替次数（齿 vs 谷）
+  // sample around the ring, count alternations of "non-white pixels" (tooth vs valley)
   const N = 3600;
   let trans = 0;
   let prevDark = false;
@@ -34,14 +34,14 @@ const analysis = await page.evaluate(() => {
     const y = cy + ringBandR * Math.sin(a);
     const [r, g, b] = px(x, y);
     const isBg = r > 250 && g > 250 && b > 250;
-    const dark = !isBg && r < 210; // 齿轮廓（灰蓝 ~118-150）
+    const dark = !isBg && r < 210; // gear outline (gray-blue ~118-150)
     if (dark !== prevDark) { trans++; prevDark = dark; }
   }
-  // 滚动齿轮：中心 (R-r)*scale = 232px → (689,432)，盘面中心、孔圈采样
+  // rolling gear: center (R-r)*scale = 232px -> (689,432), disc center, hole ring sampling
   const gcx = cx + (72 - 30) * 5.52, gcy = cy;
   const discR = 30 * 5.52;
   const centerColor = px(gcx, gcy);
-  // 孔圈 0.5r 处 8 个孔：检查孔位置 vs 非孔位置的颜色差异
+  // 8 holes at 0.5r: check color difference at hole positions vs non-hole positions
   const holeR = 0.5 * discR;
   const holeColors = [];
   const solidColors = [];
@@ -53,7 +53,7 @@ const analysis = await page.evaluate(() => {
   const avg = (arr) => arr.reduce((s, p) => s + p[2], 0) / arr.length;
   return {
     ringBandR,
-    toothTransitions: trans, // 应 ≈ 72*2 = 144（72 齿 × 明暗边界 ×2）
+    toothTransitions: trans, // should be ≈ 72*2 = 144 (72 teeth × light/dark boundary ×2)
     estimatedTeeth: trans / 2,
     rollingCenter: centerColor,
     holeAvgBlue: avg(holeColors).toFixed(0),
@@ -61,8 +61,8 @@ const analysis = await page.evaluate(() => {
     discR,
   };
 });
-console.log('环齿带半径:', analysis.ringBandR.toFixed(1), 'px');
-console.log('沿环明暗交替次数:', analysis.toothTransitions, '→ 估计齿数:', analysis.estimatedTeeth, analysis.estimatedTeeth > 60 && analysis.estimatedTeeth < 84 ? '✅ 齿形正确（72 齿）' : '⚠');
-console.log('滚动齿轮中心颜色:', analysis.rollingCenter.join(','), '(应有淡色填充，非纯白)');
-console.log('孔圈处平均蓝 vs 盘面平均蓝:', analysis.holeAvgBlue, 'vs', analysis.solidAvgBlue, analysis.holeAvgBlue < analysis.solidAvgBlue ? '✅ 孔圈可见（孔较暗）' : '⚠');
+console.log('ring tooth-band radius:', analysis.ringBandR.toFixed(1), 'px');
+console.log('light/dark alternations around ring:', analysis.toothTransitions, '-> estimated teeth:', analysis.estimatedTeeth, analysis.estimatedTeeth > 60 && analysis.estimatedTeeth < 84 ? 'OK tooth shape correct (72 teeth)' : 'WARN');
+console.log('rolling gear center color:', analysis.rollingCenter.join(','), '(should have light fill, not pure white)');
+console.log('avg blue at hole ring vs disc surface:', analysis.holeAvgBlue, 'vs', analysis.solidAvgBlue, analysis.holeAvgBlue < analysis.solidAvgBlue ? 'OK hole ring visible (holes darker)' : 'WARN');
 await browser.close();

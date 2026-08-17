@@ -1,4 +1,4 @@
-// 决定性实验：期望值 vs 实际渲染的红/蓝像素范围
+// Decisive experiment: expected vs actual rendered red/blue pixel ranges
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -12,7 +12,7 @@ await page.goto('http://localhost:5273/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(800);
 
 const r = await page.evaluate(async () => {
-  // 期望值：用页面最新模块计算 (72,30,'inside',39) 和 (72,30,'inside',75) 在 fixed 下的屏幕范围
+  // expected values: compute screen ranges under fixed for (72,30,'inside',39) and (72,30,'inside',75) using the page's latest modules
   const curve = await import('/src/math/curve.ts');
   const ren = await import('/src/render/renderer.ts');
   const store = await import('/src/state/store.ts');
@@ -34,7 +34,7 @@ const r = await page.evaluate(async () => {
     return [Math.round(minX), Math.round(minY), Math.round(maxX), Math.round(maxY)];
   }
 
-  // 实际渲染：纯红 / 纯蓝实线像素 box
+  // actual render: solid red / solid blue pixel box
   const img = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
   const CW = c.width;
   function solidBox(pred) {

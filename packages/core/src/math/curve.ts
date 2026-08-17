@@ -1,9 +1,9 @@
 import type { CurveData, DrawingMode, GearRatio } from '../types.js';
 import { meshPhase, reduceRatio, validateGears } from './gear.js';
 
-/** 每圈采样点数 */
+/** Sample points per turn */
 export const SAMPLES_PER_TURN = 1200;
-/** 单条曲线采样点上限 */
+/** Sample point cap for a single curve */
 export const MAX_SAMPLES = 150_000;
 
 export interface CurveInfo {
@@ -13,7 +13,7 @@ export interface CurveInfo {
   reduced: boolean;
 }
 
-/** 只计算齿轮信息（不做采样），供信息区快速显示 */
+/** Compute only the gear info (no sampling), for the quick info-area display */
 export function curveInfo(ringTeeth: number, rollingTeeth: number, mode: DrawingMode): CurveInfo {
   const invalid = validateGears(ringTeeth, rollingTeeth, mode);
   if (invalid) throw new Error(invalid);
@@ -29,15 +29,15 @@ export function curveInfo(ringTeeth: number, rollingTeeth: number, mode: Drawing
 }
 
 /**
- * 生成闭合曲线采样点。
+ * Generate closed-curve sample points.
  *
- * 内切（hypotrochoid）：
+ * inside (hypotrochoid):
  *   x = (R−r)cos t + d·cos((R−r)/r·t)，y = (R−r)sin t − d·sin((R−r)/r·t)
- * 外切（epitrochoid）：
+ * outside (epitrochoid):
  *   x = (R+r)cos t − d·cos((R+r)/r·t)，y = (R+r)sin t − d·sin((R+r)/r·t)
  *
- * 齿数同模数，半径与齿数成正比，直接用齿数作为 R、r。
- * 闭合周期 T = 2π·q，其中 q = rollingTeeth/gcd。
+ * Teeth share the same module so radii are proportional to tooth counts; teeth are used directly as R, r.
+ * The closing period is T = 2π·q, where q = rollingTeeth/gcd.
  */
 export function sampleCurve(
   ringTeeth: number,
@@ -55,7 +55,7 @@ export function sampleCurve(
     total = samplesPerTurn * q;
   }
 
-  const count = total + 1; // 首尾闭合重复点
+  const count = total + 1; // closing duplicate point at the end
   const pts = new Float64Array(count * 2);
 
   const R = ringTeeth;
@@ -63,7 +63,7 @@ export function sampleCurve(
   const d = (holePercent / 100) * r;
   const a = mode === 'inside' ? R - r : R + r;
   const k = mode === 'inside' ? (R - r) / r : (R + r) / r;
-  // 内切：齿轮自转含啮合相位 → 孔轨迹的 d 项相位 = -meshPhase
+  // inside: gear spin includes the mesh phase → the d-term phase of the hole trajectory = -meshPhase
   const phase = mode === 'inside' ? -meshPhase(R, r) : 0;
   const T = 2 * Math.PI * q;
 

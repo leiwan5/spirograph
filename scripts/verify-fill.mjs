@@ -1,4 +1,4 @@
-// 分步实验：离屏 canvas 手动绘制齿形，定位 fill 越界问题
+// Step-by-step experiment: draw the gear teeth manually on an offscreen canvas to locate the fill overflow issue
 import { chromium } from 'playwright-core';
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
 const browser = await chromium.launch({
@@ -22,7 +22,7 @@ const exp = await page.evaluate(() => {
   const PI2 = Math.PI * 2;
   const ringStep = PI2 / 72;
 
-  // 实验 A：只 fill 锯齿多边形
+  // Experiment A: only fill the sawtooth polygon
   ctx.beginPath();
   for (let i = 0; i < 72; i++) {
     const a = i * ringStep;
@@ -37,7 +37,7 @@ const exp = await page.evaluate(() => {
     ctx.lineTo(x2, y2);
   }
   ctx.closePath();
-  ctx.fillStyle = 'rgba(150,162,182,1)'; // 实色便于观察
+  ctx.fillStyle = 'rgba(150,162,182,1)'; // solid color for easy viewing
   ctx.fill();
 
   const img = ctx.getImageData(0, 0, 600, 600).data;
@@ -45,7 +45,7 @@ const exp = await page.evaluate(() => {
     const i = (Math.round(y) * 600 + Math.round(x)) * 4;
     return [img[i], img[i + 1], img[i + 2]];
   };
-  // 90° 方向扫描
+  // 90° direction scan
   const scan = [];
   for (let rad = 270; rad <= 310; rad += 5) {
     const p = px(cx, cy + rad);
@@ -54,5 +54,5 @@ const exp = await page.evaluate(() => {
   return { ringRoot: ringRoot.toFixed(1), ringTip: ringTip.toFixed(1), scan };
 });
 console.log('ringRoot:', exp.ringRoot, '| ringTip:', exp.ringTip);
-console.log('90°方向 fill 扫描:', exp.scan.join(' | '));
+console.log('90° direction fill scan:', exp.scan.join(' | '));
 await browser.close();

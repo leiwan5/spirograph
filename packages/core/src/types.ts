@@ -1,46 +1,46 @@
-/** 绘制模式：内切（hypotrochoid）/ 外切（epitrochoid） */
+/** Drawing mode: inside (hypotrochoid) / outside (epitrochoid) */
 export type DrawingMode = 'inside' | 'outside';
 
-/** 一支笔：孔洞位置（占滚动齿轮半径百分比）+ 一组颜色 + 粗细 */
+/** A pen: hole position (as % of the rolling gear radius) + a set of colors + width */
 export interface Pen {
   id: number;
-  hole: number; // 0-100, 百分比（真实 Spirograph 孔洞都在齿轮盘内，d ≤ r）
-  // 颜色列表：仅 1 个 = 单色笔；≥ 2 个 = 渐变笔（沿曲线按 spacing 间隔循环取色）
+  hole: number; // 0-100, percent (real Spirograph holes are inside the gear disc, d ≤ r)
+  // color list: exactly 1 = solid pen; ≥ 2 = gradient pen (cycles colors along the curve at spacing intervals)
   colors: string[];
-  spacing: number; // 渐变间隔（% 曲线长度，0-100）；单色笔时忽略
-  width: number; // 屏幕像素
+  spacing: number; // gradient spacing (% of curve length, 0-100); ignored for solid pens
+  width: number; // screen pixels
 }
 
-/** 应用绘制参数（不含播放状态，播放由 UI 层管理） */
+/** App drawing params (no play state; play is managed by the UI layer) */
 export interface AppState {
   mode: DrawingMode;
   ringTeeth: number;
   rollingTeeth: number;
   pens: Pen[];
   background: string;
-  speed: number; // 动画速度倍率 0.1-10
-  scaleMode: 'auto' | 'fixed'; // auto=联合包围盒自适应充满；fixed=固定齿轮比例（调孔洞不影响整图缩放）
-  showGears: boolean; // 动画时显示齿轮（多笔分步完成）
+  speed: number; // animation speed multiplier 0.1-10
+  scaleMode: 'auto' | 'fixed'; // auto=fit the joint bounding box; fixed=fixed gear scale (hole changes don't rescale the whole image)
+  showGears: boolean; // show gears during animation (pens drawn in sequence)
 }
 
-/** 化简后的齿轮信息 */
+/** Reduced gear info */
 export interface GearRatio {
   p: number; // ringTeeth / gcd
   q: number; // rollingTeeth / gcd
-  petals: number; // 花瓣数
+  petals: number; // petal count
 }
 
-/** 曲线采样结果：x,y 交错存储，首尾闭合（最后一点 === 第一点） */
+/** Curve sampling result: x,y interleaved, closed (last point === first point) */
 export interface CurveData {
   points: Float64Array;
-  count: number; // 点数（含闭合重复点）
+  count: number; // point count (includes the closing duplicate point)
   ratio: GearRatio;
-  periodTurns: number; // 闭合需要滚动齿轮转 q 圈
-  totalSamples: number; // 实际线段数 = count - 1
-  reduced: boolean; // 是否因采样上限被降采样
+  periodTurns: number; // rolling gear turns q times to close
+  totalSamples: number; // actual segment count = count - 1
+  reduced: boolean; // whether it was downsampled due to the sampling cap
 }
 
-/** 屏幕坐标变换 */
+/** Screen coordinate transform */
 export interface Transform {
   scale: number;
   offsetX: number;
@@ -54,30 +54,30 @@ export interface Bounds {
   maxY: number;
 }
 
-/** 一条待渲染的曲线及其笔配置 */
+/** A curve to render and its pen config */
 export interface RenderItem {
   curve: CurveData;
   pen: Pen;
 }
 
 /**
- * 线段级渲染契约（跨平台统一）：坐标已应用屏幕变换，颜色已解析（渐变在此收敛），
- * 浏览器 Canvas / SVG / 光栅 PNG / 未来 React Native 全部消费同一份数据 → 三端颜色决策一致。
+ * Segment-level render contract (unified across platforms): coordinates already screen-transformed, colors already resolved (gradients converge here),
+ * browser Canvas / SVG / raster PNG / future React Native all consume the same data → consistent color decisions across all targets.
  */
 export interface RenderSegment {
   x0: number;
   y0: number;
   x1: number;
   y1: number;
-  color: string; // 该段颜色（渐变笔为逐段解析色，单色笔为 pen.color）
-  width: number; // 屏幕像素笔宽
+  color: string; // this segment's color (gradient pen = per-segment resolved color, solid pen = pen.color)
+  width: number; // screen pixel width
 }
 
-/** 单支笔在线段数组中的区间 */
+/** A single pen's range within the segment array */
 export interface PenRange {
-  first: number; // 首段索引
-  count: number; // 段数
-  uniformColor: string | null; // 单色笔统一颜色（渐变笔为 null，供渲染器走快速单路径）
+  first: number; // first segment index
+  count: number; // segment count
+  uniformColor: string | null; // solid pen's uniform color (null for gradient pens, letting renderers use a fast single path)
   width: number;
 }
 

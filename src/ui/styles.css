@@ -24,7 +24,7 @@ body {
 
 #app { display: flex; flex-direction: column; height: 100%; }
 
-/* ===== 顶部水平工具栏（显示/动画/导出等非图形参数功能） ===== */
+/* ===== top horizontal toolbar (display/animation/export and other non-graphic-parameter functions) ===== */
 .toolbar {
   display: flex;
   align-items: center;
@@ -39,7 +39,7 @@ body {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-right: auto; /* 品牌靠左，其余工具组全部推到右侧 */
+  margin-right: auto; /* brand on the left, all other tool groups pushed to the right */
   flex-shrink: 0;
 }
 .toolbar-brand .brand-title { font-size: 16px; font-weight: 700; letter-spacing: 0.5px; }
@@ -53,7 +53,7 @@ body {
 }
 .toolbar-group:first-of-type { border-left: none; }
 .toolbar-group-lang { margin-left: 0; }
-/* 双类选择器提高特异性：覆盖 .btn { padding: 9px 0 } 的默认水平 padding */
+/* double-class selector for higher specificity: overrides the default horizontal padding of .btn { padding: 9px 0 } */
 .toolbar .toolbar-btn {
   padding: 4px 10px;
   font-size: 12.5px;
@@ -61,7 +61,7 @@ body {
   white-space: nowrap;
   min-width: 0;
 }
-/* 动画模式按钮：稍大，留足左右空间，便于点击与高亮辨识 */
+/* animation mode button: a bit larger with room left/right for easy clicking and highlight recognition */
 .toolbar .toolbar-play {
   padding: 4px 14px;
   min-width: 42px;
@@ -83,10 +83,10 @@ body {
 .toolbar .size-select { padding: 3px 6px; font-size: 12.5px; }
 .toolbar .val { color: var(--text); font-weight: 600; font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .toolbar-btn.active { background: var(--accent); color: #fff; }
-/* 后台图片端点不可用（如 GitHub Pages）→ 隐藏"复制图片链接"按钮 */
+/* backend image endpoint unavailable (e.g. GitHub Pages) → hide the "Copy image link" button */
 .toolbar-btn[hidden] { display: none; }
 
-/* ===== 设置 modal（画布相关设置） ===== */
+/* ===== settings modal (canvas-related settings) ===== */
 .settings-modal {
   position: fixed;
   inset: 0;
@@ -161,7 +161,7 @@ body {
   flex-shrink: 0;
 }
 .settings-row .size-select { font-size: 13px; }
-/* 画布缩放行：标签在上，seg 占满整行 */
+/* canvas scale row: label on top, seg fills the whole row */
 .settings-row-scale {
   flex-direction: column;
   align-items: stretch;
@@ -170,10 +170,10 @@ body {
 .settings-seg { width: 100%; }
 .settings-seg button { padding: 8px 0; font-size: 12.5px; }
 
-/* 工作区：面板 + 画布 */
+/* workspace: panel + canvas */
 .workspace { display: flex; flex: 1; min-height: 0; }
 
-/* ===== 左侧面板 ===== */
+/* ===== left panel ===== */
 .panel {
   width: 330px;
   min-width: 330px;
@@ -252,7 +252,7 @@ input[type='color'] {
   padding: 2px;
 }
 
-/* 快捷齿数 chips */
+/* quick tooth-count chips */
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
   background: var(--panel-2);
@@ -268,7 +268,7 @@ input[type='color'] {
 .chip:hover { color: var(--text); border-color: var(--accent); }
 .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-/* 模式切换 */
+/* mode switch */
 .seg { display: flex; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 3px; gap: 3px; }
 .seg button {
   flex: 1;
@@ -284,7 +284,7 @@ input[type='color'] {
 }
 .seg button.active { background: var(--accent); color: #fff; font-weight: 600; }
 
-/* 笔标签页（tab view） */
+/* pen tabs (tab view) */
 .pens-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -309,7 +309,7 @@ input[type='color'] {
 .pen-tab-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); flex-shrink: 0; }
 .pen-tab-add { border-style: dashed; font-size: 14px; padding: 2px 11px; }
 
-/* 笔卡片 */
+/* pen cards */
 .pens { display: flex; flex-direction: column; gap: 10px; }
 .pen-card {
   background: var(--panel-2);
@@ -340,7 +340,7 @@ input[type='color'] {
 .pen-row .row-label { flex: 1; }
 .pen-row input[type='color'] { width: 32px; height: 24px; }
 
-/* 渐变断点行 */
+/* gradient stop row */
 .grad-stop {
   display: flex;
   align-items: center;
@@ -369,7 +369,7 @@ input[type='color'] {
 }
 .pen-grad-del:hover { color: #fff; border-color: var(--danger); background: rgba(229, 72, 77, 0.15); }
 
-/* 渐变色槽 */
+/* gradient color slots */
 .pen-grad-colors { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .pen-grad-slot { display: inline-flex; align-items: center; gap: 3px; }
 .pen-grad-slot input[type='color'] { width: 30px !important; height: 24px !important; padding: 1px; }
@@ -388,7 +388,7 @@ input[type='color'] {
 }
 .pen-grad-del:hover { color: #fff; border-color: var(--danger); background: rgba(229, 72, 77, 0.15); }
 
-/* 下拉选择 */
+/* dropdown select */
 .size-select {
   background: var(--panel-2);
   border: 1px solid var(--border);
@@ -400,7 +400,7 @@ input[type='color'] {
   cursor: pointer;
 }
 
-/* 渐变控件 */
+/* gradient controls */
 .pen-grad-slots { display: inline-flex; gap: 4px; align-items: center; }
 .pen-grad-color { width: 26px !important; height: 22px !important; padding: 1px; }
 .pen-grad-add {
@@ -419,7 +419,7 @@ input[type='color'] {
 .pen-grad-opts { display: none; flex-direction: column; gap: 6px; }
 .pen-grad-opts.show { display: flex; }
 
-/* 复选框行 */
+/* checkbox row */
 .check-row {
   display: flex;
   align-items: center;
@@ -436,7 +436,7 @@ input[type='color'] {
   cursor: pointer;
 }
 
-/* 操作按钮 */
+/* action buttons */
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .btn {
   border: none;
@@ -456,7 +456,7 @@ input[type='color'] {
 .btn-ghost:hover { border-color: var(--accent); color: var(--accent-2); }
 .btn.full { grid-column: 1 / -1; }
 
-/* 信息区 */
+/* info area */
 .info {
   background: var(--panel-2);
   border: 1px solid var(--border);
@@ -472,13 +472,13 @@ input[type='color'] {
 .info b { color: var(--text); font-variant-numeric: tabular-nums; }
 .warn { color: var(--danger); font-size: 12px; }
 
-/* ===== 画布区域 ===== */
+/* ===== canvas area ===== */
 .stage {
   flex: 1;
   min-width: 0;
   padding: 18px;
   display: flex;
-  position: relative; /* 浮动工具栏定位基准 */
+  position: relative; /* anchor for the floating toolbar */
 }
 #canvas {
   flex: 1;
@@ -490,7 +490,7 @@ input[type='color'] {
   touch-action: none;
 }
 
-/* 动画模式浮动工具栏（画布右下角，触摸友好 ≥44px） */
+/* animation mode floating toolbar (canvas bottom-right, touch-friendly ≥44px) */
 .anim-float {
   position: absolute;
   right: 24px;
@@ -548,11 +548,11 @@ input[type='color'] {
   font-variant-numeric: tabular-nums;
   user-select: none;
 }
-/* 停止按钮（方块 fa-stop） */
+/* stop button (square fa-stop) */
 .anim-float-stop { color: var(--danger); font-size: 16px; }
 .anim-float-stop:hover { color: #fff; border-color: var(--danger); background: rgba(229,72,77,0.25); }
 
-/* 播放模式切换（多笔同时 / 单笔一次） */
+/* play mode switch (all pens together / one at a time) */
 .anim-float-mode {
   display: inline-flex;
   gap: 2px;
@@ -575,7 +575,7 @@ input[type='color'] {
 .anim-float-mode button:hover { color: var(--text); }
 .anim-float-mode button.active { background: var(--accent); color: #fff; }
 
-/* 显示齿轮切换（按钮，带 toggle active 态） */
+/* show gears toggle (button with a toggle active state) */
 .anim-float-toggle {
   display: inline-flex;
   align-items: center;
@@ -595,10 +595,10 @@ input[type='color'] {
 .anim-float-toggle:hover { color: var(--accent-2); border-color: var(--accent); }
 .anim-float-toggle.active { color: #fff; background: var(--accent); border-color: var(--accent); }
 
-/* 动画模式按钮激活态（工具栏） */
+/* animation mode button active state (toolbar) */
 .toolbar-play.active { background: var(--accent); color: #fff; }
 
-/* 小屏适配 */
+/* small screen adaptation */
 @media (max-width: 760px) {
   .workspace { flex-direction: column; }
   .panel { width: 100%; min-width: 0; height: auto; max-height: 40vh; border-right: none; border-bottom: 1px solid var(--border); }
@@ -611,7 +611,7 @@ input[type='color'] {
   .anim-float-btn { width: 48px; height: 48px; }
 }
 
-/* Font Awesome 图标在按钮内的统一表现 */
+/* consistent Font Awesome icon rendering inside buttons */
 button i.fa-solid {
   display: inline-block;
   line-height: 1;

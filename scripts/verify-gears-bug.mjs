@@ -1,4 +1,4 @@
-// 复现：勾选显示齿轮后播放动画，抓帧分析
+// Repro: check Show Gears, play the animation, analyze captured frames
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -15,13 +15,13 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push('CONSOLE: ' + 
 await page.goto('http://localhost:5273/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
 
-// 勾选齿轮（默认状态：auto 模式 72×30 两笔）
+// check the gear toggle (default state: auto mode 72×30 two pens)
 await page.evaluate(() => {
   document.getElementById('show-gears').click();
 });
 await page.waitForTimeout(500);
 
-// 播放前静态帧
+// static frame before playing
 const staticFrame = await page.evaluate(() => {
   const c = document.getElementById('canvas');
   const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
@@ -31,9 +31,9 @@ const staticFrame = await page.evaluate(() => {
   }
   return nonBg;
 });
-console.log('播放前静态帧非背景像素:', staticFrame);
+console.log('static frame non-background pixels before playing:', staticFrame);
 
-// 播放
+// play
 await page.click('#play');
 await page.waitForTimeout(500);
 const frame1 = await page.evaluate(() => {
@@ -59,12 +59,12 @@ const frame2 = await page.evaluate(() => {
   }
   return nonBg;
 });
-console.log('播放中帧1 (500ms):', JSON.stringify(frame1));
-console.log('播放中帧2 (1300ms): 非背景像素', frame2);
-console.log('播放按钮状态:', await page.textContent('#play'));
-console.log('JS错误:', errors.length ? errors : '无');
+console.log('frame1 while playing (500ms):', JSON.stringify(frame1));
+console.log('frame2 while playing (1300ms): non-background pixels', frame2);
+console.log('play button state:', await page.textContent('#play'));
+console.log('JS errors:', errors.length ? errors : 'none');
 
-// 暂停并看最终画面
+// pause and inspect the final frame
 await page.click('#play');
 await page.waitForTimeout(200);
 const paused = await page.evaluate(() => {
@@ -76,5 +76,5 @@ const paused = await page.evaluate(() => {
   }
   return nonBg;
 });
-console.log('暂停后画面非背景像素:', paused);
+console.log('non-background pixels after pausing:', paused);
 await browser.close();

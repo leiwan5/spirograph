@@ -9,7 +9,7 @@ export async function onRequest(context: CfContext): Promise<Response> {
   const url = new URL(context.request.url);
   const format = url.searchParams.get('format');
   if (format !== 'png' && format !== 'svg') {
-    return new Response('format 参数必须为 png 或 svg', { status: 400 });
+    return new Response('format param must be png or svg', { status: 400 });
   }
   try {
     if (format === 'svg') {
@@ -29,7 +29,7 @@ export async function onRequest(context: CfContext): Promise<Response> {
       },
     });
   } catch (err) {
-    console.error('[api/image] 生成失败:', err);
+    console.error('[api/image] generation failed:', err);
     return new Response('image generation failed', { status: 500 });
   }
 }

@@ -1,14 +1,14 @@
 # @spirograph/cli
 
-万花尺图案生成 CLI：把 URL query（或 JSON）直接生成 PNG / SVG 文件。基于 [`@spirograph/core`](https://www.npmjs.com/package/@spirograph/core)，无其他运行时依赖。
+Spirograph pattern generation CLI: turns a URL query (or JSON) directly into PNG / SVG files. Built on [`@spirograph/core`](https://www.npmjs.com/package/@spirograph/core), no other runtime dependencies.
 
-## 安装
+## Install
 
 ```bash
-npm install -g @spirograph/cli   # 或 npx @spirograph/cli
+npm install -g @spirograph/cli   # or npx @spirograph/cli
 ```
 
-## 用法
+## Usage
 
 ```bash
 spirograph generate --params "ring=72&rolling=30&pen=40,2.5,e63946&pen=75,2,1d6fa5" --format png --size 2048 --out out.png
@@ -17,17 +17,17 @@ spirograph generate --json '{"ringTeeth":72,"rollingTeeth":30,"pens":[{"hole":40
 spirograph --help
 ```
 
-| 选项 | 说明 |
+| Option | Description |
 |---|---|
-| `--params <query>` | URL query（与 web 分享链接 / 图片端点同一格式） |
-| `--json <json>` | AppState JSON（优先于 --params） |
-| `--format <fmt>` | `png` / `svg`（默认 png） |
-| `--size <n>` | PNG 尺寸 64–4096（默认 1000） |
-| `--out <path>` | 输出路径（默认 `spirograph.<fmt>`） |
+| `--params <query>` | URL query (same format as web share links / image endpoints) |
+| `--json <json>` | AppState JSON (takes precedence over --params) |
+| `--format <fmt>` | `png` / `svg` (default png) |
+| `--size <n>` | PNG size 64–4096 (default 1000) |
+| `--out <path>` | output path (default `spirograph.<fmt>`) |
 
-## 开发
+## Development
 
 ```bash
-npm run build   # tsc -b → dist/cli.js（bin: spirograph）
+npm run build   # tsc -b → dist/cli.js (bin: spirograph)
 node dist/cli.js generate --params "ring=72&rolling=30&pen=40,2.5,e63946"
 ```

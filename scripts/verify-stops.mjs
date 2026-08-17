@@ -9,17 +9,17 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 
-// 1) URL 加载 3 断点渐变（用户例子语义）：体当前端 gradientColorAt 渲染
-// 直接验证单测已覆盖，这里验证 URL 解析 + 画布颜色分布
+// 1) URL loads a 3-stop gradient (user example semantics): reflect current frontend gradientColorAt rendering
+// unit tests already cover direct verification; here verify URL parsing + canvas color distribution
 await page.goto('http://localhost:5273/?ring=72&rolling=30&pen=40,e63946,2.5,15:1d6fa5:5~30:f4a261:0', { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
 const state = await page.evaluate(() => {
   const p = window.__dshStore.getState().pens[0];
   return { gradient: p.gradient, loop: p.gradientLoop };
 });
-console.log('1) URL 3断点: gradient', JSON.stringify(state.gradient), state.gradient.length === 2 && state.gradient[0].pos === 15 ? '✅' : '⚠');
+console.log('1) URL 3-stop: gradient', JSON.stringify(state.gradient), state.gradient.length === 2 && state.gradient[0].pos === 15 ? '✅' : '⚠');
 
-// 2) UI 控件：默认笔勾选渐变 → 出现 2 断点
+// 2) UI control: default pen checks gradient → shows 2 stops
 await page.goto('http://localhost:5273/?ring=72&rolling=30&pen=40,e63946,2.5', { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
 await page.evaluate(() => document.querySelectorAll('.pen-card')[0].querySelector('.pen-grad').click());
@@ -29,14 +29,14 @@ const uiState = await page.evaluate(() => {
   const stops = document.querySelectorAll('.pen-card')[0].querySelectorAll('.grad-stop').length;
   return { gradient: p.gradient, stopRows: stops };
 });
-console.log('2) 勾选渐变: 断点', uiState.gradient.length, '| UI行数', uiState.stopRows, uiState.gradient.length === 2 && uiState.stopRows === 2 ? '✅' : '⚠');
+console.log('2) gradient checked: stops', uiState.gradient.length, '| UI rows', uiState.stopRows, uiState.gradient.length === 2 && uiState.stopRows === 2 ? '✅' : '⚠');
 
-// 3) 添加断点到 3，改位置/过渡
+// 3) add stops up to 3, change position/transition
 await page.evaluate(() => {
   const card = document.querySelectorAll('.pen-card')[0];
   card.querySelector('.pen-grad-add').click();
   const rows = card.querySelectorAll('.grad-stop');
-  // 改第 0 断点 pos → 20
+  // change stop 0 pos → 20
   const pos0 = rows[0].querySelector('.pen-grad-pos');
   pos0.value = '20'; pos0.dispatchEvent(new Event('input'));
 });
@@ -45,9 +45,9 @@ const state3 = await page.evaluate(() => {
   const p = window.__dshStore.getState().pens[0];
   return { n: p.gradient.length, pos0: p.gradient[0].pos };
 });
-console.log('3) 3断点+改位置:', JSON.stringify(state3), state3.n === 3 && state3.pos0 === 20 ? '✅' : '⚠');
+console.log('3) 3 stops + changed position:', JSON.stringify(state3), state3.n === 3 && state3.pos0 === 20 ? '✅' : '⚠');
 
-// 4) 导出 SVG 含多断点颜色
+// 4) exported SVG contains multi-stop colors
 await page.evaluate(() => { document.getElementById('img-size').value = '512'; });
 const [svgDl] = await Promise.all([
   page.waitForEvent('download', { timeout: 10000 }),
@@ -56,9 +56,9 @@ const [svgDl] = await Promise.all([
 const fs = await import('node:fs');
 const svgText = fs.readFileSync(await svgDl.path(), 'utf8');
 const strokes = [...svgText.matchAll(/stroke="([^"]*)"/g)].map((m) => m[1]);
-console.log('4) SVG: path数', strokes.length, '| 去重色', new Set(strokes).size, new Set(strokes).size > 5 ? '✅' : '⚠');
+console.log('4) SVG: path count', strokes.length, '| unique colors', new Set(strokes).size, new Set(strokes).size > 5 ? '✅' : '⚠');
 
-// 5) /api/image PNG 无 NaN（渐变颜色丰富）
+// 5) /api/image PNG without NaN (gradient has rich colors)
 const png = await page.evaluate(async () => {
   const resp = await fetch('/api/image?ring=72&rolling=30&pen=40,e63946,2.5,15:1d6fa5:5~30:f4a261:0&format=png&size=256');
   const blob = await resp.blob();
@@ -84,9 +84,9 @@ const png = await page.evaluate(async () => {
     img.src = dataUrl;
   });
 });
-console.log('5) /api PNG: 黑', png.black, '| 去重色', png.distinct, png.black === 0 && png.distinct > 5 ? '✅' : '⚠');
+console.log('5) /api PNG: black', png.black, '| unique colors', png.distinct, png.black === 0 && png.distinct > 5 ? '✅' : '⚠');
 
-// 6) 动画回归
+// 6) animation regression
 await page.click('#play');
 await page.waitForTimeout(1200);
 const mid = await page.evaluate(() => {
@@ -97,5 +97,5 @@ const mid = await page.evaluate(() => {
   return n;
 });
 await page.click('#play');
-console.log('6) 动画:', mid > 5000 ? '✅ 有内容' : '⚠', '| JS错误:', errors.length ? errors : '无');
+console.log('6) animation:', mid > 5000 ? '✅ has content' : '⚠', '| JS errors:', errors.length ? errors : 'none');
 await browser.close();

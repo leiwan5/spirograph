@@ -1,4 +1,4 @@
-// 精确统计：各场景下"笔一红像素"与"笔二蓝像素"各自的变动
+// Precise counts: how many "pen one red pixels" and "pen two blue pixels" move in each scenario
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -30,7 +30,7 @@ async function capture() {
   });
 }
 
-// 笔一红 #e63946 ≈ (230,57,70)；笔二蓝 #1d6fa5 ≈ (29,111,165)
+// Pen one red #e63946 ≈ (230,57,70); pen two blue #1d6fa5 ≈ (29,111,165)
 const isRed = (r, g, b) => r > 180 && g < 130 && b < 130 && r - g > 60;
 const isBlue = (r, g, b) => b > 120 && g > 70 && g < 160 && r < 90;
 
@@ -51,12 +51,12 @@ async function measure(label, mode, change) {
     if (isBlue(r1, g1, b1)) blueMoved++;
   }
   console.log(label);
-  console.log('  笔一(红)像素变动:', redMoved, ' | 笔二(蓝)像素变动:', blueMoved);
+  console.log('  pen one (red) pixels moved:', redMoved, ' | pen two (blue) pixels moved:', blueMoved);
 }
 
-await measure('A [auto] 变动笔一 39→20（观察笔二是否动）', 'auto', () => setHole(0, 20));
-await measure('B [auto] 变动笔二 79→40（观察笔一是否动）', 'auto', () => setHole(1, 40));
-await measure('C [fixed] 变动笔二 79→40（观察笔一是否动）', 'fixed', () => setHole(1, 40));
-await measure('D [fixed] 变动笔一 39→20（观察笔二是否动）', 'fixed', () => setHole(0, 20));
+await measure('A [auto] change pen one 39->20 (watch whether pen two moves)', 'auto', () => setHole(0, 20));
+await measure('B [auto] change pen two 79->40 (watch whether pen one moves)', 'auto', () => setHole(1, 40));
+await measure('C [fixed] change pen two 79->40 (watch whether pen one moves)', 'fixed', () => setHole(1, 40));
+await measure('D [fixed] change pen one 39->20 (watch whether pen two moves)', 'fixed', () => setHole(0, 20));
 
 await browser.close();

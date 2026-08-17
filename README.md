@@ -1,58 +1,58 @@
-# Spirograph 生成器 · Monorepo
+# Spirograph Generator · Monorepo
 
-浏览器即开即用的 Spirograph 图案生成器（中文界面）+ **跨平台万花尺图形生成库**（npm workspaces 单仓库）。
+A browser-ready Spirograph pattern generator (demo UI) + **cross-platform spirograph rendering library** (npm workspaces monorepo).
 
 ```
-packages/core/    @spirograph/core   纯核心库：数学/几何/渐变/线段渲染契约/SVG/PNG，零 DOM/Node 依赖
-packages/anim/    @spirograph/anim   可选动画驱动库（可注入帧调度器），配合 core 使用
-apps/cli/         @spirograph/cli    CLI：query/JSON → PNG/SVG 文件（bin: spirograph）
-src/  api/  functions/               web 应用（根目录，Vercel/CF 部署配置保留）
+packages/core/    @spirograph/core   Pure core library: math / geometry / gradients / segment-level render contract / SVG / PNG, zero DOM/Node dependencies
+packages/anim/    @spirograph/anim   Optional animation driver (injectable frame scheduler), used with core
+apps/cli/         @spirograph/cli    CLI: query/JSON → PNG/SVG files (bin: spirograph)
+src/  api/  functions/               web app (root, Vercel/CF deployment config retained)
 ```
 
-## 功能
+## Features
 
-- **齿轮规格**：环形齿轮 40–240 齿、滚动齿轮 8–96 齿（含经典快捷值），内切 / 外切两种模式
-- **多笔叠加**：任意数量笔，每支独立配置孔洞（滚动半径 0–100%）、颜色、粗细（0.5–8px）
-- **两种缩放模式**：
-  - 固定图像大小：图案始终充满画布
-  - 环固定大小：齿轮环在画布上大小恒定，图案按真实比例画在环内（调孔洞不影响其他笔）
-- **模拟绘制动画**：笔尖逐段绘制，速度 0.1–10×，可暂停 / 继续
-- **导出**：高清 PNG（2048px）与 SVG
-- **预设与随机**：7 组经典齿轮组合一键套用，随机灵感按钮
-- **URL 分享**：全部参数经 querystring 传递，复制地址栏即可分享当前图案
+- **Gear specs**: ring gear 40–240 teeth, rolling gear 8–96 teeth (with classic quick values), inside / outside modes
+- **Multi-pen stacking**: any number of pens, each independently configured with hole (0–100% of rolling radius), color, width (0.5–8px)
+- **Two scale modes**:
+  - Fixed image size: pattern always fills the canvas
+  - Fixed ring size: gear ring stays constant size on canvas, pattern drawn at true scale inside (hole changes do not affect other pens)
+- **Simulated drawing animation**: pen tip draws segment by segment, speed 0.1–10×, pausable / resumable
+- **Export**: high-res PNG (2048px) and SVG
+- **Presets & random**: 7 classic gear combinations with one click, random inspiration button
+- **URL sharing**: all parameters passed via querystring, copy the address bar to share the current pattern
 
-## 开发
+## Development
 
 ```bash
 npm install
-npm run dev          # 开发服务器 http://localhost:5173
-npm test             # 构建 packages + Vitest 单元测试（60+）
-npm run build        # 构建 packages + 类型检查 + 生产构建 → dist/
-npm run check:purity # 纯度守卫：核心库零平台依赖检查
-npm run build:cli    # 构建 CLI
+npm run dev          # dev server http://localhost:5173
+npm test             # build packages + Vitest unit tests (60+)
+npm run build        # build packages + typecheck + production build → dist/
+npm run check:purity # purity guard: core library zero platform-dependency check
+npm run build:cli    # build CLI
 ```
 
-## 库的使用（@spirograph/core）
+## Using the library (@spirograph/core)
 
 ```ts
 import { parseState, buildItems, buildSvg, generatePng } from '@spirograph/core';
 
 const state = parseState('?ring=72&rolling=30&pen=40,e63946,2.5');
-const items = buildItems({ ...defaults, ...state });   // 见 DEFAULT_STATE
-const svg   = buildSvg(items, '#ffffff', 1024);        // SVG 字符串
-const png   = generatePng('?ring=72&rolling=30&pen=40,e63946,2.5'); // PNG 字节
+const items = buildItems({ ...defaults, ...state });   // see DEFAULT_STATE
+const svg   = buildSvg(items, '#ffffff', 1024);        // SVG string
+const png   = generatePng('?ring=72&rolling=30&pen=40,e63946,2.5'); // PNG bytes
 
-// 浏览器 Canvas 渲染（./browser 子路径）
+// Browser Canvas rendering (./browser subpath)
 import { renderFull, clearCanvas } from '@spirograph/core/browser';
 const ctx = clearCanvas(canvas, 800, 800, '#ffffff', window.devicePixelRatio || 1);
 renderFull(ctx, items, computeTransform(computeBounds(items.map(i => i.curve)), 800, 800, 32));
 ```
 
-说明：
-- `.` 入口 = 纯逻辑（可作为 npm 包发布，浏览器/Node/RN(Hermes)/Serverless 通用）
-- `./browser` 入口 = Canvas 2D 渲染（最小结构化接口，不依赖 DOM lib）
-- 渐变颜色在核心统一解析（`buildRenderData` 逐段取色）→ Canvas / SVG / PNG 三端颜色决策一致
-- URL 编解码为内置纯字符串 codec（不依赖 URLSearchParams / TextEncoder）
+Notes:
+- `.` entry = pure logic (publishable as an npm package; browser / Node / RN (Hermes) / Serverless)
+- `./browser` entry = Canvas 2D rendering (minimal structural interface, no DOM lib dependency)
+- Gradient colors are resolved centrally in core (`buildRenderData` resolves per-segment) → consistent color decisions across Canvas / SVG / PNG
+- URL encode/decode is a built-in pure string codec (no dependency on URLSearchParams / TextEncoder)
 
 ## CLI
 
@@ -62,93 +62,93 @@ npx @spirograph/cli generate --params "…" --format svg --out out.svg
 npx @spirograph/cli generate --json '{"ringTeeth":72,"rollingTeeth":30,"pens":[{"hole":40,"color":"#e63946","width":2.5}]}'
 ```
 
-## 未来扩展位（未实现）
+## Future expansion (not yet implemented)
 
-- `@spirograph/react-native`（react-native-svg 适配）、`@spirograph/react`、`@spirograph/svelte`：依赖 core 的薄封装
-- 消费契约：`RenderData`（线段级数据）、`createFramePlan`（帧计划）、`generatePng/generateSvg`（序列化）
+- `@spirograph/react-native` (react-native-svg adapter), `@spirograph/react`, `@spirograph/svelte`: thin wrappers on core
+- Consumed contracts: `RenderData` (segment-level data), `createFramePlan` (frame plan), `generatePng/generateSvg` (serialization)
 
-## URL 参数
+## URL parameters
 
 `?ring=144&rolling=60&mode=inside&pen=40,1.8,3a86ff&pen=70,1.5,10,00bbf9,f4a261&bg=1b1b2f&speed=2.5&scale=fixed`
 
-| 参数 | 含义 | 范围 |
+| Param | Meaning | Range |
 |---|---|---|
-| `ring` | 环形齿轮齿数 | 40–240 |
-| `rolling` | 滚动齿轮齿数 | 8–96 |
-| `mode` | 绘制模式 | `inside` / `outside` |
-| `pen` | 一支笔（可重复）：`孔洞,粗细,颜色1` = 单色；`孔洞,粗细,间隔,颜色1[,颜色2[,颜色3[,颜色4]]]` = 多色渐变（间隔在颜色组前，与 6 位 hex 无歧义）。**1 个颜色 = 单色，≥ 2 个颜色 = 渐变** | 孔洞 0–100 / 粗细 0.5–8 / 间隔 1–100 |
-| `bg` | 背景色 | 6 位 hex（无 #） |
-| `speed` | 动画速度 | 0.1–10 |
-| `scale` | 缩放模式 | `auto` / `fixed` |
-| `gears` | 显示齿轮动画（多笔分步绘制） | `1` / `0` |
+| `ring` | ring gear teeth | 40–240 |
+| `rolling` | rolling gear teeth | 8–96 |
+| `mode` | drawing mode | `inside` / `outside` |
+| `pen` | one pen (repeatable): `hole,width,color1` = solid; `hole,width,spacing,color1[,color2[,color3[,color4]]]` = multi-color gradient (spacing comes before the color group, unambiguous with 6-digit hex). **1 color = solid, ≥ 2 colors = gradient** | hole 0–100 / width 0.5–8 / spacing 1–100 |
+| `bg` | background color | 6-digit hex (no #) |
+| `speed` | animation speed | 0.1–10 |
+| `scale` | scale mode | `auto` / `fixed` |
+| `gears` | show gear animation (pens drawn in sequence) | `1` / `0` |
 
-非法参数自动忽略回退默认值；内切时滚动齿数 ≥ 环形齿数会自动夹取。
+Invalid parameters are silently ignored and fall back to defaults; when inside mode has rolling teeth ≥ ring teeth it is clamped automatically.
 
-## 数学
+## Math
 
-- 内切（hypotrochoid）：x=(R−r)cos t + d·cos((R−r)/r·t)，y=(R−r)sin t − d·sin((R−r)/r·t)
-- 外切（epitrochoid）：x=(R+r)cos t − d·cos((R+r)/r·t)，y=(R+r)sin t − d·sin((R+r)/r·t)
-- 齿数同模数，半径与齿数成正比；闭合周期 T=2π·q（q = 滚动齿数/gcd）
+- Inside (hypotrochoid): x=(R−r)cos t + d·cos((R−r)/r·t), y=(R−r)sin t − d·sin((R−r)/r·t)
+- Outside (epitrochoid): x=(R+r)cos t − d·cos((R+r)/r·t), y=(R+r)sin t − d·sin((R+r)/r·t)
+- Teeth share the same module, so radii are proportional to tooth counts; the closing period is T=2π·q (q = rolling teeth/gcd)
 
-## 图片端点（format=png/svg）
+## Image endpoint (format=png/svg)
 
-URL 带 `format=png` 或 `format=svg` 时直接返回图片（可被 `<img>` 引用、右键保存）：
+A URL with `format=png` or `format=svg` returns the image directly (usable in `<img>` tags, saveable via right-click):
 
 ```
 http://localhost:5173/api/image?ring=72&rolling=30&pen=40,e63946,2.5&format=png&size=2048
 http://localhost:5173/?ring=72&rolling=30&format=svg
 ```
 
-- 参数与主应用 URL 一致（ring/rolling/mode/pen/bg/scale/speed 等），额外支持 `size`（64–4096，默认 1000）
-- 开发环境：Vite 中间件（`/?format=` 与 `/api/image` 均可）
-- 生产部署：Serverless 函数（Vercel `api/image.ts` / Cloudflare Pages `functions/api/image.ts`），PNG 编码为纯 JS（pako），无原生依赖
-- 实现全部来自 `@spirograph/core` 的 `generateSvg/generatePng`（query → 图片，与 CLI 同源）
+- Parameters match the main app URL (ring/rolling/mode/pen/bg/scale/speed, etc.), with extra support for `size` (64–4096, default 1000)
+- Development: Vite middleware (both `/?format=` and `/api/image`)
+- Production: Serverless functions (Vercel `api/image.ts` / Cloudflare Pages `functions/api/image.ts`), PNG encoding is pure JS (pako), no native dependencies
+- Implementation all comes from `@spirograph/core`'s `generateSvg/generatePng` (query → image, same source as CLI)
 
-### 部署到 Vercel
+### Deploying to Vercel
 
-1. 推送仓库到 GitHub，在 Vercel 导入项目（Framework: Vite）
-2. `api/image.ts` 自动成为 `/api/image` 端点，静态站点照常托管
-3. 图片 URL：`https://你的域名/api/image?...&format=png`
+1. Push the repo to GitHub and import the project in Vercel (Framework: Vite)
+2. `api/image.ts` automatically becomes the `/api/image` endpoint; the static site is hosted as usual
+3. Image URL: `https://<your-domain>/api/image?...&format=png`
 
-### 部署到 Cloudflare Pages
+### Deploying to Cloudflare Pages
 
-1. 构建命令 `npm run build`，输出目录 `dist`
-2. `functions/` 目录自动成为 Pages Functions，`/api/image` 端点生效
-3. 图片 URL：`https://你的域名/api/image?...&format=png`
+1. Build command `npm run build`, output directory `dist`
+2. The `functions/` directory automatically becomes Pages Functions; the `/api/image` endpoint is enabled
+3. Image URL: `https://<your-domain>/api/image?...&format=png`
 
-### 部署到 GitHub Pages
+### Deploying to GitHub Pages
 
-GitHub Pages 是纯静态托管，**没有** serverless 函数，因此 `/api/image` 图片端点不可用：
-前端会在运行时探测并自动隐藏「复制图片链接」按钮，其余功能均正常。
+GitHub Pages is pure static hosting and has **no** serverless functions, so the `/api/image` image endpoint is unavailable:
+the frontend probes at runtime and automatically hides the "Copy image link" button; everything else works normally.
 
-已内置 `.github/workflows/deploy.yml`，push 到 `main` 时自动构建并以子路径部署：
+A `.github/workflows/deploy.yml` is included: on push to `main` it builds automatically and deploys to a subpath:
 
-1. 仓库 Settings → Pages → Source 选 **GitHub Actions**
-2. push 到 `main` 后，Actions 自动构建 `dist/` 并发布（首次部署需手动跑一次
-   `workflow_dispatch` 触发）
-3. 站点地址：`https://<你的用户名>.github.io/<仓库名>/`
+1. Repo Settings → Pages → Source select **GitHub Actions**
+2. After pushing to `main`, Actions builds `dist/` and publishes (the first deploy requires a manual
+   `workflow_dispatch` trigger)
+3. Site URL: `https://<your-username>.github.io/<repo-name>/`
 
-> 子路径资源引用通过构建时环境变量 `BASE_URL` 注入（见 `.github/workflows/deploy.yml`），
-> 仓库改名无需改代码。本地 `npm run dev` / `npm run preview` 默认使用相对路径
-> `./`，不依赖该变量。
+> Subpath resource references are injected via the build-time environment variable `BASE_URL` (see `.github/workflows/deploy.yml`),
+> so renaming the repo requires no code changes. Local `npm run dev` / `npm run preview` use the relative
+> path `./` by default and do not depend on that variable.
 
-## 目录结构
+## Directory structure
 
 ```
-packages/core/src/   核心库（纯）：
-  math/               齿轮化简、曲线采样
-  geometry.ts         包围盒 / 变换
-  gradient.ts         渐变取色（三端统一）
-  pattern.ts          盘面孔阵
-  pose.ts             齿轮位姿、分步进度
-  segments.ts         线段级渲染契约 buildRenderData（统一颜色决策）
-  svg.ts              SVG 字符串
-  png.ts              光栅 + PNG 编码
-  query.ts            URL codec
-  image.ts            query → PNG/SVG（图片端点 / CLI 同源）
-  browser.ts          Canvas 2D 渲染（./browser 子路径入口）
-packages/anim/src/    动画驱动：FrameScheduler / DrawAnimation / createFramePlan
-apps/cli/src/         CLI：generate 命令
-src/                  web 应用：main / state / ui / render(导出胶水)
-scripts/              无头浏览器验证脚本（playwright-core）+ 纯度守卫
+packages/core/src/   core library (pure):
+  math/              gear reduction, curve sampling
+  geometry.ts        bounds / transform
+  gradient.ts        gradient color sampling (unified across targets)
+  pattern.ts         disc hole pattern
+  pose.ts            gear pose, per-step progress
+  segments.ts        segment-level render contract buildRenderData (unified color decision)
+  svg.ts             SVG string
+  png.ts             raster + PNG encoding
+  query.ts           URL codec
+  image.ts           query → PNG/SVG (same source as image endpoint / CLI)
+  browser.ts         Canvas 2D rendering (./browser subpath entry)
+packages/anim/src/   animation driver: FrameScheduler / DrawAnimation / createFramePlan
+apps/cli/src/        CLI: generate command
+src/                 web app: main / state / ui / render (export glue)
+scripts/             headless browser verification scripts (playwright-core) + purity guard
 ```

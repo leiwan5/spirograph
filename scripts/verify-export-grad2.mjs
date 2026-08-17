@@ -13,7 +13,7 @@ await page.goto('http://localhost:5273/?' + GRAD, { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
 await page.evaluate(() => { document.getElementById('img-size').value = '512'; });
 
-// 3) UI 导出 PNG：base64 分析
+// 3) UI export PNG: base64 analysis
 const [pngDl] = await Promise.all([
   page.waitForEvent('download', { timeout: 10000 }),
   page.click('#export-png'),
@@ -38,15 +38,15 @@ const uiPng = await page.evaluate(async (b64) => {
   }
   return { red, blue, total, w: img.naturalWidth };
 }, pngB64);
-console.log('3) UI 导出 PNG:', uiPng.w + 'px | 红', uiPng.red, '蓝', uiPng.blue, uiPng.red > 100 && uiPng.blue > 100 ? '✅ 渐变' : '⚠');
+console.log('3) UI export PNG:', uiPng.w + 'px | red', uiPng.red, 'blue', uiPng.blue, uiPng.red > 100 && uiPng.blue > 100 ? '✅ gradient' : '⚠');
 
-// 4) UI 导出 SVG
+// 4) UI export SVG
 const [svgDl] = await Promise.all([
   page.waitForEvent('download', { timeout: 10000 }),
   page.click('#export-svg'),
 ]);
 const svgText = fs.readFileSync(await svgDl.path(), 'utf8');
 const strokes = [...svgText.matchAll(/stroke="([^"]*)"/g)].map((m) => m[1]);
-console.log('4) UI 导出 SVG: path 数', strokes.length, '| 去重色', new Set(strokes).size, new Set(strokes).size > 5 ? '✅ 渐变' : '⚠');
-console.log('JS错误:', errors.length ? errors : '无');
+console.log('4) UI export SVG: path count', strokes.length, '| distinct colors', new Set(strokes).size, new Set(strokes).size > 5 ? '✅ gradient' : '⚠');
+console.log('JS errors:', errors.length ? errors : 'none');
 await browser.close();

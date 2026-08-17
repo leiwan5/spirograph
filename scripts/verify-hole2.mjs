@@ -21,23 +21,23 @@ const r = await page.evaluate(async () => {
     const i = (Math.round(y) * W + Math.round(x)) * 4;
     return [img[i], img[i + 1], img[i + 2]];
   };
-  // 笔一曲线起点（曲线坐标 → 屏幕）
+  // pen 1 curve start (curve coordinates -> screen)
   const curve = await import('/src/math/curve.ts');
   const data = curve.sampleCurve(72, 30, 'inside', 40);
   const scale = 5.52;
   const sx = data.points[0] * scale + cx;
   const sy = data.points[1] * scale + cy;
-  // 起点中心 + 十字采样：中心应为红色笔尖，周围为深色孔底
+  // start center + cross sampling: center should be the red pen tip, surroundings dark hole bottom
   const center = px(sx, sy);
   const ring = [px(sx - 4, sy), px(sx + 4, sy), px(sx, sy - 4), px(sx, sy + 4)];
-  // 孔在滚动齿轮盘上的半径（数学验证）：起点到滚动中心(42,0)的距离 = 40%×30 = 12
+  // hole radius on the rolling gear disc (math validation): distance from start to rolling center (42,0) = 40%×30 = 12
   const holeR = Math.hypot(data.points[0] - 42, data.points[1]);
   return { center, ring, holeR };
 });
 const isRed = (p) => p[0] > 180 && p[1] < 130 && p[2] < 130;
 const isDark = (p) => p[0] < 110 && p[1] < 130 && p[2] < 150 && p[0] > 30;
-console.log('孔中心像素(应红色笔尖):', r.center.join(','), isRed(r.center) ? '✅ 笔尖在孔正中' : '⚠');
-console.log('孔底四周(应深色):', JSON.stringify(r.ring), r.ring.every(isDark) ? '✅ 深色孔底包围' : '⚠');
-console.log('孔在盘上半径:', r.holeR.toFixed(2), '= 参数 40%×30 = 12', Math.abs(r.holeR - 12) < 0.01 ? '✅ 孔位=当前参数' : '⚠');
-console.log('JS错误:', errors.length ? errors : '无');
+console.log('hole center pixel (should be red pen tip):', r.center.join(','), isRed(r.center) ? 'OK pen tip at hole center' : 'WARN');
+console.log('around hole bottom (should be dark):', JSON.stringify(r.ring), r.ring.every(isDark) ? 'OK dark hole bottom surrounds' : 'WARN');
+console.log('hole radius on disc:', r.holeR.toFixed(2), '= param 40%×30 = 12', Math.abs(r.holeR - 12) < 0.01 ? 'OK hole = current param' : 'WARN');
+console.log('JS errors:', errors.length ? errors : 'none');
 await browser.close();

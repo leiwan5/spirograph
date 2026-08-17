@@ -1,10 +1,10 @@
-/** 孔阵中的一个孔（盘面局部坐标：frac = 半径比例，angle = 局部角） */
+/** A hole in the pattern (disc-local coords: frac = radius ratio, angle = local angle) */
 export interface HolePatternHole {
   frac: number;
   angle: number;
 }
 
-/** 确定性随机数（基于笔参数种子，同一组参数 → 同一孔阵） */
+/** Deterministic pseudo-random (seeded from pen params: same params → same hole pattern) */
 function seededRandom(seed: number): () => number {
   let s = seed >>> 0;
   return () => {
@@ -14,10 +14,10 @@ function seededRandom(seed: number): () => number {
 }
 
 /**
- * 根据笔参数生成盘面孔阵：
- * - 每支笔的参数半径（hole%·r）处有一圈孔，0 号孔在局部角 0（与曲线起点严格重合）
- *   → 所有笔的孔都是孔阵的一员，笔尖插在孔正中间
- * - 再确定性随机补充若干圈装饰孔，使盘面像真实万花尺的钻孔布局
+ * Generate the disc hole pattern from pen params:
+ * - a ring of holes at each pen's param radius (hole%·r), hole 0 at local angle 0 (strictly coincides with the curve start)
+ *   → every pen's hole is a member of the pattern, the pen tip sits exactly in the middle of its hole
+ * - then deterministically-random decorative rings so the face looks like a real spirograph drilling layout
  */
 export function generateHolePattern(pens: Array<{ hole: number }>): HolePatternHole[] {
   const seed = pens.reduce((h, p) => h * 31 + Math.round(p.hole), 7) >>> 0;
@@ -25,7 +25,7 @@ export function generateHolePattern(pens: Array<{ hole: number }>): HolePatternH
   const holes: HolePatternHole[] = [];
   const usedFracs = new Set<number>();
 
-  // 笔参数圈：0 号孔在局部角 0
+  // pen-param rings: hole 0 at local angle 0
   for (const pen of pens) {
     const frac = Math.max(0.08, pen.hole / 100);
     if (usedFracs.has(frac)) continue;
@@ -35,7 +35,7 @@ export function generateHolePattern(pens: Array<{ hole: number }>): HolePatternH
     usedFracs.add(frac);
   }
 
-  // 补充圈（装饰，随机半径与孔数，避免与已有圈过近）
+  // extra rings (decorative, random radius and hole count, avoiding being too close to existing rings)
   const target = Math.min(5, usedFracs.size + 2);
   let guard = 0;
   while (usedFracs.size < target && guard++ < 30) {

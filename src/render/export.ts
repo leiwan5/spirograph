@@ -1,5 +1,5 @@
-// Web 应用专属导出帮助函数（DOM 侧：Blob / URL / document）
-// buildSvg / renderToCanvasAt 本体在 @spirograph/core，此处只做浏览器胶水。
+// Web-app-specific export helpers (DOM side: Blob / URL / document)
+// buildSvg / renderToCanvasAt live in @spirograph/core; this is just browser glue.
 import type { RenderItem } from '@spirograph/core';
 import { buildSvg } from '@spirograph/core';
 import { renderToCanvasAt } from '@spirograph/core/browser';

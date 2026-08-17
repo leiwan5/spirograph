@@ -6,11 +6,11 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--disable-gpu'],
 });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-const GRAD = 'ring=72&rolling=30&pen=40,e63946,2.5,20,40,1d6fa5'; // 起点20 长度40 不循环
+const GRAD = 'ring=72&rolling=30&pen=40,e63946,2.5,20,40,1d6fa5'; // start 20, length 40, no loop
 await page.goto('http://localhost:5273/?' + GRAD, { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
 
-// 页面内统一分析函数：给定图片 src（同源 URL），返回指定进度位置的颜色
+// Unified in-page analysis function: given an image src (same-origin URL), returns the color distribution by progress position
 async function sampleColors(src) {
   return page.evaluate(async (url) => {
     const resp = await fetch(url);
@@ -28,7 +28,7 @@ async function sampleColors(src) {
         const ctx = cv.getContext('2d');
         ctx.drawImage(img, 0, 0);
         const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
-        // 统计渐变曲线上的颜色分布（排除背景）：中段（插值区）应有非黑非白颜色
+        // Count the color distribution on the gradient curve (excluding background): the middle (interpolation) region should have non-black non-white colors
         let midColors = 0, black = 0, total = 0;
         const seen = new Set();
         for (let i = 0; i < d.length; i += 16) {
@@ -46,7 +46,7 @@ async function sampleColors(src) {
   }, src);
 }
 
-// 屏幕渲染的颜色统计（同样方法）
+// Screen render color statistics (same method)
 const screen = await page.evaluate(() => {
   const c = document.getElementById('canvas');
   const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
@@ -65,10 +65,10 @@ const screen = await page.evaluate(() => {
 const apiPng = await sampleColors('/api/image?' + GRAD + '&format=png&size=512');
 const apiSvg = await sampleColors('/api/image?' + GRAD + '&format=svg&size=512');
 
-console.log('屏幕渲染:    黑色', screen.black, '| 去重颜色', screen.distinct, '| 总', screen.total);
-console.log('/api PNG:     黑色', apiPng.black, '| 去重颜色', apiPng.distinct, '| 总', apiPng.total);
-console.log('/api SVG:     黑色', apiSvg.black, '| 去重颜色', apiSvg.distinct, '| 总', apiSvg.total);
-console.log('判定:');
-console.log('  NaN 黑像素已修复:', apiPng.black === 0 && apiSvg.black === 0 ? '✅ 无黑色（之前插值段全黑）' : '⚠ 仍有黑');
-console.log('  渐变颜色丰富:', screen.distinct > 10 && apiPng.distinct > 10 && apiSvg.distinct > 10 ? '✅ 各路径都有渐变' : '⚠');
+console.log('screen render:  black', screen.black, '| distinct colors', screen.distinct, '| total', screen.total);
+console.log('/api PNG:      black', apiPng.black, '| distinct colors', apiPng.distinct, '| total', apiPng.total);
+console.log('/api SVG:      black', apiSvg.black, '| distinct colors', apiSvg.distinct, '| total', apiSvg.total);
+console.log('verdict:');
+console.log('  NaN black pixels fixed:', apiPng.black === 0 && apiSvg.black === 0 ? '✅ no black (previously the interpolation segment was all black)' : '⚠ still black');
+console.log('  gradient colors rich:', screen.distinct > 10 && apiPng.distinct > 10 && apiSvg.distinct > 10 ? '✅ gradient on every path' : '⚠');
 await browser.close();

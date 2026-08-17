@@ -24,7 +24,7 @@ export function setPen(id: number, patch: Partial<Pen>): void {
   emit();
 }
 
-/** 整体替换笔列表（预设/随机用），自动分配新 id；空列表会被拒绝（保证至少一支笔） */
+/** Replace the whole pen list (preset/random), auto-assign new ids; empty lists are rejected (always keep at least one pen) */
 export function setPens(pens: Array<Omit<Pen, 'id'>>): void {
   if (pens.length === 0) return;
   state = { ...state, pens: pens.map((p) => ({ ...p, id: nextPenId++ })) };
@@ -45,7 +45,7 @@ export function addPen(patch?: Partial<Pen>): void {
 }
 
 export function removePen(id: number): void {
-  if (state.pens.length <= 1) return; // 至少保留一支笔
+  if (state.pens.length <= 1) return; // always keep at least one pen
   state = { ...state, pens: state.pens.filter((p) => p.id !== id) };
   emit();
 }
@@ -67,7 +67,7 @@ function emit(): void {
   for (const fn of listeners) fn();
 }
 
-// 暴露给验证/调试脚本（不影响功能）
+// Exposed to verification/debug scripts (does not affect functionality)
 if (typeof window !== 'undefined') {
   (window as unknown as { __dshStore?: unknown }).__dshStore = { getState, setState, subscribe };
 }

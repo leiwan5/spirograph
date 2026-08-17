@@ -1,4 +1,4 @@
-// 用 window.__dshStore 验证：点击 fixed 后主实例状态与渲染
+// Verify main instance state and render via window.__dshStore after clicking fixed
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -11,14 +11,14 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 await page.goto('http://localhost:5273/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(800);
 
-console.log('初始 scaleMode:', await page.evaluate(() => window.__dshStore.getState().scaleMode));
+console.log('initial scaleMode:', await page.evaluate(() => window.__dshStore.getState().scaleMode));
 await page.evaluate(() => {
   document.querySelector('#scale-seg button[data-scale="fixed"]').click();
 });
 await page.waitForTimeout(400);
-console.log('点击后 scaleMode:', await page.evaluate(() => window.__dshStore.getState().scaleMode));
+console.log('after click scaleMode:', await page.evaluate(() => window.__dshStore.getState().scaleMode));
 
-// 设置孔洞 39/79 并抓渲染尺度
+// set holes 39/79 and capture the rendered scale
 await page.evaluate(() => {
   const s = document.querySelectorAll('.pen-card')[0].querySelector('.pen-hole');
   s.value = '39'; s.dispatchEvent(new Event('input'));
@@ -41,11 +41,11 @@ const inkBox = await page.evaluate(() => {
   }
   return { box: [minX, minY, maxX, maxY], w: W, h: c.height, ink: n };
 });
-console.log('当前状态:', JSON.stringify(await page.evaluate(() => {
+console.log('current state:', JSON.stringify(await page.evaluate(() => {
   const s = window.__dshStore.getState();
   return { scaleMode: s.scaleMode, pens: s.pens.map(p => p.hole), ring: s.ringTeeth, rolling: s.rollingTeeth };
 })));
-console.log('画布墨迹范围:', JSON.stringify(inkBox));
-// 期望：fixed 模式 + 笔一 39 → 半径 53.7×scale(5.52)≈296px → 中心457±296=[161,753]
-console.log('fixed 期望 [161,753] | auto(39,79) 期望 [112,802]');
+console.log('canvas ink box:', JSON.stringify(inkBox));
+// expected: fixed mode + pen 1 hole 39 → radius 53.7×scale(5.52)≈296px → center 457±296=[161,753]
+console.log('fixed expected [161,753] | auto(39,79) expected [112,802]');
 await browser.close();

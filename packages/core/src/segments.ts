@@ -2,9 +2,9 @@ import type { Pen, RenderData, RenderItem, RenderSegment, Transform } from './ty
 import { gradientColorAt } from './gradient.js';
 
 /**
- * 某支笔第 i 条线段（共 totalSegments 条）的颜色。
- * 多色笔（colors.length ≥ 2）：取该线段中点进度 (i+0.5)/N 处的渐变插值色；
- * 单色笔：colors[0]。全平台唯一颜色决策点，SVG/PNG/Canvas/RN 颜色从此函数收敛。
+ * The color of the i-th segment (of totalSegments) of a given pen.
+ * Multi-color pen (colors.length ≥ 2): the gradient interpolated color at the segment midpoint progress (i+0.5)/N;
+ * solid pen: colors[0]. This is the only color decision point across all platforms; SVG/PNG/Canvas/RN colors converge from this function.
  */
 export function segmentColor(pen: Pen, segmentIndex: number, totalSegments: number): string {
   if (pen.colors.length > 1) {
@@ -14,25 +14,25 @@ export function segmentColor(pen: Pen, segmentIndex: number, totalSegments: numb
   return pen.colors[0];
 }
 
-/** 渐变收笔线颜色：曲线闭合处 t=1 渐变回初始色（单色笔 = colors[0]） */
+/** Gradient closure-segment color: at the curve's closing point t=1 it fades back to the initial color (solid pen = colors[0]) */
 export function closureColor(pen: Pen): string {
   return pen.colors.length > 1 ? gradientColorAt(pen.colors, 1, pen.spacing) : pen.colors[0];
 }
 
 export interface BuildRenderDataOptions {
-  /** 每笔最多输出的线段数（不含渐变收笔线；动画前缀截断用），默认全部 */
+  /** max segments to output per pen (not counting the gradient closure segment; used for animation prefix truncation), default all */
   perPenLimit?: number[];
-  /** 渐变笔是否补收笔线（最后一点 → 起点，闭合曲线），默认 true；动画未画完时为 false */
+  /** whether gradient pens get a closure segment (last point → start, closing the curve), default true; false while the animation is unfinished */
   closed?: boolean | boolean[];
-  /** 合并步长：每 d 个原始段合并为 1 段（SVG 大图抽样/提速），可全局或按笔，默认 1 */
+  /** merge step: merge every d original segments into 1 (SVG large-image sampling/speed-up), global or per pen, default 1 */
   decimate?: number | number[];
 }
 
 /**
- * 构建线段级渲染数据（统一渲染契约）：
- * - 坐标已应用屏幕变换（transform 缩放 + 平移）
- * - 颜色已解析：渐变逐段取色 + 收笔线；单色笔统一 pen.color
- * - 宽度 = pen.width（屏幕像素），导出端按需再乘尺寸倍率
+ * Build segment-level render data (unified render contract):
+ * - coordinates already screen-transformed (transform scale + translate)
+ * - colors already resolved: gradient per-segment + closure segment; solid pen uses uniform pen.color
+ * - width = pen.width (screen pixels); the export side multiplies by the size ratio as needed
  */
 export function buildRenderData(items: RenderItem[], transform: Transform, opts: BuildRenderDataOptions = {}): RenderData {
   const segments: RenderSegment[] = [];
@@ -63,7 +63,7 @@ export function buildRenderData(items: RenderItem[], transform: Transform, opts:
       });
     }
 
-    // 渐变收笔线：仅当整支笔画完（limit 达上限）且 closed 时追加
+    // gradient closure segment: only appended when the entire pen is drawn (limit reached) and closed
     const penClosed = Array.isArray(closedDefault) ? closedDefault[pi] ?? true : closedDefault;
     if (isGradient && penClosed && limit >= merged && count > 1) {
       const n = count - 1;

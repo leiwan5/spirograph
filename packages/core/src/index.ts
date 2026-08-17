@@ -1,5 +1,5 @@
-// @spirograph/core — 纯核心入口（零 DOM / 零 Node 依赖）
-// 数学 / 几何 / 渐变 / 孔阵 / 位姿 / 线段渲染契约 / SVG / PNG / query codec
+// @spirograph/core — pure core entry (zero DOM / zero Node dependencies)
+// math / geometry / gradient / hole pattern / pose / segment render contract / SVG / PNG / query codec
 
 export * from './types.js';
 export { DEFAULT_STATE } from './defaults.js';
@@ -31,7 +31,7 @@ export {
   computeGearPose, computeSteps, weightedSteps, type GearPose,
 } from './pose.js';
 
-// segments（统一渲染契约）
+// segments (unified render contract)
 export {
   segmentColor, closureColor, buildRenderData,
   type BuildRenderDataOptions,
@@ -41,7 +41,7 @@ export {
 export { buildSvg } from './svg.js';
 export { rasterize, encodePng } from './png.js';
 
-// image（query → 图片，图片端点 / CLI 同源）
+// image (query → image, same source as image endpoint / CLI)
 export {
   parseImageParams, buildItems, generateSvg, generatePng,
   type ImageParams,

@@ -1,4 +1,4 @@
-// 查看 fixed 模式下"笔二蓝像素变动"的具体位置与邻域
+// Inspect the exact location and neighborhood of "pen 2 blue pixel changes" in fixed mode
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -50,7 +50,7 @@ const result = await page.evaluate(async () => {
           x, y,
           before: [r, g, b],
           after: at(img2, x, y),
-          // 3×3 邻域里是否出现笔一红
+          // whether pen 1 red appears within the 3×3 neighborhood
           neighborRed: nb.some((p) => p[0] > 180 && p[1] < 120 && p[2] < 120),
         });
       }

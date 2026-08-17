@@ -2,22 +2,22 @@ import { parseState, serializeState } from '@spirograph/core';
 import { getState, setPens, setState } from './store';
 
 /**
- * URL query 参数格式（核心 query codec 支持，见 @spirograph/core）：
+ * URL query parameter format (supported by the core query codec, see @spirograph/core):
  *   ring=72&rolling=30&mode=inside
- *   &pen=40,e63946,2.5&pen=75,1d6fa5,2   （每支笔一个 pen 参数，可重复）
- *   &pen=40,e63946,2.5,1d6fa5,f4a261     （3-6 段：附加 1-3 个渐变色，总色数 ≤4）
+ *   &pen=40,e63946,2.5&pen=75,1d6fa5,2   (one pen parameter per pen, repeatable)
+ *   &pen=40,e63946,2.5,1d6fa5,f4a261     (3-6 fields: 1-3 extra gradient colors, total colors ≤4)
  *   &bg=ffffff&speed=1&scale=auto&gears=1
- * 颜色一律使用不带 # 的 6 位 hex（避免 # 截断 query）。
- * parseState/serializeState 本体在核心库（纯），此处只保留 DOM 相关：应用/同步/分享链接。
+ * Colors always use 6-digit hex without # (to avoid # truncating the query).
+ * parseState/serializeState live in the core library (pure); only DOM-related parts stay here: apply/sync/share link.
  */
 
-/** 页面加载时应用 URL 参数（须在 buildPanel 之前调用） */
+/** Apply URL params on page load (must be called before buildPanel) */
 export function applyUrlParams(): void {
   if (typeof location === 'undefined') return;
   const patch = parseState(location.search);
   if (Object.keys(patch).length === 0) return;
 
-  // 内切时滚动齿数必须小于环形齿数（夹取）
+  // When inside mode, the rolling teeth must be less than the ring teeth (clamped)
   const mode = patch.mode ?? getState().mode;
   const ring = patch.ringTeeth ?? getState().ringTeeth;
   const rolling = patch.rollingTeeth ?? getState().rollingTeeth;
@@ -28,12 +28,12 @@ export function applyUrlParams(): void {
   if (pens && pens.length > 0) setPens(pens);
 }
 
-/** 生成当前状态的分享链接（完整 query） */
+/** Generate the share link for the current state (full query) */
 export function shareUrl(): string {
   return location.origin + location.pathname + '?' + serializeState(getState());
 }
 
-/** 状态变化 → 防抖同步地址栏（replaceState，不产生历史记录） */
+/** State change → debounce-sync the address bar (replaceState, no history entries) */
 export function syncUrl(): void {
   if (typeof window === 'undefined' || typeof history === 'undefined') return;
   window.clearTimeout(syncTimer);

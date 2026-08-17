@@ -1,4 +1,4 @@
-// 修正版：每个场景独立 setup(39,79) → before → 只变一支 → after
+// Fixed version: each scenario sets independent setup(39,79) -> before -> change only one pen -> after
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
@@ -24,7 +24,7 @@ async function grab() {
     return Array.from(c.getContext('2d').getImageData(0, 0, c.width, c.height).data);
   });
 }
-// 实线核心像素：与纯色精确一致（±3 容差）
+// Solid-line core pixels: exactly match the solid color (±3 tolerance)
 const isRedCore = (r, g, b) => Math.abs(r - 230) <= 3 && Math.abs(g - 57) <= 3 && Math.abs(b - 70) <= 3;
 const isBlueCore = (r, g, b) => Math.abs(r - 29) <= 3 && Math.abs(g - 111) <= 3 && Math.abs(b - 165) <= 3;
 
@@ -43,12 +43,12 @@ async function scenario(label, change) {
     if (isRedCore(r1, g1, b1)) redMoved++;
     if (isBlueCore(r1, g1, b1)) blueMoved++;
   }
-  console.log(label, '→ 笔一实线核心变动:', redMoved, '| 笔二实线核心变动:', blueMoved);
+  console.log(label, '-> pen1 solid-line core changed:', redMoved, '| pen2 solid-line core changed:', blueMoved);
   return { redMoved, blueMoved };
 }
 
-const a = await scenario('A 变动笔一 39→20（观察笔二）', () => setHole(0, 20));
-const b = await scenario('B 变动笔二 79→40（观察笔一）', () => setHole(1, 40));
-console.log('A 判定:', a.blueMoved === 0 ? '✅ 变动笔一，笔二核心像素完全不动' : '⚠ 笔二核心像素动了 ' + a.blueMoved);
-console.log('B 判定:', b.redMoved === 0 ? '✅ 变动笔二，笔一核心像素完全不动' : '⚠ 笔一核心像素动了 ' + b.redMoved);
+const a = await scenario('A change pen1 39->20 (observe pen2)', () => setHole(0, 20));
+const b = await scenario('B change pen2 79->40 (observe pen1)', () => setHole(1, 40));
+console.log('A result:', a.blueMoved === 0 ? 'OK changing pen1, pen2 core pixels completely unmoved' : 'WARN pen2 core pixels moved ' + a.blueMoved);
+console.log('B result:', b.redMoved === 0 ? 'OK changing pen2, pen1 core pixels completely unmoved' : 'WARN pen1 core pixels moved ' + b.redMoved);
 await browser.close();

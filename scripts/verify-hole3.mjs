@@ -27,17 +27,17 @@ const r = await page.evaluate(async () => {
   const sx = data.points[0] * scale + cx;
   const sy = data.points[1] * scale + cy;
   const center = px(sx, sy);
-  // 孔描边环：半径 4.5 处（当前笔孔边）
+  // hole outline ring: at radius 4.5 (the current pen-hole edge)
   const ring = [px(sx - 4.5, sy), px(sx + 4.5, sy), px(sx, sy - 4.5), px(sx, sy + 4.5)];
-  // 白圈：半径 6.5 处
+  // white ring: at radius 6.5
   const white = [px(sx - 6.5, sy), px(sx + 6.5, sy), px(sx, sy - 6.5), px(sx, sy + 6.5)];
   return { center, ring, white };
 });
 const isRed = (p) => p[0] > 180 && p[1] < 130 && p[2] < 130;
 const isDark = (p) => p[0] < 110 && p[1] < 130 && p[2] < 150 && p[0] > 30;
 const isWhiteish = (p) => p[0] > 200 && p[1] > 200 && p[2] > 200;
-console.log('孔中心(红色笔尖):', r.center.join(','), isRed(r.center) ? '✅' : '⚠');
-console.log('孔描边环(深色空心圆边):', JSON.stringify(r.ring), r.ring.filter(isDark).length >= 2 ? '✅ 空心圆孔样式' : '⚠');
-console.log('白圈(高亮):', JSON.stringify(r.white), r.white.filter(isWhiteish).length >= 2 ? '✅' : '⚠');
-console.log('JS错误:', errors.length ? errors : '无');
+console.log('hole center (red pen tip):', r.center.join(','), isRed(r.center) ? 'OK' : 'WARN');
+console.log('hole outline ring (dark hollow circle edge):', JSON.stringify(r.ring), r.ring.filter(isDark).length >= 2 ? 'OK hollow-circle hole style' : 'WARN');
+console.log('white ring (highlight):', JSON.stringify(r.white), r.white.filter(isWhiteish).length >= 2 ? 'OK' : 'WARN');
+console.log('JS errors:', errors.length ? errors : 'none');
 await browser.close();

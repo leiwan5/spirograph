@@ -1,4 +1,4 @@
-// 正确调试：设置 (39,79) 后对比红色像素实际范围 vs 笔一曲线采样范围
+// Proper debug: after setting (39,79), compare the actual red pixel range vs the pen one curve sampling range
 import { chromium } from 'playwright-core';
 
 const EDGE = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';

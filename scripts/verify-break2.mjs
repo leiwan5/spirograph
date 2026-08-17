@@ -22,8 +22,8 @@ const r = await page.evaluate(async () => {
   };
   const curve = await import('/src/math/curve.ts');
   const data = curve.sampleCurve(72, 30, 'inside', 40);
-  // 精确沿曲线点采样（起点附近 0-40px，避开笔二交叉区域——起点方向是笔一自己的区域）
-  // 注意：起点在 x 正方向，笔二曲线(75%)也在附近……用紧贴曲线的密采样
+  // Sample precisely along the curve points (near the start, 0-40px, avoiding the pen two crossing region - the start direction is pen one's own territory)
+  // Note: the start is in the +x direction, and the pen two curve (75%) is also nearby... use dense sampling hugging the curve
   const trace = [];
   const step = 3;
   for (let idx = 120; idx >= 0; idx -= step) {
@@ -43,10 +43,10 @@ let gaps = [];
 let prevRed = false;
 for (const t of r) {
   const red = isReddish(t.color);
-  if (!red && prevRed) gaps.push('距起点 ' + t.dist + 'px (' + t.color + ')');
+  if (!red && prevRed) gaps.push('distance from start ' + t.dist + 'px (' + t.color + ')');
   prevRed = red;
 }
-console.log('起点附近曲线采样（0-40px）:');
+console.log('curve samples near the start (0-40px):');
 for (const t of r.slice(0, 14)) console.log('  ' + t.dist + 'px |', t.color);
-console.log('断点(红色→非红):', gaps.length ? gaps : '无 ✅ 曲线连续');
+console.log('break points (red->non-red):', gaps.length ? gaps : 'none ✅ curve continuous');
 await browser.close();
