@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { generatePng, generateSvg } from '@spirograph/core';
 
 export interface CliOptions {
@@ -132,8 +133,11 @@ export function main(argv: string[], writeFile: (path: string, data: Uint8Array 
 function isMain(): boolean {
   if (typeof process === 'undefined' || !process.argv?.[1]) return false;
   try {
-    return import.meta.url === new URL(`file://${process.argv[1]}`).href ||
-      import.meta.url.endsWith(process.argv[1].split('/').pop() ?? '');
+    // Resolve both sides to their canonical real paths so the npm-linked bin symlink
+    // (`@spirograph/cli` → bin `spirograph`) is recognized as the same entry as `node dist/cli.js`.
+    const entry = realpathSync(process.argv[1]);
+    const self = realpathSync(fileURLToPath(import.meta.url));
+    return entry === self;
   } catch {
     return false;
   }

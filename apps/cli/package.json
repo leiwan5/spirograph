@@ -1,6 +1,6 @@
 {
   "name": "@spirograph/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Spirograph CLI: generate PNG/SVG files directly from query/JSON params, based on @spirograph/core",
   "license": "MIT",
   "type": "module",
