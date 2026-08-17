@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { generatePng, generateSvg } from './image.js';
 import { encodePng } from './png.js';
+import { parseState, buildItems, rasterize } from './index.js';
 
 describe('server-side image generation (deployed endpoint reuse)', () => {
   it('encodePng outputs a valid PNG signature', () => {
@@ -46,5 +47,31 @@ describe('server-side image generation (deployed endpoint reuse)', () => {
     expect(png[0]).toBe(137);
     const dv = new DataView(png.buffer, 16, 4);
     expect(dv.getUint32(0)).toBe(1000);
+  });
+});
+
+describe('gradient color rasterization (parseColor in PNG renderer)', () => {
+  it('rasterize resolves gradient (rgb(...)) segment colors to the correct RGB, not NaN/black', () => {
+    const items = buildItems({ ...parseState('?ring=144&rolling=60&pen=40,2,45,ff0000,00ff00,0000ff') });
+    // Small render keeps the test fast; scan a 256px raster for colored (non-background, non-black) stroke pixels.
+    const rgba = rasterize(items, '#ffffff', 256, {});
+    let colored = 0;
+    for (let i = 0; i < rgba.length; i += 4) {
+      const r = rgba[i], g = rgba[i + 1], b = rgba[i + 2];
+      // A red/green/blue gradient stroke pixel has strong color content and low grey flatness
+      if ((r + g + b) < 700 && (Math.max(r, g, b) - Math.min(r, g, b)) > 60) colored++;
+    }
+    // The pattern must render plenty of colorful stroke pixels (would be ~0 if colors parsed to NaN/black).
+    expect(colored).toBeGreaterThan(500);
+  });
+
+  it('rasterize background accepts both hex forms and short hex', () => {
+    const items = buildItems({ ...parseState('?ring=50&rolling=30&pen=40,2,ff0000') });
+    const full = rasterize(items, '#0b1026', 32, {});
+    expect(full[0]).toBe(11);   // 0x0b
+    expect(full[1]).toBe(16);   // 0x10
+    expect(full[2]).toBe(38);   // 0x26
+    const short = rasterize(items, 'abc', 32, {});
+    expect([short[0], short[1], short[2]]).toEqual([170, 187, 204]);
   });
 });

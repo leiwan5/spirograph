@@ -1,7 +1,7 @@
 import { deflate } from 'pako';
 import type { RenderItem } from './types.js';
 import { computeBounds, computeFixedBounds, computeTransform } from './geometry.js';
-import { hexToRgb } from './gradient.js';
+import { parseColor } from './gradient.js';
 import { buildRenderData, type BuildRenderDataOptions } from './segments.js';
 import type { Transform } from './types.js';
 
@@ -30,7 +30,7 @@ export function rasterize(
   const data = buildRenderData(items, t, opts);
 
   const rgba = new Uint8Array(size * size * 4);
-  const bg = hexToRgb(background);
+  const bg = parseColor(background);
   for (let i = 0; i < rgba.length; i += 4) {
     rgba[i] = bg[0];
     rgba[i + 1] = bg[1];
@@ -39,7 +39,7 @@ export function rasterize(
   }
   const widthScale = size / 1000;
   for (const s of data.segments) {
-    plotLine(rgba, size, s.x0, s.y0, s.x1, s.y1, hexToRgb(s.color), s.width * widthScale);
+    plotLine(rgba, size, s.x0, s.y0, s.x1, s.y1, parseColor(s.color), s.width * widthScale);
   }
   return rgba;
 }

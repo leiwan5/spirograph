@@ -20,7 +20,7 @@ export {
 
 // gradient
 export {
-  GRADIENT_SEGMENTS, hexToRgb, lerpColor, gradientColorAt,
+  GRADIENT_SEGMENTS, hexToRgb, parseColor, lerpColor, gradientColorAt,
 } from './gradient.js';
 
 // pattern / pose
