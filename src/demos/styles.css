@@ -331,6 +331,22 @@ body {
 }
 .api-table tr:last-child td { border-bottom: none; }
 
+/* ===== SpirographState structure block (inside API section) ===== */
+.api-struct {
+  margin-top: 28px;
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+}
+.api-struct h3 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+.api-struct .sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
 /* ===== footer ===== */
 .docs-footer {
   border-top: 1px solid var(--border);

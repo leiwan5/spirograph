@@ -120,6 +120,24 @@
       <tr><td><code>onDone</code></td><td><code>() =&gt; void?</code></td><td>—</td><td>fired when the animation completes</td></tr>
     </tbody>
   </table>
+
+  <div class="api-struct">
+    <h3>SpirographState</h3>
+    <p class="sub">The single <code>state</code> prop fully describes the pattern to draw.</p>
+    <table class="api-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><code>mode</code></td><td><code>'inside' | 'outside'</code></td><td><code>inside</code> = hypotrochoid inside the ring · <code>outside</code> = epitrochoid around the ring</td></tr>
+        <tr><td><code>ringTeeth</code></td><td><code>number</code></td><td>ring gear teeth (40–240)</td></tr>
+        <tr><td><code>rollingTeeth</code></td><td><code>number</code></td><td>rolling gear teeth (8–96, <code>inside</code> requires &lt; <code>ringTeeth</code>)</td></tr>
+        <tr><td><code>pens</code></td><td><code>Pen[]</code></td><td>stacked pens: <code>hole</code> (0–100% of rolling radius), <code>colors</code> (1 = solid, ≥2 = gradient), <code>width</code>, <code>spacing</code></td></tr>
+        <tr><td><code>background</code></td><td><code>string</code></td><td>canvas background color (e.g. <code>'#ffffff'</code>)</td></tr>
+        <tr><td><code>speed</code></td><td><code>number</code></td><td>animation speed multiplier 0.1–10</td></tr>
+        <tr><td><code>scaleMode</code></td><td><code>'auto' | 'fixed'</code></td><td><code>auto</code> = fit the joint bounding box · <code>fixed</code> = fixed ring size</td></tr>
+        <tr><td><code>showGears</code></td><td><code>boolean</code></td><td>show the gear mesh during animation</td></tr>
+      </tbody>
+    </table>
+  </div>
 </section>
 
 <footer class="docs-footer">
