@@ -4,6 +4,7 @@ import { serializeState } from '@spirograph/core';
 import { addPen, getState, removePen, setPen, setPens, setState, subscribe } from '../state/store';
 import { COMBO_PRESETS, RING_PRESETS, ROLLING_PRESETS } from './presets';
 import { getLang, setLang, t, subscribeLang, type Lang, type I18nKey } from './i18n';
+import { copyImageLinkUrl, probeImageApi } from './backend';
 
 /** 渐变附加色的默认取色（取色相轮上与当前色差异大的颜色） */
 function nextGradientColor(base: string): string {
@@ -49,7 +50,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     <div class="toolbar-group">
       <button class="btn btn-ghost toolbar-btn" id="export-png" data-i18n-title="exportPngTitle">PNG</button>
       <button class="btn btn-ghost toolbar-btn" id="export-svg" data-i18n-title="exportSvgTitle">SVG</button>
-      <button class="btn btn-ghost toolbar-btn" id="copy-image-link" data-i18n-title="copyImageLinkTitle"><i class="fa-solid fa-link"></i></button>
+      <button class="btn btn-ghost toolbar-btn" id="copy-image-link" data-i18n-title="copyImageLinkTitle" hidden><i class="fa-solid fa-link"></i></button>
       <button class="btn btn-ghost toolbar-btn" id="random" data-i18n-title="randomTitle"><i class="fa-solid fa-shuffle"></i></button>
     </div>
 
@@ -533,9 +534,7 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
 
   // 复制当前参数的图片链接（/api/image?...&format=png）
   copyLinkBtn.addEventListener('click', async () => {
-    const qs = serializeState(getState());
-    const dir = location.pathname.replace(/[^/]*$/, '');
-    const url = location.origin + dir + 'api/image?' + qs + '&format=png&size=' + imgSizeSelect.value;
+    const url = copyImageLinkUrl(serializeState(getState()), Number(imgSizeSelect.value));
     try {
       await navigator.clipboard.writeText(url);
     } catch {
@@ -553,6 +552,11 @@ export function buildPanel(root: HTMLElement, canvas: HTMLCanvasElement): PanelA
     setTimeout(() => {
       copyLinkBtn.innerHTML = '<i class="fa-solid fa-link"></i>';
     }, 1600);
+  });
+
+  // 探测后台图片端点：不可用（如 GitHub Pages 纯静态）→ 保持隐藏
+  probeImageApi().then((ok) => {
+    if (ok) copyLinkBtn.hidden = false;
   });
 
   // ---- 信息区（可变部分）----

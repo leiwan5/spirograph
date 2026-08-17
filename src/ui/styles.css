@@ -83,6 +83,8 @@ body {
 .toolbar .size-select { padding: 3px 6px; font-size: 12.5px; }
 .toolbar .val { color: var(--text); font-weight: 600; font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .toolbar-btn.active { background: var(--accent); color: #fff; }
+/* 后台图片端点不可用（如 GitHub Pages）→ 隐藏"复制图片链接"按钮 */
+.toolbar-btn[hidden] { display: none; }
 
 /* ===== 设置 modal（画布相关设置） ===== */
 .settings-modal {
