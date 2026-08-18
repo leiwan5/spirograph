@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="svelte preview" src="../../docs/images/preview-svelte.png" width="280" />
+  <img alt="svelte preview — rolling gear tracing the pattern" src="../../docs/images/gear-svelte.gif" width="280" />
 </p>
 
 # @spirograph/svelte
@@ -59,6 +59,26 @@ Adds a simulated drawing animation plus `play` / `pause` / `resume` / `stop` / `
 <button on:click={() => control.resume?.()}>Resume</button>
 <button on:click={() => control.stop?.()}>Stop</button>
 ```
+
+## Draw with gears
+
+The gear mechanism (a fixed ring + a rolling gear) is rendered during the animation whenever **`state.showGears`** is `true`. It's a field of `SpirographState` (same as the vanilla demo and the CLI), so just pass it via `state`:
+
+```svelte
+<script lang="ts">
+  import { SpirographAnimated } from '@spirograph/svelte';
+  import { DEFAULT_STATE } from '@spirograph/core';
+
+  let control = {};
+  const state = { ...DEFAULT_STATE, showGears: true };
+</script>
+
+<div style="width:480px;height:480px">
+  <SpirographAnimated {control} {state} />
+</div>
+```
+
+Gears roll with the active pen as the pattern is traced, and freeze into place on the finished static drawing. Works on both `<SpirographCanvas>` (static gears beneath the full pattern) and `<SpirographAnimated>` (rotating gears during playback).
 
 ## Props
 

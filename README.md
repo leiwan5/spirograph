@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="Spirograph Generator" src="docs/images/hero-hypotrochoid-gradient.png" width="420" />
+  <img alt="Spirograph Generator — rolling gear tracing the pattern" src="docs/images/gear-main.gif" width="420" />
 </p>
 
 <h1 align="center">Spirograph Generator</h1>
@@ -149,9 +149,11 @@ The vanilla demo (`/`) is a full editor: gear specs, per-pen controls, scale mod
 | `bg` | background color | 6-digit hex (no `#`) |
 | `speed` | animation speed | `0.1–10` |
 | `scale` | scale mode | `auto` / `fixed` |
-| `gears` | show the gear animation | `1` / `0` |
+| `gears` | show the gear animation (maps to `showGears`) | `1` / `0` |
 
 **Gradient pens**: `1 color = solid`, `≥ 2 colors = gradient`. The `spacing` parameter (a percentage) sets how far along the curve each color point sits before the set cycles — with ≥2 colors the pen fades smoothly between them around the closed loop.
+
+**Gears**: the `gears=1` URL param is the same `showGears` flag in `SpirographState` — it draws the ring + rolling gear during the animation (rotating with the active pen) and freezes them beneath the finished pattern. In the framework components it's simply `state={{ ...DEFAULT_STATE, showGears: true }}`.
 
 Invalid parameters are silently ignored and fall back to defaults; when `inside` mode has rolling teeth ≥ ring teeth it is clamped automatically.
 

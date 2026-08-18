@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>spirograph GIF recorder</title>
+  <style>
+    html, body { margin: 0; padding: 0; background: #000; }
+    body { display: flex; align-items: center; justify-content: center; height: 100vh; }
+    canvas { width: 560px; height: 560px; }
+  </style>
+</head>
+<body>
+  <canvas id="stage" width="1120" height="1120"></canvas>
+  <script type="module">
+    import { CanvasRenderer } from '../packages/canvas/dist/index.js';
+    import { DEFAULT_STATE, parseState } from '../packages/core/dist/index.js';
+
+    // Build a full state from URL query (e.g. ?ring=144&rolling=60&pen=40,e63946,2.5&bg=0b1026)
+    // and always force the gear animation on.
+    const q = new URLSearchParams(location.search);
+    const search = '?' + q.toString();
+    const parsed = parseState(search);
+    const state = {
+      ...DEFAULT_STATE,
+      ...parsed,
+      pens: parsed.pens && parsed.pens.length ? parsed.pens : DEFAULT_STATE.pens,
+      showGears: true,
+      // Default to FIXED ring scale mode so the gear ring keeps a constant size and the
+      // pattern is drawn at true scale inside it (pass fixed=0 to use auto scale).
+      scaleMode: q.get('fixed') === '0' ? 'auto' : 'fixed',
+    };
+
+    // Give the page a moment to size up; renderer reads computed canvas size.
+    const renderer = new CanvasRenderer(document.getElementById('stage'));
+
+    // Expose a deterministic frame draw for the screenshot driver.
+    window.__drawFrame = (progress) => {
+      renderer.renderProgress(state, 'sequential', progress);
+    };
+
+    // Draw an initial static frame so a first screenshot isn't blank.
+    window.__drawFrame(0);
+    window.__ready = true;
+  </script>
+</body>
+</html>

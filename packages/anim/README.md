@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="anim preview" src="../../docs/images/preview-anim.png" width="280" />
+  <img alt="anim preview — rolling gear tracing the pattern" src="../../docs/images/gear-anim.gif" width="280" />
 </p>
 
 # @spirograph/anim

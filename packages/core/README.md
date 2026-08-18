@@ -78,6 +78,18 @@ renderFull(ctx, items, t);
 - **≥ 2 colors = gradient pen** — cycles through colors along the curve at `spacing` (% of curve length) intervals.
 - `spacing` is ignored for solid pens; `segmentColor` / `buildRenderData` handle both semantics uniformly.
 
+## State fields
+
+`SpirographState` (see `types.ts`) carries both the gear/pen geometry and rendering options. Rendering-relevant fields include:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `showGears` | `boolean` | draw the gear mechanism (ring + rolling gear) during animation, rotating with the active pen; frozen beneath the full static pattern as well |
+| `scaleMode` | `'auto' \| 'fixed'` | `auto` fits the pattern to the canvas; `fixed` keeps the ring at a constant size and draws the pattern at true scale inside it |
+| `background` | `string` | canvas / image background color |
+
+Gradient-pen colors are still resolved in `buildRenderData`; `showGears`/`scaleMode`/`background` are consumed by the `@spirograph/core/browser` renderer and `@spirograph/canvas`.
+
 ↳ See the full URL/params and math docs in the [monorepo README](../../README.md). Or try the rendered output of this library live at **[https://leiwan5.github.io/spirograph/](https://leiwan5.github.io/spirograph/)**.
 
 ## Curve sampling

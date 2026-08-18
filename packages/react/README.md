@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="react preview" src="../../docs/images/preview-react.png" width="280" />
+  <img alt="react preview — rolling gear tracing the pattern" src="../../docs/images/gear-react.gif" width="280" />
 </p>
 
 # @spirograph/react
@@ -62,6 +62,19 @@ export default function App() {
   );
 }
 ```
+
+## Draw with gears
+
+The gear mechanism (a fixed ring + a rolling gear) is rendered during the animation whenever **`state.showGears`** is `true`. It's a field of `SpirographState` (same as the vanilla demo and the CLI), so just pass it through `state`:
+
+```tsx
+<SpirographAnimated
+  ref={ref}
+  state={{ ...DEFAULT_STATE, showGears: true }}
+/>
+```
+
+Gears roll with the active pen as the pattern is traced, and freeze into place on the finished static drawing. Works on both `<SpirographCanvas>` (static gears beneath the full pattern) and `<SpirographAnimated>` (rotating gears during playback).
 
 ## Props
 
