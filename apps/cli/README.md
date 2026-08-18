@@ -61,4 +61,4 @@ npm run build   # tsc -b → dist/cli.js (bin: spirograph)
 node dist/cli.js generate --params "ring=72&rolling=30&pen=40,2.5,e63946"
 ```
 
-↳ Part of the [spirograph-generator monorepo](../../README.md).
+↳ Part of the [spirograph-generator monorepo](../../README.md). Preview what the CLI outputs at **[https://leiwan5.github.io/spirograph/](https://leiwan5.github.io/spirograph/)**.

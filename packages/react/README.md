@@ -84,6 +84,12 @@ export default function App() {
 
 > **Behavior**: when `state` changes while animating, the animation stops and the static pattern is redrawn (same as the vanilla demo).
 
+## Live demo
+
+See `<SpirographCanvas>` / `<SpirographAnimated>` in action on the **React demo page** of the live site:
+
+**[https://leiwan5.github.io/spirograph/react.html](https://leiwan5.github.io/spirograph/react.html)** — docs + live render-only &amp; animated examples.
+
 ## Development / demo
 
 ```bash

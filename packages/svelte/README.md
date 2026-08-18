@@ -82,6 +82,12 @@ Adds a simulated drawing animation plus `play` / `pause` / `resume` / `stop` / `
 
 > **Behavior**: when `state` changes while animating, the animation stops and the static pattern is redrawn (same as the vanilla demo).
 
+## Live demo
+
+See `<SpirographCanvas>` / `<SpirographAnimated>` in action on the **Svelte demo page** of the live site:
+
+**[https://leiwan5.github.io/spirograph/svelte.html](https://leiwan5.github.io/spirograph/svelte.html)** — docs + live render-only &amp; animated examples.
+
 ## Development / demo
 
 ```bash

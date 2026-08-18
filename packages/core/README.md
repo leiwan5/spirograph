@@ -78,7 +78,7 @@ renderFull(ctx, items, t);
 - **≥ 2 colors = gradient pen** — cycles through colors along the curve at `spacing` (% of curve length) intervals.
 - `spacing` is ignored for solid pens; `segmentColor` / `buildRenderData` handle both semantics uniformly.
 
-↳ See the full URL/params and math docs in the [monorepo README](../../README.md).
+↳ See the full URL/params and math docs in the [monorepo README](../../README.md). Or try the rendered output of this library live at **[https://leiwan5.github.io/spirograph/](https://leiwan5.github.io/spirograph/)**.
 
 ## Curve sampling
 

@@ -63,4 +63,4 @@ anim.pause(); anim.resume(); anim.stop();
 npm run build   # tsc -b → dist/
 ```
 
-↳ Part of the [spirograph-generator monorepo](../../README.md).
+↳ Part of the [spirograph-generator monorepo](../../README.md). See it animate live at **[https://leiwan5.github.io/spirograph/](https://leiwan5.github.io/spirograph/)**.

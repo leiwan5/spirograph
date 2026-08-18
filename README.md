@@ -19,10 +19,31 @@
   <img alt="license" src="https://img.shields.io/badge/license-MIT-blue">
 </p>
 
+<p align="center">
+  <a href="https://leiwan5.github.io/spirograph/"><img alt="Live demo" src="https://img.shields.io/badge/LIVE%20DEMO-leiwan5.github.io%2Fspirograph%2F-4cc9f0?style=for-the-badge"></a>
+</p>
+
+## ✨ Try it live
+
+**Play with the spirograph right now — no install needed:**
+
+<p align="center">
+  <a href="https://leiwan5.github.io/spirograph/">
+    <img alt="Spirograph Generator live app" src="docs/images/live-site.png" width="820" />
+  </a>
+  <br/>
+  <a href="https://leiwan5.github.io/spirograph/"><code>https://leiwan5.github.io/spirograph/</code></a>
+</p>
+
+Tweak the **ring &amp; rolling gears**, stack **multi-color pens**, switch between **inside / outside** modes, hit **play** to watch the pen trace the pattern, then **export** a high-resolution **PNG / SVG** — all settings stay in the URL, so just copy the address bar to share what you made.
+
+> This is the static GitHub Pages deployment of this repo (see [Deployment](#deployment)). The same app also runs locally with `npm run dev` on `http://localhost:5173`.
+
 ---
 
 ## Table of contents
 
+- [Try it live](#-try-it-live)
 - [What it is](#what-it-is)
 - [Features](#features)
 - [Monorepo layout](#monorepo-layout)
@@ -108,6 +129,8 @@ npm run build:cli  # build the CLI
 ```
 
 That's it — no backend required to run the demo. The **image endpoint** uses a small Vite middleware in dev, and optional serverless functions in production (see [Deployment](#deployment)).
+
+> ⚡ **Already deployed**: jump straight in at **[https://leiwan5.github.io/spirograph/](https://leiwan5.github.io/spirograph/)** to try the app without running anything locally.
 
 ## Web demo & URL parameters
 

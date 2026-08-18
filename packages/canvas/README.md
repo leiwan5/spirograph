@@ -90,4 +90,4 @@ downloadBlob(blob, 'pattern.png');                          // low-level Blob do
 npm run build   # tsc -b → dist/
 ```
 
-↳ Part of the [spirograph-generator monorepo](../../README.md).
+↳ Part of the [spirograph-generator monorepo](../../README.md). See the reviewed pattern live at **[https://leiwan5.github.io/spirograph/](https://leiwan5.github.io/spirograph/)**.
