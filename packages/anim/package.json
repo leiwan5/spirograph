@@ -1,6 +1,6 @@
 {
   "name": "@spirograph/anim",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Optional spirograph animation driver library: injectable frame scheduler (rAF/Node timer) + drawing animation + frame-plan computation, used with @spirograph/core",
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,7 @@
     "build": "tsc -b"
   },
   "dependencies": {
-    "@spirograph/core": "0.1.0"
+    "@spirograph/core": "0.1.1"
   },
   "keywords": [
     "spirograph",

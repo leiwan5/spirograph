@@ -14,7 +14,7 @@
     "build": "tsc -b"
   },
   "dependencies": {
-    "@spirograph/core": "0.1.0"
+    "@spirograph/core": "0.1.1"
   },
   "keywords": [
     "spirograph",

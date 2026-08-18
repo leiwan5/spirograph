@@ -1,6 +1,6 @@
 {
   "name": "@spirograph/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cross-platform spirograph pattern generation core: pure-math curve sampling, geometry transforms, segment-level render data, SVG/PNG serialization, zero DOM/Node dependencies",
   "license": "MIT",
   "type": "module",

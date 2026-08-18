@@ -1,6 +1,6 @@
 {
   "name": "@spirograph/canvas",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Browser Canvas 2D glue layer for Spirograph: curve-caching renderer (static + animation frames) and PNG/SVG export download helpers. Shared by @spirograph/react and @spirograph/svelte.",
   "license": "MIT",
   "type": "module",
@@ -18,8 +18,8 @@
     "build": "tsc -b"
   },
   "dependencies": {
-    "@spirograph/core": "0.1.0",
-    "@spirograph/anim": "0.1.0"
+    "@spirograph/core": "0.1.1",
+    "@spirograph/anim": "0.1.1"
   },
   "keywords": [
     "spirograph",

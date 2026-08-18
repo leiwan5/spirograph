@@ -1,6 +1,6 @@
 {
   "name": "@spirograph/react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React components for Spirograph: a render-only <SpirographCanvas> and an animated, controllable <SpirographAnimated>, on @spirograph/core + @spirograph/canvas",
   "license": "MIT",
   "type": "module",
@@ -18,9 +18,9 @@
     "build": "tsc -b"
   },
   "dependencies": {
-    "@spirograph/core": "0.1.0",
-    "@spirograph/anim": "0.1.0",
-    "@spirograph/canvas": "0.1.0"
+    "@spirograph/core": "0.1.1",
+    "@spirograph/anim": "0.1.1",
+    "@spirograph/canvas": "0.1.1"
   },
   "peerDependencies": {
     "react": ">=18"
