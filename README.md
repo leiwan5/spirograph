@@ -39,11 +39,35 @@ Tweak the **ring &amp; rolling gears**, stack **multi-color pens**, switch betwe
 
 > This is the static GitHub Pages deployment of this repo (see [Deployment](#deployment)). The same app also runs locally with `npm run dev` on `http://localhost:5173`.
 
+### ✍️ Render dynamic spirograph in your own project?
+
+Each framework library ships its own self-contained demo page — install docs, live examples, and the exact same core math:
+
+**[`@spirograph/react`](https://leiwan5.github.io/spirograph/react.html)** — render-only + animated canvas components. ▶ [Live demo](https://leiwan5.github.io/spirograph/react.html) · `https://leiwan5.github.io/spirograph/react.html`
+
+```tsx
+import { SpirographCanvas } from '@spirograph/react';
+
+<SpirographCanvas state={{ ringTeeth: 144, rollingTeeth: 60, pens: [{ hole: 40, color: '#e63946', width: 2.5 }] }} />
+```
+
+**[`@spirograph/svelte`](https://leiwan5.github.io/spirograph/svelte.html)** — Svelte 5 components, same core math. ▶ [Live demo](https://leiwan5.github.io/spirograph/svelte.html) · `https://leiwan5.github.io/spirograph/svelte.html`
+
+```svelte
+<script>
+  import { SpirographCanvas } from '@spirograph/svelte';
+  const state = { ringTeeth: 144, rollingTeeth: 60, pens: [{ hole: 40, color: '#e63946', width: 2.5 }] };
+</script>
+
+<SpirographCanvas {state} />
+```
+
 ---
 
 ## Table of contents
 
 - [Try it live](#-try-it-live)
+- [React & Svelte demo pages](#render-dynamic-spirograph-in-your-own-project)
 - [What it is](#what-it-is)
 - [Features](#features)
 - [Monorepo layout](#monorepo-layout)
