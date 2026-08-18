@@ -199,15 +199,20 @@ export function drawGears(
   ctx.lineJoin = 'round';
   ctx.lineWidth = 1.4;
 
-  // ================= ring gear (internal tooth ring, stationary) =================
-  const ringOuter = (R + toothH * 1.2) * scale;
-  const ringRoot = (R + toothH * 0.3) * scale;
-  const ringTip = (R - toothH * 0.7) * scale;
+  // ================= ring gear (stationary) =================
+  // inside: internal ring gear, teeth on the inner circumference (point inward).
+  // outside: external ring gear, the rolling gear engages the outer circumference
+  // (teeth point outward, band sits on the inner side).
+  const inside = mode === 'inside';
+  const bandOuter = (inside ? R + toothH * 1.2 : R + toothH * 0.3) * scale;
+  const bandInner = (inside ? R + toothH * 0.3 : R - toothH * 1.2) * scale;
+  const ringRoot = inside ? bandInner : bandOuter; // tooth base (at the ring body)
+  const ringTip = (inside ? R - toothH * 0.7 : R + toothH * 0.7) * scale; // tooth tip (toward the rolling gear)
   const ringStep = PI2 / ringTeeth;
 
   ctx.beginPath();
-  ctx.arc(offsetX, offsetY, ringOuter, 0, PI2);
-  ctx.arc(offsetX, offsetY, ringRoot, 0, PI2, true);
+  ctx.arc(offsetX, offsetY, bandOuter, 0, PI2);
+  ctx.arc(offsetX, offsetY, bandInner, 0, PI2, true);
   ctx.closePath();
   ctx.fillStyle = fill;
   ctx.fill();
@@ -227,11 +232,11 @@ export function drawGears(
   }
 
   ctx.beginPath();
-  ctx.arc(offsetX, offsetY, ringOuter, 0, PI2);
+  ctx.arc(offsetX, offsetY, bandOuter, 0, PI2);
   ctx.strokeStyle = stroke;
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(offsetX, offsetY, ringRoot, 0, PI2);
+  ctx.arc(offsetX, offsetY, bandInner, 0, PI2);
   ctx.strokeStyle = strokeSoft;
   ctx.stroke();
 
