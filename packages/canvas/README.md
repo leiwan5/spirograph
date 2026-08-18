@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="canvas preview" src="../../docs/images/preview-canvas.png" width="280" />
+  <img alt="canvas preview" src="https://raw.githubusercontent.com/leiwan5/spirograph/main/docs/images/preview-canvas.png" width="280" />
 </p>
 
 # @spirograph/canvas

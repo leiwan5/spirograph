@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="core preview" src="../../docs/images/preview-core.png" width="280" />
+  <img alt="core preview" src="https://raw.githubusercontent.com/leiwan5/spirograph/main/docs/images/preview-core.png" width="280" />
 </p>
 
 # @spirograph/core

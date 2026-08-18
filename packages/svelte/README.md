@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="svelte preview — rolling gear tracing the pattern" src="../../docs/images/gear-svelte.gif" width="280" />
+  <img alt="svelte preview — rolling gear tracing the pattern" src="https://raw.githubusercontent.com/leiwan5/spirograph/main/docs/images/gear-svelte.gif" width="280" />
 </p>
 
 # @spirograph/svelte
