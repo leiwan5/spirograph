@@ -1,3 +1,7 @@
+<p align="center">
+  <img alt="Spirograph demo running in the Expo app on a phone" src="https://raw.githubusercontent.com/leiwan5/spirograph/main/docs/images/react-native-phone.png" width="280" />
+</p>
+
 # @spirograph/react-native
 
 React Native components for Spirograph, rendered with
