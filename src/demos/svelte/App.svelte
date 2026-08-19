@@ -149,6 +149,8 @@
 <footer class="docs-footer">
   <p class="footer-brand">Spirograph Generator · <strong>@spirograph/svelte</strong></p>
   <p class="footer-links">
+    <a href="/react.html"><i class="fa-brands fa-react"></i> React</a>
+    <a href="/react-native.html"><i class="fa-solid fa-mobile-screen"></i> React Native</a>
     <a href="{NPM_URL}" target="_blank" rel="noreferrer"><i class="fa-brands fa-npm"></i> npm</a>
     <a href="{GITHUB_URL}" target="_blank" rel="noreferrer"><i class="fa-brands fa-github"></i> GitHub</a>
   </p>

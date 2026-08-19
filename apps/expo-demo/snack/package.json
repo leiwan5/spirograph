@@ -1,0 +1,16 @@
+{
+  "name": "@spirograph/expo-demo-snack",
+  "version": "0.1.1",
+  "private": true,
+  "description": "Self-contained Expo Snack demo for @spirograph/react-native. Depends on the published @spirograph/core, @spirograph/anim and @spirograph/react-native from npm.",
+  "dependencies": {
+    "@spirograph/anim": "0.1.1",
+    "@spirograph/core": "0.1.1",
+    "@spirograph/react-native": "0.1.2",
+    "expo": "~53.0.0",
+    "react": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-svg": "15.11.2"
+  }
+}

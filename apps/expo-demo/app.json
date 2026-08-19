@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Spirograph Generator",
+    "slug": "spirograph-expo-demo",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "scheme": "spirograph",
+    "splash": {
+      "image": "./assets/splash.png",
+      "backgroundColor": "#111827",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "dev.spirograph.expodemo"
+    },
+    "android": {
+      "package": "dev.spirograph.expodemo",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#111827"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}

@@ -62,6 +62,8 @@ import { SpirographCanvas } from '@spirograph/react';
 <SpirographCanvas {state} />
 ```
 
+**[`@spirograph/react-native`](https://leiwan5.github.io/spirograph/react-native.html)** — React Native SVG components, with an embedded **Expo Snack** live demo you can run in the page or scan in Expo Go on your phone. ▶ [Live demo](https://leiwan5.github.io/spirograph/react-native.html) · `https://leiwan5.github.io/spirograph/react-native.html`
+
 ---
 
 ## Table of contents
@@ -76,6 +78,7 @@ import { SpirographCanvas } from '@spirograph/react';
 - [Using the library (`@spirograph/core`)](#using-the-library-spirographcore)
 - [React components (`@spirograph/react`)](#react-components-spirographreact)
 - [Svelte components (`@spirograph/svelte`)](#svelte-components-spirographsvelte)
+- [React Native components (`@spirograph/react-native`)](#react-native-components-spirographreact-native)
 - [CLI (`@spirograph/cli`)](#cli-spirographcli)
 - [Image endpoint](#image-endpoint)
 - [Deployment](#deployment)
@@ -89,7 +92,7 @@ import { SpirographCanvas } from '@spirograph/react';
 
 A classic **spirograph** simulator: two gears mesh with a common tooth module — a fixed outer **ring gear** and a smaller **rolling gear** whose pen-hole traces a curve as it rolls. Depending on whether the rolling gear runs *inside* or *outside* the ring, you get a **hypotrochoid** or an **epitrochoid**, and the tooth counts determine how many lobes (petals) the finished figure has and when the loop closes.
 
-Everything is computed from pure math in a shared core, so the **exact same pattern** renders identically on the `<canvas>` in your browser, inside a **React** or **Svelte** component, as a generated **SVG/PNG** file, or through the **CLI** — with per-segment gradient colors resolved in one place to keep them consistent everywhere.
+Everything is computed from pure math in a shared core, so the **exact same pattern** renders identically on the `<canvas>` in your browser, inside a **React**, **Svelte**, or **React Native** component, as a generated **SVG/PNG** file, or through the **CLI** — with per-segment gradient colors resolved in one place to keep them consistent everywhere.
 
 | Inside (hypotrochoid) | Outside (epitrochoid) |
 |:---:|:---:|
@@ -130,14 +133,19 @@ packages/anim/    @spirograph/anim    Optional animation driver (injectable fram
 packages/canvas/  @spirograph/canvas  Browser-only Canvas 2D glue (renderer + export)
 packages/react/   @spirograph/react   React: <SpirographCanvas> (render-only) + <SpirographAnimated>
 packages/svelte/  @spirograph/svelte  Svelte 5: <SpirographCanvas> + <SpirographAnimated>
+packages/react-native/
+                  @spirograph/react-native  React Native: SVG-based <SpirographSvg> + <SpirographAnimated>
+                                            on react-native-svg (shares the exact same core math)
 apps/cli/         @spirograph/cli     CLI: query / JSON → PNG / SVG files (bin: `spirograph`)
+apps/expo-demo/   @spirograph/expo-demo  Expo (React Native) demo app: interactive pattern controls
+                                          + animation, powered by @spirograph/react-native
 
 src/  api/  functions/                Web apps (root Vite multi-page): vanilla demo (index.html)
                                       + framework demo pages (svelte.html, react.html) + Vercel /
                                       Cloudflare deployment config
 ```
 
-Every renderer is a thin adapter over `@spirograph/core`, so **any bug fix or new feature in the math is automatically shared** across Canvas, React, Svelte, SVG, PNG, the image endpoint, and the CLI.
+Every renderer is a thin adapter over `@spirograph/core`, so **any bug fix or new feature in the math is automatically shared** across Canvas, React, Svelte, React Native, SVG, PNG, the image endpoint, and the CLI.
 
 ## Quick start
 
@@ -247,6 +255,42 @@ The Svelte 5 component set mirrors React:
 
 See the live docs + demos at `/svelte.html`.
 
+## React Native components (`@spirograph/react-native`)
+
+Install: `npm i @spirograph/react-native react-native-svg`
+
+A React Native adapter that renders patterns as **SVG** (via
+[`react-native-svg`](https://github.com/software-mansion/react-native-svg))
+instead of a browser `<canvas>`. It consumes `@spirograph/core`'s segment render
+data directly, so mobile output matches the web/Canvas/SVG/PNG output exactly:
+- `<SpirographSvg>` — render-only static view.
+- `<SpirographAnimated>` — animated view with `play / pause / resume / stop / setSpeed` (handled imperatively through a ref).
+
+```tsx
+import { SpirographAnimated } from '@spirograph/react-native';
+import type { SpirographAnimationHandle } from '@spirograph/react-native';
+import { useRef } from 'react';
+
+const ref = useRef<SpirographAnimationHandle>(null);
+
+<SpirographAnimated
+  ref={ref}
+  state={{ mode: 'inside', ringTeeth: 72, rollingTeeth: 30,
+           pens: [{ id: 1, hole: 40, colors: ['#e63946'], spacing: 20, width: 4 }],
+           background: '#111827', speed: 1, scaleMode: 'auto', showGears: true }}
+  size={{ width: 320, height: 320 }}
+  showGears
+/>;
+
+ref.current?.play();
+```
+
+There's a full **Expo demo app** at `apps/expo-demo` (`@spirograph/expo-demo`) with
+interactive pattern/pen controls and playback — see its
+[README](apps/expo-demo/README.md). The package ships the same core-math feature
+set (inside/outside, multi-pen stacking, gears overlay, sequential/simultaneous
+animation) in a React Native context.
+
 ## CLI (`@spirograph/cli`)
 
 Turn a URL-query (or JSON) directly into PNG / SVG files — the same query engine as the image endpoint, driven from the terminal.
@@ -336,9 +380,10 @@ The Vite build is a multi-page app (`build.rollupOptions.input`): the original v
 
 - `/svelte.html` — docs landing + live demo for `@spirograph/svelte`
 - `/react.html` — docs landing + live demo for `@spirograph/react`
+- `/react-native.html` — docs landing + embedded **Expo Snack** live demo for `@spirograph/react-native`
 
-Each landing page shows render-only and animated usage, plus install/API docs. All three entries share the same `base` (GitHub Pages subpath via `BASE_URL` works for all of them).
+Each landing page shows render-only and animated usage, plus install/API docs. All four entries share the same `base` (GitHub Pages subpath via `BASE_URL` works for all of them).
 
 ## Contributing & license
 
-Suggestions, bug reports, and PRs are welcome — see the [GitHub repo](https://github.com/) issues. The project is MIT-licensed. Framework adapters (React & Svelte) and the CLI are implemented; a `@spirograph/react-native` adapter (react-native-svg) is a planned future addition on top of the same core `RenderData` contract.
+Suggestions, bug reports, and PRs are welcome — see the [GitHub repo](https://github.com/) issues. The project is MIT-licensed. Framework adapters (React, Svelte, and React Native via `react-native-svg`) and the CLI are all implemented on top of the same core `RenderData` contract.

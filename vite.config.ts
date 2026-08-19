@@ -70,6 +70,7 @@ export default defineConfig({
         main: resolve(root, 'index.html'),
         svelte: resolve(root, 'svelte.html'),
         react: resolve(root, 'react.html'),
+        reactNative: resolve(root, 'react-native.html'),
       },
     },
   },

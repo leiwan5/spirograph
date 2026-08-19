@@ -65,6 +65,7 @@ body {
 }
 .tag-svelte { background: #ff3e00; }
 .tag-react { background: #61dafb; color: #0b1120 !important; }
+.tag-rn { background: #22d3ee; color: #0b1120 !important; }
 .docs-links {
   display: flex;
   gap: 16px;
@@ -392,3 +393,83 @@ body {
 .docs-footer .footer-links a:hover { color: var(--accent-2); }
 
 .anchor { scroll-margin-top: 70px; }
+
+/* ===== React Native page: run-mode toggle ===== */
+.run-toggle {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.toggle-btn i { color: var(--accent); }
+.toggle-btn:hover { color: var(--text); }
+.toggle-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+.toggle-btn.active i { color: #fff; }
+
+/* ===== React Native page: snack embed ===== */
+.snack-embed {
+  display: block;
+  width: 100%;
+  height: 640px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fbfcfd;
+}
+
+/* snack pending placeholder */
+.snack-pending {
+  padding: 34px 24px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel);
+}
+.snack-pending-icon {
+  font-size: 34px;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.snack-pending h3 { font-size: 18px; margin-bottom: 8px; }
+.snack-pending p { color: var(--muted); font-size: 14px; max-width: 620px; margin: 0 auto; }
+.snack-pending code {
+  background: var(--panel-2);
+  padding: 1px 7px;
+  border-radius: 5px;
+  font-size: 12.5px;
+  color: var(--accent-2);
+}
+.snack-pending a { color: var(--accent-2); }
+.snack-steps {
+  text-align: left;
+  max-width: 620px;
+  margin: 18px auto 6px;
+  padding-left: 20px;
+  color: var(--muted);
+  font-size: 14px;
+  display: grid;
+  gap: 6px;
+}
+.snack-steps li { margin-bottom: 4px; }
+

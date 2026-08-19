@@ -1,0 +1,26 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@spirograph/core": [
+        "../../packages/core/dist"
+      ],
+      "@spirograph/anim": [
+        "../../packages/anim/dist"
+      ],
+      "@spirograph/canvas": [
+        "../../packages/canvas/dist"
+      ],
+      "@spirograph/react-native": [
+        "../../packages/react-native/dist"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ]
+}

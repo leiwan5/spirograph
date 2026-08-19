@@ -8,3 +8,13 @@ dist/
 .svelte-kit/
 
 .dsh-vision-router/
+
+# Expo / React Native
+.expo/
+.expo-shared/
+.expo/types/
+apps/expo-demo/.expo/
+apps/expo-demo/android/
+apps/expo-demo/ios/
+apps/expo-demo/web-build/
+

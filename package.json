@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:packages && tsc && vite build",
-    "build:packages": "tsc -b packages/core packages/anim packages/canvas packages/react && npm --prefix packages/svelte run build",
+    "build:packages": "tsc -b packages/core packages/anim packages/canvas packages/react packages/react-native && npm --prefix packages/svelte run build",
     "build:cli": "tsc -b apps/cli",
     "preview": "vite preview",
     "test": "npm run build:packages && vitest run",
