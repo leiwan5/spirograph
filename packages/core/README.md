@@ -99,6 +99,25 @@ Gradient-pen colors are still resolved in `buildRenderData`; `showGears`/`scaleM
 - Teeth share the same module, so radii are proportional to tooth counts; the closing period is `T=2π·q` (q = rolling teeth/gcd).
 - Sampling cap `MAX_SAMPLES = 150_000`; beyond that, auto-downsampling keeps the curve closed.
 
+## Spirograph Generator (live demo)
+
+The **Spirograph Generator** is the browser demo UI that consumes this core — a vanilla `<canvas>` editor where the gear/pen model can be tweaked live, with PNG / SVG export and URL-based sharing.
+
+▶ Try the full app — no install needed: **[https://leiwan5.github.io/spirograph/](https://leiwan5.github.io/spirograph/)**
+
+## Sibling packages
+
+`@spirograph/*` is a small npm-workspaces monorepo — every package is a thin adapter or layer around this core, so colors, math, and animation frames stay pixel-consistent across renderers. The other independently publishable packages:
+
+| Package | What it is |
+|---|---|
+| [`@spirograph/anim`](https://www.npmjs.com/package/@spirograph/anim) | Optional animation driver with an injectable frame scheduler |
+| [`@spirograph/canvas`](https://www.npmjs.com/package/@spirograph/canvas) | Browser-only Canvas 2D glue: renderer + PNG/SVG export helpers |
+| [`@spirograph/react`](https://www.npmjs.com/package/@spirograph/react) | React `<SpirographCanvas>` / `<SpirographAnimated>` |
+| [`@spirograph/svelte`](https://www.npmjs.com/package/@spirograph/svelte) | Svelte 5 `<SpirographCanvas>` / `<SpirographAnimated>` |
+| [`@spirograph/react-native`](https://www.npmjs.com/package/@spirograph/react-native) | React Native SVG components on `react-native-svg` |
+| [`@spirograph/cli`](https://www.npmjs.com/package/@spirograph/cli) | CLI: URL-query / JSON → PNG / SVG files |
+
 ## Build / publish
 
 ```bash

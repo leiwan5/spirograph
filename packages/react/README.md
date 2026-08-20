@@ -103,6 +103,25 @@ See `<SpirographCanvas>` / `<SpirographAnimated>` in action on the **React demo 
 
 **[https://leiwan5.github.io/spirograph/react.html](https://leiwan5.github.io/spirograph/react.html)** — docs + live render-only &amp; animated examples.
 
+## Spirograph Generator (live demo)
+
+The **Spirograph Generator** is the browser demo UI behind this library — a vanilla `<canvas>` editor where the same gear/pen/animation model can be tweaked live, with PNG / SVG export and URL-based sharing.
+
+▶ Try the full app — no install needed: **[https://leiwan5.github.io/spirograph/](https://leiwan5.github.io/spirograph/)**
+
+## Sibling packages
+
+`@spirograph/*` is a small npm-workspaces monorepo — every package is a thin adapter or layer around the shared pure core, so colors, math, and animation frames stay pixel-consistent across renderers. The other independently publishable packages:
+
+| Package | What it is |
+|---|---|
+| [`@spirograph/core`](https://www.npmjs.com/package/@spirograph/core) | Pure cross-platform math, gradients, SVG/PNG generation — zero DOM / Node deps |
+| [`@spirograph/anim`](https://www.npmjs.com/package/@spirograph/anim) | Optional animation driver with an injectable frame scheduler |
+| [`@spirograph/canvas`](https://www.npmjs.com/package/@spirograph/canvas) | Browser-only Canvas 2D glue: renderer + PNG/SVG export helpers |
+| [`@spirograph/svelte`](https://www.npmjs.com/package/@spirograph/svelte) | Svelte 5 `<SpirographCanvas>` / `<SpirographAnimated>` |
+| [`@spirograph/react-native`](https://www.npmjs.com/package/@spirograph/react-native) | React Native SVG components on `react-native-svg` |
+| [`@spirograph/cli`](https://www.npmjs.com/package/@spirograph/cli) | CLI: URL-query / JSON → PNG / SVG files |
+
 ## Development / demo
 
 ```bash

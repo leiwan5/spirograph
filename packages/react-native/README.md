@@ -104,6 +104,34 @@ at a time, weighted by curve length — the default, matching the web components
 - Gear rendering: `SvgGearRenderer` is an SVG port of the core's Canvas 2D gear
   drawing.
 
+## Live demo
+
+See `<SpirographSvg>` / `<SpirographAnimated>` in action on the **React Native demo
+page** of the live site:
+
+**[https://leiwan5.github.io/spirograph/react-native.html](https://leiwan5.github.io/spirograph/react-native.html)** — docs + an embedded **Expo Snack** live demo you can run right in the page (react-native-web) or open in Expo Go on your phone via QR.
+
+For a full native app, the repo also ships the **Expo demo app** at `apps/expo-demo` — interactive pattern/pen controls and playback powered by this package.
+
+## Spirograph Generator (live demo)
+
+The **Spirograph Generator** is the browser demo UI behind this library — a vanilla `<canvas>` editor where the same gear/pen/animation model can be tweaked live, with PNG / SVG export and URL-based sharing.
+
+▶ Try the full app — no install needed: **[https://leiwan5.github.io/spirograph/](https://leiwan5.github.io/spirograph/)**
+
+## Sibling packages
+
+`@spirograph/*` is a small npm-workspaces monorepo — every package is a thin adapter or layer around the shared pure core, so colors, math, and animation frames stay pixel-consistent across renderers. The other independently publishable packages:
+
+| Package | What it is |
+|---|---|
+| [`@spirograph/core`](https://www.npmjs.com/package/@spirograph/core) | Pure cross-platform math, gradients, SVG/PNG generation — zero DOM / Node deps |
+| [`@spirograph/anim`](https://www.npmjs.com/package/@spirograph/anim) | Optional animation driver with an injectable frame scheduler |
+| [`@spirograph/canvas`](https://www.npmjs.com/package/@spirograph/canvas) | Browser-only Canvas 2D glue: renderer + PNG/SVG export helpers |
+| [`@spirograph/react`](https://www.npmjs.com/package/@spirograph/react) | React `<SpirographCanvas>` / `<SpirographAnimated>` |
+| [`@spirograph/svelte`](https://www.npmjs.com/package/@spirograph/svelte) | Svelte 5 `<SpirographCanvas>` / `<SpirographAnimated>` |
+| [`@spirograph/cli`](https://www.npmjs.com/package/@spirograph/cli) | CLI: URL-query / JSON → PNG / SVG files |
+
 ## Dev
 
 ```sh
