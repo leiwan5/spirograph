@@ -2,6 +2,15 @@
   "name": "@spirograph/react-native",
   "version": "0.1.2",
   "description": "React Native components for Spirograph: SVG-based rendering on @spirograph/core + @spirograph/anim",
+  "homepage": "https://leiwan5.github.io/spirograph/react-native.html",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leiwan5/spirograph.git"
+  },
+  "bugs": {
+    "url": "https://github.com/leiwan5/spirograph/issues"
+  },
+  "author": "Lei Wang <cnkknd@gmail.com>",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,

@@ -3,6 +3,17 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "description": "Spirograph Generator — a browser-ready spirograph pattern generator demo UI + cross-platform rendering library (hypotrochoids & epitrochoids, animation, PNG/SVG export)",
+  "homepage": "https://leiwan5.github.io/spirograph/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leiwan5/spirograph.git"
+  },
+  "bugs": {
+    "url": "https://github.com/leiwan5/spirograph/issues"
+  },
+  "author": "Lei Wang <cnkknd@gmail.com>",
+  "license": "MIT",
   "workspaces": [
     "packages/*",
     "apps/*"

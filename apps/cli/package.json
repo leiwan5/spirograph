@@ -2,6 +2,15 @@
   "name": "@spirograph/cli",
   "version": "0.1.1",
   "description": "Spirograph CLI: generate PNG/SVG files directly from query/JSON params, based on @spirograph/core",
+  "homepage": "https://leiwan5.github.io/spirograph/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leiwan5/spirograph.git"
+  },
+  "bugs": {
+    "url": "https://github.com/leiwan5/spirograph/issues"
+  },
+  "author": "Lei Wang <cnkknd@gmail.com>",
   "license": "MIT",
   "type": "module",
   "bin": {

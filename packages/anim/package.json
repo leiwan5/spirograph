@@ -2,6 +2,15 @@
   "name": "@spirograph/anim",
   "version": "0.1.1",
   "description": "Optional spirograph animation driver library: injectable frame scheduler (rAF/Node timer) + drawing animation + frame-plan computation, used with @spirograph/core",
+  "homepage": "https://leiwan5.github.io/spirograph/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leiwan5/spirograph.git"
+  },
+  "bugs": {
+    "url": "https://github.com/leiwan5/spirograph/issues"
+  },
+  "author": "Lei Wang <cnkknd@gmail.com>",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,

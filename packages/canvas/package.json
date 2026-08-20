@@ -2,6 +2,15 @@
   "name": "@spirograph/canvas",
   "version": "0.1.1",
   "description": "Browser Canvas 2D glue layer for Spirograph: curve-caching renderer (static + animation frames) and PNG/SVG export download helpers. Shared by @spirograph/react and @spirograph/svelte.",
+  "homepage": "https://leiwan5.github.io/spirograph/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leiwan5/spirograph.git"
+  },
+  "bugs": {
+    "url": "https://github.com/leiwan5/spirograph/issues"
+  },
+  "author": "Lei Wang <cnkknd@gmail.com>",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
