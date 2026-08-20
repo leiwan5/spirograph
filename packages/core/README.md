@@ -103,6 +103,12 @@ Gradient-pen colors are still resolved in `buildRenderData`; `showGears`/`scaleM
 
 The **Spirograph Generator** is the browser demo UI that consumes this core — a vanilla `<canvas>` editor where the gear/pen model can be tweaked live, with PNG / SVG export and URL-based sharing.
 
+<p align="center">
+  <a href="https://leiwan5.github.io/spirograph/">
+    <img alt="Spirograph Generator live app" src="https://github.com/leiwan5/spirograph/raw/main/docs/images/live-site.png" width="720" />
+  </a>
+</p>
+
 ▶ Try the full app — no install needed: **[https://leiwan5.github.io/spirograph/](https://leiwan5.github.io/spirograph/)**
 
 ## Sibling packages

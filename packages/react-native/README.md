@@ -117,6 +117,12 @@ For a full native app, the repo also ships the **Expo demo app** at `apps/expo-d
 
 The **Spirograph Generator** is the browser demo UI behind this library — a vanilla `<canvas>` editor where the same gear/pen/animation model can be tweaked live, with PNG / SVG export and URL-based sharing.
 
+<p align="center">
+  <a href="https://leiwan5.github.io/spirograph/">
+    <img alt="Spirograph Generator live app" src="https://github.com/leiwan5/spirograph/raw/main/docs/images/live-site.png" width="720" />
+  </a>
+</p>
+
 ▶ Try the full app — no install needed: **[https://leiwan5.github.io/spirograph/](https://leiwan5.github.io/spirograph/)**
 
 ## Sibling packages
