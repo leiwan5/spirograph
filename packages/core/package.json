@@ -1,6 +1,6 @@
 {
   "name": "@spirograph/core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Cross-platform spirograph pattern generation core: pure-math curve sampling, geometry transforms, segment-level render data, SVG/PNG serialization, zero DOM/Node dependencies",
   "homepage": "https://leiwan5.github.io/spirograph/",
   "repository": {
@@ -14,6 +14,8 @@
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

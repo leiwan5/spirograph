@@ -7,7 +7,8 @@ embedded live demo on the `react-native.html` docs page.
 ## How it resolves dependencies
 
 The snack depends on the **published npm packages** `@spirograph/core`,
-`@spirograph/anim` and `@spirograph/react-native` (all version `0.1.1`), plus the
+`@spirograph/anim` and `@spirograph/react-native` (versions `0.1.2`, `0.1.2` and
+`0.1.3` respectively), plus the
 standard Expo / React Native platform deps. Snack installs them automatically
 from `package.json` — there is **no inlined `src/lib/`** to keep in sync.
 

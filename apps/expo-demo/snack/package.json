@@ -4,9 +4,9 @@
   "private": true,
   "description": "Self-contained Expo Snack demo for @spirograph/react-native. Depends on the published @spirograph/core, @spirograph/anim and @spirograph/react-native from npm.",
   "dependencies": {
-    "@spirograph/anim": "0.1.1",
-    "@spirograph/core": "0.1.1",
-    "@spirograph/react-native": "0.1.2",
+    "@spirograph/anim": "0.1.2",
+    "@spirograph/core": "0.1.2",
+    "@spirograph/react-native": "0.1.3",
     "expo": "~53.0.0",
     "react": "19.0.0",
     "react-native": "0.79.2",
